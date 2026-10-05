@@ -16,7 +16,7 @@ import AdminDashboard from './pages/admin/adminDashboard';
 import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Categories from "./pages/admin/Categories";
-
+import CategoryForm from "./pages/admin/CategoryForm";
 
 function App() {
   return (
@@ -46,6 +46,11 @@ function App() {
   path="/admin/categories"
   element={<Categories />}
 />
+<Route
+  path="/admin/categories/new"
+  element={<CategoryForm />}
+/>
+
         </Route>
       </Routes>
     </BrowserRouter>

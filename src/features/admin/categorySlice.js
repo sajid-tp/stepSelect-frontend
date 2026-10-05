@@ -6,15 +6,25 @@ import axiosInstance from "../../api/axiosInstance";
 
 export const getCategories = createAsyncThunk(
   "adminCategories/getCategories",
-
-  async ({ search = "", page = 1 }, { rejectWithValue }) => {
+  async (
+    {
+      search = "",
+      page = 1,
+      limit = 5,
+    },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await axiosInstance.get("/admin/categories", {
-        params: {
-          search,
-          page,
-        },
-      });
+      const res = await axiosInstance.get(
+        "/admin/categories",
+        {
+          params: {
+            search,
+            page,
+            limit,
+          },
+        }
+      );
 
       return res.data;
 
@@ -24,7 +34,36 @@ export const getCategories = createAsyncThunk(
         error.response?.data?.error?.message ||
         "Failed to fetch categories"
       );
+
     }
+  }
+);
+
+
+// ================= CREATE CATEGORY =================
+
+export const createCategory = createAsyncThunk(
+  "adminCategories/createCategory",
+  async (categoryData, { rejectWithValue }) => {
+
+    try {
+
+      const res = await axiosInstance.post(
+        "/admin/categories",
+        categoryData
+      );
+
+      return res.data;
+
+    } catch (error) {
+
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        "Failed to create category"
+      );
+
+    }
+
   }
 );
 
@@ -33,8 +72,8 @@ export const getCategories = createAsyncThunk(
 
 export const toggleCategoryStatus = createAsyncThunk(
   "adminCategories/toggleCategoryStatus",
-
   async (categoryId, { rejectWithValue }) => {
+
     try {
 
       const res = await axiosInstance.patch(
@@ -49,6 +88,7 @@ export const toggleCategoryStatus = createAsyncThunk(
         error.response?.data?.error?.message ||
         "Failed to update category status"
       );
+
     }
   }
 );
@@ -57,67 +97,134 @@ export const toggleCategoryStatus = createAsyncThunk(
 // ================= SLICE =================
 
 const adminCategorySlice = createSlice({
+
   name: "adminCategories",
 
   initialState: {
+
     categories: [],
 
     totalResults: 0,
+
     totalPages: 1,
+
     currentPage: 1,
+
     limit: 5,
 
     status: "idle",
+
     error: null,
+
+    createStatus: "idle",
+
+    createError: null,
+
   },
 
+
   reducers: {},
+
 
   extraReducers: (builder) => {
 
     builder
 
-      // ================= GET CATEGORIES =================
+      // ================= GET =================
 
-      .addCase(getCategories.pending, (state) => {
+      .addCase(
+        getCategories.pending,
+        (state) => {
 
-        state.status = "loading";
-        state.error = null;
+          state.status = "loading";
 
-      })
+          state.error = null;
 
-      .addCase(getCategories.fulfilled, (state, action) => {
+        }
+      )
 
-        state.status = "succeeded";
+      .addCase(
+        getCategories.fulfilled,
+        (state, action) => {
 
-        state.categories = action.payload.categories;
+          state.status = "succeeded";
 
-        state.totalResults = action.payload.totalResults;
+          state.categories =
+            action.payload.categories;
 
-        state.totalPages = action.payload.totalPages;
+          state.totalResults =
+            action.payload.totalResults;
 
-        state.currentPage = action.payload.page;
+          state.totalPages =
+            action.payload.totalPages;
 
-        state.limit = action.payload.limit;
+          state.currentPage =
+            action.payload.page;
 
-      })
+          state.limit =
+            action.payload.limit;
 
-      .addCase(getCategories.rejected, (state, action) => {
+        }
+      )
 
-        state.status = "failed";
+      .addCase(
+        getCategories.rejected,
+        (state, action) => {
 
-        state.error = action.payload;
+          state.status = "failed";
 
-      })
+          state.error = action.payload;
+
+        }
+      )
 
 
-      // ================= TOGGLE STATUS =================
+      // ================= CREATE =================
 
-      .addCase(toggleCategoryStatus.pending, (state) => {
+      .addCase(
+        createCategory.pending,
+        (state) => {
 
-        state.error = null;
+          state.createStatus = "loading";
 
-      })
+          state.createError = null;
+
+        }
+      )
+
+      .addCase(
+        createCategory.fulfilled,
+        (state) => {
+
+          state.createStatus = "succeeded";
+
+          state.createError = null;
+
+        }
+      )
+
+      .addCase(
+        createCategory.rejected,
+        (state, action) => {
+
+          state.createStatus = "failed";
+
+          state.createError = action.payload;
+
+        }
+      )
+
+
+      // ================= TOGGLE =================
+
+      .addCase(
+        toggleCategoryStatus.pending,
+        (state) => {
+
+          state.error = null;
+
+        }
+      )
 
       .addCase(
         toggleCategoryStatus.fulfilled,
@@ -128,12 +235,17 @@ const adminCategorySlice = createSlice({
             isActive,
           } = action.payload;
 
-          const category = state.categories.find(
-            (category) => category.id === id
-          );
+          const category =
+            state.categories.find(
+              (category) =>
+                category.id === id
+            );
 
           if (category) {
-            category.isActive = isActive;
+
+            category.isActive =
+              isActive;
+
           }
 
         }
@@ -147,7 +259,9 @@ const adminCategorySlice = createSlice({
 
         }
       );
+
   },
+
 });
 
 
