@@ -6,6 +6,7 @@ import App from './App';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './index.css';
 import { injectStore } from './api/axiosInstance';
+import "@fortawesome/fontawesome-free/css/all.min.css";
 injectStore(store);
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

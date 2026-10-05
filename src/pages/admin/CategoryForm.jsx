@@ -517,8 +517,8 @@ function CategoryForm() {
                         "Category name is required",
 
                       validate: (value) =>
-                        value.trim().length > 0 ||
-                        "Category name is required",
+                        (value.trim().length > 6 && value.trim().length<20) ||
+                        "Category name should be between 6 and 20 characters",
                     }
                   )}
                   className={`
@@ -816,7 +816,10 @@ function CategoryForm() {
                   rows={5}
                   placeholder="Enter a short description for this category"
                   {...register(
-                    "description"
+                    "description",
+                    {
+                        required : "Description is required"
+                    }
                   )}
                   className="
                     w-full
@@ -836,8 +839,24 @@ function CategoryForm() {
                   "
                 />
 
+            {errors.description && (
+
+                  <p
+                    className="
+                      mt-1.5
+                      text-xs
+                      text-red-500
+                    "
+                  >
+                    {errors.description.message}
+                  </p>
+
+                )}
+
+
               </div>
 
+              
 
               {/* ================================================= */}
               {/* ACTIONS */}

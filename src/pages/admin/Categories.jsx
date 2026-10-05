@@ -43,6 +43,9 @@ function Categories() {
   const [search, setSearch] =
     useState("");
 
+  const [activeTab, setActiveTab] =
+    useState("all");
+
   const [page, setPage] =
     useState(1);
 
@@ -278,6 +281,7 @@ function Categories() {
 
         }
 
+
       } catch (error) {
 
         console.error(
@@ -314,7 +318,6 @@ function Categories() {
         return;
       }
 
-
       setDeleteModalOpen(
         false
       );
@@ -324,6 +327,44 @@ function Categories() {
       );
 
     };
+
+
+  // ===================================================
+  // TAB CHANGE
+  // ===================================================
+
+  const handleTabChange =
+    (value) => {
+
+      setActiveTab(value);
+
+    };
+
+
+  // ===================================================
+  // FILTER CATEGORIES
+  // ===================================================
+
+  const filteredCategories =
+    categories.filter(
+      (category) => {
+
+        if (
+          activeTab === "active"
+        ) {
+          return category.isActive;
+        }
+
+        if (
+          activeTab === "inactive"
+        ) {
+          return !category.isActive;
+        }
+
+        return true;
+
+      }
+    );
 
 
   // ===================================================
@@ -558,47 +599,129 @@ function Categories() {
             "
           >
 
+            {/* ALL CATEGORIES */}
+
             <button
               type="button"
-              className="
-                border-b-2
-                border-[#ff5722]
+              onClick={() =>
+                handleTabChange("all")
+              }
+              className={`
+                relative
                 px-1
                 pb-4
                 text-sm
-                font-semibold
-                text-gray-900
-              "
+                font-medium
+                transition
+                ${
+                  activeTab === "all"
+                    ? "text-[#071a33]"
+                    : "text-gray-500 hover:text-gray-800"
+                }
+              `}
             >
+
               All categories
+
+              {activeTab === "all" && (
+
+                <span
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    h-[2px]
+                    w-full
+                    bg-[#ff5722]
+                  "
+                />
+
+              )}
+
             </button>
 
 
+            {/* ACTIVE */}
+
             <button
               type="button"
-              className="
+              onClick={() =>
+                handleTabChange("active")
+              }
+              className={`
+                relative
                 px-1
                 pb-4
                 text-sm
                 font-medium
-                text-gray-500
-              "
+                transition
+                ${
+                  activeTab === "active"
+                    ? "text-[#071a33]"
+                    : "text-gray-500 hover:text-gray-800"
+                }
+              `}
             >
+
               Active
+
+              {activeTab === "active" && (
+
+                <span
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    h-[2px]
+                    w-full
+                    bg-[#ff5722]
+                  "
+                />
+
+              )}
+
             </button>
 
 
+            {/* INACTIVE */}
+
             <button
               type="button"
-              className="
+              onClick={() =>
+                handleTabChange("inactive")
+              }
+              className={`
+                relative
                 px-1
                 pb-4
                 text-sm
                 font-medium
-                text-gray-500
-              "
+                transition
+                ${
+                  activeTab === "inactive"
+                    ? "text-[#071a33]"
+                    : "text-gray-500 hover:text-gray-800"
+                }
+              `}
             >
+
               Inactive
+
+              {activeTab === "inactive" && (
+
+                <span
+                  className="
+                    absolute
+                    bottom-0
+                    left-0
+                    h-[2px]
+                    w-full
+                    bg-[#ff5722]
+                  "
+                />
+
+              )}
+
             </button>
 
           </div>
@@ -666,7 +789,7 @@ function Categories() {
 
           {status !== "loading" && (
 
-            categories.length > 0 ? (
+            filteredCategories.length > 0 ? (
 
               <div
                 className="
@@ -680,7 +803,7 @@ function Categories() {
                 "
               >
 
-                {categories.map(
+                {filteredCategories.map(
                   (category) => (
 
                     <AdminCategoryCard
@@ -732,7 +855,11 @@ function Categories() {
 
                 {search
                   ? "No categories found for your search."
-                  : "No categories found."}
+                  : activeTab === "active"
+                    ? "There are no active categories."
+                    : activeTab === "inactive"
+                      ? "There are no inactive categories."
+                      : "No categories found."}
 
               </div>
 
@@ -745,15 +872,20 @@ function Categories() {
           {/* PAGINATION */}
           {/* ================================================= */}
 
-          <AdminPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalResults={totalResults}
-            limit={limit}
-            onPageChange={setPage}
-          />
+          {activeTab === "all" && (
+
+            <AdminPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalResults={totalResults}
+              limit={limit}
+              onPageChange={setPage}
+            />
+
+          )}
 
         </section>
+
 
       </main>
 
@@ -795,6 +927,7 @@ function Categories() {
     </div>
 
   );
+
 }
 
 
