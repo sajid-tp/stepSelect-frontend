@@ -17,6 +17,8 @@ import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Categories from "./pages/admin/Categories";
 import CategoryForm from "./pages/admin/CategoryForm";
+import Brands from "./pages/admin/Brands";
+import BrandForm from "./pages/admin/BrandForm";
 
 function App() {
   return (
@@ -53,6 +55,28 @@ function App() {
 <Route
   path="/admin/categories/edit/:categoryId"
   element={<CategoryForm />}
+
+  />
+<Route
+  path="/admin/brands"
+  element={ <Brands />}
+/>
+
+<Route
+  path="/admin/brands/new"
+  element={
+
+      <BrandForm />
+
+  }
+/>
+
+<Route
+  path="/admin/brands/edit/:brandId"
+  element={
+      <BrandForm />
+  }
+
 />
 
         </Route>
