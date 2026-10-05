@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   useDispatch,
   useSelector,
@@ -16,6 +17,9 @@ import AdminCategoryCard
 
 import AdminPagination
   from "../../components/AdminPagination";
+
+import Modal
+  from "../../components/Modals";
 
 import {
   getCategories,
@@ -46,6 +50,15 @@ function Categories() {
     useState(null);
 
   const [deletingCategoryId, setDeletingCategoryId] =
+    useState(null);
+
+
+  // Delete confirmation modal
+
+  const [deleteModalOpen, setDeleteModalOpen] =
+    useState(false);
+
+  const [selectedCategory, setSelectedCategory] =
     useState(null);
 
 
@@ -136,7 +149,7 @@ function Categories() {
 
 
   // ===================================================
-  // TOGGLE
+  // TOGGLE STATUS
   // ===================================================
 
   const handleToggleStatus =
@@ -173,19 +186,31 @@ function Categories() {
 
 
   // ===================================================
-  // DELETE
+  // OPEN DELETE MODAL
   // ===================================================
 
   const handleDeleteCategory =
-    async (category) => {
+    (category) => {
 
-      const confirmed =
-        window.confirm(
-          `Are you sure you want to delete "${category.categoryName}"?`
-        );
+      setSelectedCategory(
+        category
+      );
+
+      setDeleteModalOpen(
+        true
+      );
+
+    };
 
 
-      if (!confirmed) {
+  // ===================================================
+  // CONFIRM DELETE
+  // ===================================================
+
+  const handleConfirmDelete =
+    async () => {
+
+      if (!selectedCategory) {
         return;
       }
 
@@ -193,9 +218,16 @@ function Categories() {
       try {
 
         setDeletingCategoryId(
-          category.id
+          selectedCategory.id
         );
 
+
+        /*
+         * If this is the only category
+         * on the current page and we're
+         * not on page 1, move to the
+         * previous page after deletion.
+         */
 
         const shouldGoToPreviousPage =
           categories.length === 1 &&
@@ -204,9 +236,20 @@ function Categories() {
 
         await dispatch(
           deleteCategory(
-            category.id
+            selectedCategory.id
           )
         ).unwrap();
+
+
+        // Close modal after successful delete
+
+        setDeleteModalOpen(
+          false
+        );
+
+        setSelectedCategory(
+          null
+        );
 
 
         if (
@@ -219,6 +262,11 @@ function Categories() {
           );
 
         } else {
+
+          /*
+           * Refresh current page because
+           * the backend is paginated.
+           */
 
           dispatch(
             getCategories({
@@ -247,6 +295,40 @@ function Categories() {
 
     };
 
+
+  // ===================================================
+  // CLOSE DELETE MODAL
+  // ===================================================
+
+  const handleCloseDeleteModal =
+    () => {
+
+      /*
+       * Don't allow closing while
+       * delete request is running.
+       */
+
+      if (
+        deletingCategoryId !== null
+      ) {
+        return;
+      }
+
+
+      setDeleteModalOpen(
+        false
+      );
+
+      setSelectedCategory(
+        null
+      );
+
+    };
+
+
+  // ===================================================
+  // RENDER
+  // ===================================================
 
   return (
 
@@ -332,7 +414,9 @@ function Categories() {
           </div>
 
 
-          {/* ADD */}
+          {/* ================================================= */}
+          {/* ADD CATEGORY */}
+          {/* ================================================= */}
 
           <button
             type="button"
@@ -387,7 +471,9 @@ function Categories() {
           "
         >
 
+          {/* ================================================= */}
           {/* SEARCH */}
+          {/* ================================================= */}
 
           <div
             className="
@@ -458,7 +544,9 @@ function Categories() {
           </div>
 
 
+          {/* ================================================= */}
           {/* TABS */}
+          {/* ================================================= */}
 
           <div
             className="
@@ -516,7 +604,9 @@ function Categories() {
           </div>
 
 
+          {/* ================================================= */}
           {/* ERROR */}
+          {/* ================================================= */}
 
           {(status === "failed" ||
             deleteError) && (
@@ -534,15 +624,19 @@ function Categories() {
                 text-red-600
               "
             >
+
               {deleteError ||
                 error ||
                 "Failed to load categories."}
+
             </div>
 
           )}
 
 
+          {/* ================================================= */}
           {/* LOADING */}
+          {/* ================================================= */}
 
           {status === "loading" && (
 
@@ -566,7 +660,9 @@ function Categories() {
           )}
 
 
+          {/* ================================================= */}
           {/* CATEGORY GRID */}
+          {/* ================================================= */}
 
           {status !== "loading" && (
 
@@ -633,9 +729,11 @@ function Categories() {
                   text-gray-400
                 "
               >
+
                 {search
                   ? "No categories found for your search."
                   : "No categories found."}
+
               </div>
 
             )
@@ -643,7 +741,9 @@ function Categories() {
           )}
 
 
+          {/* ================================================= */}
           {/* PAGINATION */}
+          {/* ================================================= */}
 
           <AdminPagination
             currentPage={currentPage}
@@ -656,6 +756,41 @@ function Categories() {
         </section>
 
       </main>
+
+
+      {/* ================================================= */}
+      {/* DELETE CONFIRMATION MODAL */}
+      {/* ================================================= */}
+
+      <Modal
+        open={deleteModalOpen}
+
+        title="Delete Category"
+
+        message={
+          selectedCategory
+            ? `Are you sure you want to delete "${selectedCategory.categoryName}"? The category will be removed from the category list.`
+            : ""
+        }
+
+        confirmText="Delete Category"
+
+        cancelText="Cancel"
+
+        variant="danger"
+
+        loading={
+          deletingCategoryId !== null
+        }
+
+        onClose={
+          handleCloseDeleteModal
+        }
+
+        onConfirm={
+          handleConfirmDelete
+        }
+      />
 
     </div>
 
