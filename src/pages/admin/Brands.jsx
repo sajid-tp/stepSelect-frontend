@@ -1,11 +1,25 @@
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 
-import AdminSidebar from "../../components/AdminSideBar";
-import AdminBrandCard from "../../components/AdminBrandCard";
-import AdminPagination from "../../components/AdminPagination";
-import Modal from "../../components/Modals";
+import {
+  useDispatch,
+  useSelector,
+} from "react-redux";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import AdminSidebar
+  from "../../components/AdminSideBar";
+
+import AdminEntityCard
+  from "../../components/AdminEntityCard";
+
+import Pagination
+  from "../../components/Pagination";
+
+import Modal
+  from "../../components/Modals";
 
 import {
   getBrands,
@@ -13,25 +27,46 @@ import {
   deleteBrand,
 } from "../../features/admin/brandSlice";
 
+
 function Brands() {
+
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
+  const navigate =
+    useNavigate();
+
+
+  // ===================================================
+  // REDUX
+  // ===================================================
 
   const {
-    brands,
-    totalResults,
-    totalPages,
-    currentPage,
-    limit,
+    brands = [],
+    totalResults = 0,
+    totalPages = 1,
+    currentPage = 1,
+    limit = 8,
     status,
     error,
     deleteError,
-  } = useSelector((state) => state.adminBrands);
+  } = useSelector(
+    (state) =>
+      state.adminBrands
+  );
 
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
 
-  const [activeTab, setActiveTab] = useState("all");
+  // ===================================================
+  // LOCAL STATE
+  // ===================================================
+
+  const [search, setSearch] =
+    useState("");
+
+  const [page, setPage] =
+    useState(1);
+
+  const [activeTab, setActiveTab] =
+    useState("all");
 
   const [togglingBrandId, setTogglingBrandId] =
     useState(null);
@@ -45,192 +80,347 @@ function Brands() {
   const [selectedBrand, setSelectedBrand] =
     useState(null);
 
-  /*
-  |--------------------------------------------------------------------------
-  | FETCH BRANDS
-  |--------------------------------------------------------------------------
-  */
+
+  // ===================================================
+  // FETCH BRANDS
+  // ===================================================
 
   useEffect(() => {
+
     dispatch(
       getBrands({
         search,
         page,
       })
     );
-  }, [dispatch, search, page]);
 
-  /*
-  |--------------------------------------------------------------------------
-  | SEARCH
-  |--------------------------------------------------------------------------
-  */
+  }, [
+    dispatch,
+    search,
+    page,
+  ]);
 
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setPage(1);
-  };
 
-  /*
-  |--------------------------------------------------------------------------
-  | TAB CHANGE
-  |--------------------------------------------------------------------------
-  */
+  // ===================================================
+  // SEARCH
+  // ===================================================
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
+  const handleSearchChange =
+    (e) => {
 
-  /*
-  |--------------------------------------------------------------------------
-  | FRONTEND STATUS FILTER
-  |--------------------------------------------------------------------------
-  */
+      setSearch(
+        e.target.value
+      );
 
-  const filteredBrands = brands.filter((brand) => {
-    if (activeTab === "active") {
-      return brand.isActive;
-    }
+      setPage(1);
 
-    if (activeTab === "inactive") {
-      return !brand.isActive;
-    }
+    };
 
-    return true;
-  });
 
-  /*
-  |--------------------------------------------------------------------------
-  | EDIT
-  |--------------------------------------------------------------------------
-  */
+  // ===================================================
+  // TAB CHANGE
+  // ===================================================
 
-  const handleEdit = (brand) => {
-    navigate(`/admin/brands/edit/${brand.id}`, {
-      state: {
-        brand,
-      },
-    });
-  };
+  const handleTabChange =
+    (tab) => {
 
-  /*
-  |--------------------------------------------------------------------------
-  | TOGGLE STATUS
-  |--------------------------------------------------------------------------
-  */
+      setActiveTab(tab);
 
-  const handleToggleStatus = async (brand) => {
-    try {
-      setTogglingBrandId(brand.id);
+    };
 
-      await dispatch(
-        toggleBrandStatus(brand.id)
-      ).unwrap();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setTogglingBrandId(null);
-    }
-  };
 
-  /*
-  |--------------------------------------------------------------------------
-  | OPEN DELETE MODAL
-  |--------------------------------------------------------------------------
-  */
+  // ===================================================
+  // FRONTEND STATUS FILTER
+  // ===================================================
 
-  const handleDeleteClick = (brand) => {
-    setSelectedBrand(brand);
-    setDeleteModalOpen(true);
-  };
+  const filteredBrands =
+    brands.filter(
+      (brand) => {
 
-  /*
-  |--------------------------------------------------------------------------
-  | DELETE
-  |--------------------------------------------------------------------------
-  */
+        if (
+          activeTab === "active"
+        ) {
+          return brand.isActive;
+        }
 
-  const handleConfirmDelete = async () => {
-    if (!selectedBrand) return;
 
-    try {
-      setDeletingBrandId(selectedBrand.id);
+        if (
+          activeTab === "inactive"
+        ) {
+          return !brand.isActive;
+        }
 
-      await dispatch(
-        deleteBrand(selectedBrand.id)
-      ).unwrap();
 
-      setDeleteModalOpen(false);
-      setSelectedBrand(null);
+        return true;
 
-      /*
-      |--------------------------------------------------------------------------
-      | If current page becomes empty,
-      | move to previous page.
-      |--------------------------------------------------------------------------
-      */
-
-      if (brands.length === 1 && page > 1) {
-        setPage((previousPage) => previousPage - 1);
-      } else {
-        dispatch(
-          getBrands({
-            search,
-            page,
-          })
-        );
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDeletingBrandId(null);
-    }
-  };
+    );
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
 
-  const isLoading = status === "loading";
+  // ===================================================
+  // EDIT
+  // ===================================================
+
+  const handleEdit =
+    (brand) => {
+
+      navigate(
+        `/admin/brands/edit/${brand.id}`,
+        {
+          state: {
+            brand,
+          },
+        }
+      );
+
+    };
+
+
+  // ===================================================
+  // TOGGLE STATUS
+  // ===================================================
+
+  const handleToggleStatus =
+    async (brand) => {
+
+      try {
+
+        setTogglingBrandId(
+          brand.id
+        );
+
+
+        await dispatch(
+          toggleBrandStatus(
+            brand.id
+          )
+        ).unwrap();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+      } finally {
+
+        setTogglingBrandId(
+          null
+        );
+
+      }
+
+    };
+
+
+  // ===================================================
+  // OPEN DELETE MODAL
+  // ===================================================
+
+  const handleDeleteClick =
+    (brand) => {
+
+      setSelectedBrand(
+        brand
+      );
+
+      setDeleteModalOpen(
+        true
+      );
+
+    };
+
+
+  // ===================================================
+  // DELETE
+  // ===================================================
+
+  const handleConfirmDelete =
+    async () => {
+
+      if (!selectedBrand) {
+        return;
+      }
+
+
+      try {
+
+        setDeletingBrandId(
+          selectedBrand.id
+        );
+
+
+        await dispatch(
+          deleteBrand(
+            selectedBrand.id
+          )
+        ).unwrap();
+
+
+        setDeleteModalOpen(
+          false
+        );
+
+        setSelectedBrand(
+          null
+        );
+
+
+        /*
+         * If current page becomes empty,
+         * move to previous page.
+         */
+
+        if (
+          brands.length === 1 &&
+          page > 1
+        ) {
+
+          setPage(
+            (previousPage) =>
+              previousPage - 1
+          );
+
+        } else {
+
+          dispatch(
+            getBrands({
+              search,
+              page,
+            })
+          );
+
+        }
+
+
+      } catch (error) {
+
+        console.error(error);
+
+      } finally {
+
+        setDeletingBrandId(
+          null
+        );
+
+      }
+
+    };
+
+
+  // ===================================================
+  // LOADING
+  // ===================================================
+
+  const isLoading =
+    status === "loading";
+
+
+  // ===================================================
+  // RENDER
+  // ===================================================
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc]">
+
+    <div
+      className="
+        min-h-screen
+        bg-[#f7f9fc]
+      "
+    >
+
       <AdminSidebar />
 
-      <main className="ml-[214px] min-h-screen">
-        {/* ================================================================
-            HEADER
-        ================================================================= */}
 
-        <header className="border-b border-gray-200 bg-white px-12 py-8">
-          <div className="flex items-center justify-between">
+      <main
+        className="
+          ml-[214px]
+          min-h-screen
+        "
+      >
+
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
+
+        <header
+          className="
+            border-b
+            border-gray-200
+            bg-white
+            px-12
+            py-8
+          "
+        >
+
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+            "
+          >
+
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-gray-400">
+
+              <p
+                className="
+                  text-xs
+                  font-medium
+                  uppercase
+                  tracking-[0.18em]
+                  text-gray-400
+                "
+              >
                 COLLECTION
               </p>
 
-              <h1 className="mt-1 text-4xl font-bold tracking-tight text-[#071a33]">
+
+              <h1
+                className="
+                  mt-1
+                  text-4xl
+                  font-bold
+                  tracking-tight
+                  text-[#071a33]
+                "
+              >
+
                 Brand{" "}
-                <span className="text-[#ff5722]">
+
+                <span
+                  className="
+                    text-[#ff5722]
+                  "
+                >
                   Management
                 </span>
+
               </h1>
+
             </div>
+
+
+            {/* ADD NEW BRAND */}
 
             <button
               type="button"
               onClick={() =>
-                navigate("/admin/brands/new")
+                navigate(
+                  "/admin/brands/new"
+                )
               }
               className="
-                inline-flex items-center gap-2
+                inline-flex
+                items-center
+                gap-2
                 rounded-full
                 bg-[#ff5722]
-                px-7 py-3.5
-                text-sm font-bold
-                uppercase tracking-wide
+                px-7
+                py-3.5
+                text-sm
+                font-bold
+                uppercase
+                tracking-wide
                 text-white
                 shadow-sm
                 transition
@@ -238,33 +428,65 @@ function Brands() {
                 hover:shadow-md
               "
             >
-              <span className="text-lg leading-none">
+
+              <span
+                className="
+                  text-lg
+                  leading-none
+                "
+              >
                 +
               </span>
 
               Add New Brand
+
             </button>
+
           </div>
+
         </header>
 
-        {/* ================================================================
-            CONTENT
-        ================================================================= */}
 
-        <section className="px-12 py-10">
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
+
+        <section
+          className="
+            px-12
+            py-10
+          "
+        >
+
+          {/* ================================================= */}
           {/* SEARCH */}
-          <div className="mb-12">
-            <div className="w-[450px]">
+          {/* ================================================= */}
+
+          <div
+            className="
+              mb-12
+            "
+          >
+
+            <div
+              className="
+                w-[450px]
+              "
+            >
+
               <input
                 type="text"
                 value={search}
-                onChange={handleSearchChange}
+                onChange={
+                  handleSearchChange
+                }
                 placeholder="Search brand"
                 className="
                   h-12
                   w-full
                   rounded-lg
-                  border border-gray-300
+                  border
+                  border-gray-300
                   bg-white
                   px-4
                   text-sm
@@ -277,12 +499,15 @@ function Brands() {
                   focus:ring-[#ff5722]/10
                 "
               />
+
             </div>
+
           </div>
 
-          {/* ================================================================
-              TABS
-          ================================================================= */}
+
+          {/* ================================================= */}
+          {/* TABS */}
+          {/* ================================================= */}
 
           <div
             className="
@@ -290,9 +515,13 @@ function Brands() {
               flex
               items-center
               gap-9
-              border-b border-gray-200
+              border-b
+              border-gray-200
             "
           >
+
+            {/* ALL BRANDS */}
+
             <button
               type="button"
               onClick={() =>
@@ -311,9 +540,11 @@ function Brands() {
                 }
               `}
             >
+
               All brands
 
               {activeTab === "all" && (
+
                 <span
                   className="
                     absolute
@@ -324,8 +555,13 @@ function Brands() {
                     bg-[#ff5722]
                   "
                 />
+
               )}
+
             </button>
+
+
+            {/* ACTIVE */}
 
             <button
               type="button"
@@ -345,9 +581,11 @@ function Brands() {
                 }
               `}
             >
+
               Active
 
               {activeTab === "active" && (
+
                 <span
                   className="
                     absolute
@@ -358,8 +596,13 @@ function Brands() {
                     bg-[#ff5722]
                   "
                 />
+
               )}
+
             </button>
+
+
+            {/* INACTIVE */}
 
             <button
               type="button"
@@ -379,9 +622,11 @@ function Brands() {
                 }
               `}
             >
+
               Inactive
 
               {activeTab === "inactive" && (
+
                 <span
                   className="
                     absolute
@@ -392,53 +637,80 @@ function Brands() {
                     bg-[#ff5722]
                   "
                 />
+
               )}
+
             </button>
+
           </div>
 
-          {/* ================================================================
-              ERROR
-          ================================================================= */}
+
+          {/* ================================================= */}
+          {/* ERROR */}
+          {/* ================================================= */}
 
           {error && (
+
             <div
               className="
                 mb-6
                 rounded-lg
-                border border-red-200
+                border
+                border-red-200
                 bg-red-50
-                px-4 py-3
+                px-4
+                py-3
                 text-sm
                 text-red-600
               "
             >
               {error}
             </div>
+
           )}
 
-          {/* ================================================================
-              LOADING
-          ================================================================= */}
+
+          {/* ================================================= */}
+          {/* LOADING / CONTENT */}
+          {/* ================================================= */}
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-              {[1, 2, 3, 4].map((item) => (
-                <div
-                  key={item}
-                  className="
-                    h-[244px]
-                    animate-pulse
-                    rounded-xl
-                    border border-gray-200
-                    bg-white
-                  "
-                />
-              ))}
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-6
+                md:grid-cols-2
+                xl:grid-cols-4
+              "
+            >
+
+              {[1, 2, 3, 4].map(
+                (item) => (
+
+                  <div
+                    key={item}
+                    className="
+                      h-[244px]
+                      animate-pulse
+                      rounded-xl
+                      border
+                      border-gray-200
+                      bg-white
+                    "
+                  />
+
+                )
+              )}
+
             </div>
+
           ) : filteredBrands.length === 0 ? (
-            /* ================================================================
-                EMPTY STATE
-            ================================================================= */
+
+            /* ================================================= */
+            /* EMPTY STATE */
+            /* ================================================= */
 
             <div
               className="
@@ -455,6 +727,7 @@ function Brands() {
                 text-center
               "
             >
+
               <div
                 className="
                   flex
@@ -467,13 +740,18 @@ function Brands() {
                   text-[#ff5722]
                 "
               >
+
                 <svg
-                  className="h-7 w-7"
+                  className="
+                    h-7
+                    w-7
+                  "
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
                 >
+
                   <rect
                     x="3"
                     y="4"
@@ -483,26 +761,56 @@ function Brands() {
                   />
 
                   <path d="M8 9h8" />
+
                   <path d="M8 13h5" />
+
                 </svg>
+
               </div>
 
-              <h2 className="mt-5 text-lg font-semibold text-gray-900">
+
+              <h2
+                className="
+                  mt-5
+                  text-lg
+                  font-semibold
+                  text-gray-900
+                "
+              >
                 No brands found
               </h2>
 
-              <p className="mt-2 text-sm text-gray-500">
+
+              <p
+                className="
+                  mt-2
+                  text-sm
+                  text-gray-500
+                "
+              >
+
                 {search
+
                   ? "Try searching with a different brand name."
+
                   : activeTab === "active"
+
                     ? "There are no active brands."
+
                     : activeTab === "inactive"
+
                       ? "There are no inactive brands."
-                      : "Create your first brand to get started."}
+
+                      : "Create your first brand to get started."
+
+                }
+
               </p>
+
 
               {!search &&
                 activeTab === "all" && (
+
                   <button
                     type="button"
                     onClick={() =>
@@ -514,7 +822,8 @@ function Brands() {
                       mt-5
                       rounded-lg
                       bg-[#ff5722]
-                      px-5 py-2.5
+                      px-5
+                      py-2.5
                       text-sm
                       font-semibold
                       text-white
@@ -524,13 +833,18 @@ function Brands() {
                   >
                     Add Brand
                   </button>
+
                 )}
+
             </div>
+
           ) : (
+
             <>
-              {/* ============================================================
-                  BRAND GRID
-              ============================================================= */}
+
+              {/* ================================================= */}
+              {/* BRAND GRID */}
+              {/* ================================================= */}
 
               <div
                 className="
@@ -541,78 +855,136 @@ function Brands() {
                   xl:grid-cols-4
                 "
               >
-                {filteredBrands.map((brand) => (
-                  <AdminBrandCard
-                    key={brand.id}
-                    brand={brand}
-                    onEdit={handleEdit}
-                    onToggleStatus={
-                      handleToggleStatus
-                    }
-                    onDelete={
-                      handleDeleteClick
-                    }
-                    toggling={
-                      togglingBrandId
-                    }
-                    deleting={
-                      deletingBrandId
-                    }
-                  />
-                ))}
+
+                {filteredBrands.map(
+                  (brand) => (
+
+                    <AdminEntityCard
+                      key={brand.id}
+
+                      item={brand}
+
+                      name={
+                        brand.brandName
+                      }
+
+                      description={
+                        brand.description
+                      }
+
+                      visual={
+                        brand.logo
+                      }
+
+                      visualType="image"
+
+                      onEdit={
+                        handleEdit
+                      }
+
+                      onToggleStatus={
+                        handleToggleStatus
+                      }
+
+                      onDelete={
+                        handleDeleteClick
+                      }
+
+                      toggling={
+                        togglingBrandId
+                      }
+
+                      deleting={
+                        deletingBrandId
+                      }
+                    />
+
+                  )
+                )}
+
               </div>
 
-              {/* ============================================================
-                  PAGINATION
-              ============================================================= */}
+
+              {/* ================================================= */}
+              {/* PAGINATION */}
+              {/* ================================================= */}
 
               {activeTab === "all" && (
-                <AdminPagination
+
+                <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
                   totalResults={totalResults}
                   limit={limit}
                   onPageChange={setPage}
                 />
+
               )}
+
             </>
+
           )}
+
         </section>
+
       </main>
 
-      {/* ================================================================
-          DELETE MODAL
-      ================================================================= */}
+
+      {/* ================================================= */}
+      {/* DELETE MODAL */}
+      {/* ================================================= */}
 
       <Modal
         open={deleteModalOpen}
+
         title="Delete brand?"
+
         message={
           selectedBrand
             ? `Are you sure you want to delete "${selectedBrand.brandName}"? This brand will be removed from the brand list.`
             : ""
         }
+
         confirmText="Delete"
+
         cancelText="Cancel"
+
         variant="danger"
+
         loading={
           deletingBrandId !== null
         }
+
         onConfirm={
           handleConfirmDelete
         }
+
         onClose={() => {
+
           if (
             deletingBrandId === null
           ) {
-            setDeleteModalOpen(false);
-            setSelectedBrand(null);
+
+            setDeleteModalOpen(
+              false
+            );
+
+            setSelectedBrand(
+              null
+            );
+
           }
+
         }}
       />
 
+
+      {/* ================================================= */}
       {/* DELETE ERROR */}
+      {/* ================================================= */}
+
       {deleteError && (
+
         <div
           className="
             fixed
@@ -621,9 +993,11 @@ function Brands() {
             z-[110]
             max-w-sm
             rounded-lg
-            border border-red-200
+            border
+            border-red-200
             bg-red-50
-            px-4 py-3
+            px-4
+            py-3
             text-sm
             text-red-600
             shadow-lg
@@ -631,9 +1005,14 @@ function Brands() {
         >
           {deleteError}
         </div>
+
       )}
+
     </div>
+
   );
+
 }
+
 
 export default Brands;

@@ -12,11 +12,11 @@ import {
 import AdminSidebar
   from "../../components/AdminSideBar";
 
-import AdminCategoryCard
-  from "../../components/AdminCategoryCard";
+import AdminEntityCard
+  from "../../components/AdminEntityCard";
 
-import AdminPagination
-  from "../../components/AdminPagination";
+import Pagination
+  from "../../components/Pagination";
 
 import Modal
   from "../../components/Modals";
@@ -318,6 +318,7 @@ function Categories() {
         return;
       }
 
+
       setDeleteModalOpen(
         false
       );
@@ -355,11 +356,13 @@ function Categories() {
           return category.isActive;
         }
 
+
         if (
           activeTab === "inactive"
         ) {
           return !category.isActive;
         }
+
 
         return true;
 
@@ -806,9 +809,24 @@ function Categories() {
                 {filteredCategories.map(
                   (category) => (
 
-                    <AdminCategoryCard
+                    <AdminEntityCard
                       key={category.id}
-                      category={category}
+
+                      item={category}
+
+                      name={
+                        category.categoryName
+                      }
+
+                      description={
+                        category.description
+                      }
+
+                      visual={
+                        category.iconClass
+                      }
+
+                      visualType="icon"
 
                       onEdit={
                         handleEditCategory
@@ -874,7 +892,7 @@ function Categories() {
 
           {activeTab === "all" && (
 
-            <AdminPagination
+            <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               totalResults={totalResults}

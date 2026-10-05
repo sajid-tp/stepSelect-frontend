@@ -1,4 +1,4 @@
-function AdminPagination({
+function Pagination({
   currentPage,
   totalPages,
   totalResults,
@@ -238,4 +238,4 @@ function AdminPagination({
   );
 }
 
-export default AdminPagination;
+export default Pagination;

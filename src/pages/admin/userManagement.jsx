@@ -7,7 +7,7 @@ import {
 
 import AdminSidebar from "../../components/AdminSideBar";
 import Modal from "../../components/Modals";
-import AdminPagination from "../../components/AdminPagination";
+import AdminPagination from "../../components/Pagination";
 
 function Users() {
   const [search, setSearch] = useState("");
