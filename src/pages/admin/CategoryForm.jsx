@@ -1,41 +1,85 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import {
+  useForm,
+} from "react-hook-form";
+
+import {
+  useDispatch,
+  useSelector,
+} from "react-redux";
+
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 import AdminSidebar from "../../components/AdminSideBar";
 
 import {
   createCategory,
+  updateCategory,
 } from "../../features/admin/categorySlice";
 
 
 function CategoryForm() {
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
+  const navigate =
+    useNavigate();
+
+  const location =
+    useLocation();
+
+  const { categoryId } =
+    useParams();
 
 
-  // ================= REDUX =================
+  // ===================================================
+  // MODE
+  // ===================================================
+
+  const isEditMode =
+    Boolean(categoryId);
+
+
+  // Category passed from Categories.jsx
+
+  const category =
+    location.state?.category;
+
+
+  // ===================================================
+  // REDUX
+  // ===================================================
 
   const {
     createStatus,
     createError,
+
+    updateStatus,
+    updateError,
+
   } = useSelector(
-    (state) => state.adminCategories
+    (state) =>
+      state.adminCategories
   );
 
 
-  // ================= FORM =================
+  // ===================================================
+  // FORM
+  // ===================================================
 
   const {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: {
       errors,
     },
-    reset,
+
   } = useForm({
 
     defaultValues: {
@@ -51,45 +95,102 @@ function CategoryForm() {
   });
 
 
-  // ================= ICON PREVIEW =================
+  // ===================================================
+  // POPULATE EDIT FORM
+  // ===================================================
+
+  useEffect(() => {
+
+    if (
+      isEditMode &&
+      category
+    ) {
+
+      reset({
+
+        categoryName:
+          category.categoryName || "",
+
+        iconClass:
+          category.iconClass || "",
+
+        description:
+          category.description || "",
+
+      });
+
+    }
+
+  }, [
+    isEditMode,
+    category,
+    reset,
+  ]);
+
+
+  // ===================================================
+  // ICON PREVIEW
+  // ===================================================
 
   const iconClass =
     watch("iconClass");
 
 
-  // ================= SUBMIT =================
+  // ===================================================
+  // SUBMIT
+  // ===================================================
 
   const onSubmit = async (data) => {
 
+    const categoryData = {
+
+      categoryName:
+        data.categoryName.trim(),
+
+      iconClass:
+        data.iconClass.trim(),
+
+      description:
+        data.description.trim(),
+
+    };
+
+
     try {
 
-      await dispatch(
-        createCategory({
-          categoryName:
-            data.categoryName.trim(),
+      if (isEditMode) {
 
-          iconClass:
-            data.iconClass.trim(),
+        await dispatch(
+          updateCategory({
 
-          description:
-            data.description.trim(),
-        })
-      ).unwrap();
+            categoryId,
+
+            categoryData,
+
+          })
+        ).unwrap();
+
+      } else {
+
+        await dispatch(
+          createCategory(
+            categoryData
+          )
+        ).unwrap();
+
+      }
 
 
-      // Clear form after successful creation
-
-      reset();
-
-
-      // Go back to category list
-
-      navigate("/admin/categories");
+      navigate(
+        "/admin/categories"
+      );
 
     } catch (error) {
 
       console.error(
-        "Failed to create category:",
+        isEditMode
+          ? "Failed to update category:"
+          : "Failed to create category:",
         error
       );
 
@@ -98,37 +199,144 @@ function CategoryForm() {
   };
 
 
-  // ================= CLEANUP =================
+  // ===================================================
+  // STATUS
+  // ===================================================
 
-  useEffect(() => {
-
-    return () => {
-
-      // Nothing needed here currently.
-
-    };
-
-  }, []);
+  const isSubmitting =
+    isEditMode
+      ? updateStatus === "loading"
+      : createStatus === "loading";
 
 
-  const isCreating =
-    createStatus === "loading";
+  const formError =
+    isEditMode
+      ? updateError
+      : createError;
+
+
+  // ===================================================
+  // EDIT URL WITHOUT CATEGORY STATE
+  // ===================================================
+
+  if (
+    isEditMode &&
+    !category
+  ) {
+
+    return (
+
+      <div className="min-h-screen bg-[#f8fafc]">
+
+        <AdminSidebar />
+
+        <main
+          className="
+            ml-[214px]
+            min-h-screen
+            px-12
+            py-16
+          "
+        >
+
+          <div
+            className="
+              mx-auto
+              max-w-3xl
+              rounded-xl
+              border
+              border-red-200
+              bg-red-50
+              p-8
+              text-center
+            "
+          >
+
+            <h2
+              className="
+                text-lg
+                font-bold
+                text-red-700
+              "
+            >
+              Category data is unavailable
+            </h2>
+
+
+            <p
+              className="
+                mt-2
+                text-sm
+                text-red-600
+              "
+            >
+              Please return to the category list
+              and select Edit again.
+            </p>
+
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  "/admin/categories"
+                )
+              }
+              className="
+                mt-6
+                rounded-lg
+                bg-[#ff5722]
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+              "
+            >
+              Back to Categories
+            </button>
+
+          </div>
+
+        </main>
+
+      </div>
+
+    );
+
+  }
 
 
   return (
 
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div
+      className="
+        min-h-screen
+        bg-[#f8fafc]
+      "
+    >
 
-      {/* ================= SIDEBAR ================= */}
+      {/* ================================================= */}
+      {/* SIDEBAR */}
+      {/* ================================================= */}
 
       <AdminSidebar />
 
 
-      {/* ================= MAIN ================= */}
+      {/* ================================================= */}
+      {/* MAIN */}
+      {/* ================================================= */}
 
-      <main className="ml-[214px] min-h-screen">
+      <main
+        className="
+          ml-[214px]
+          min-h-screen
+        "
+      >
 
-        {/* ================= HEADER ================= */}
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
 
         <header
           className="
@@ -163,32 +371,43 @@ function CategoryForm() {
             "
           >
 
-            Add Category
+            {isEditMode
+              ? "Edit Category"
+              : "Add Category"}
 
           </h1>
 
         </header>
 
 
-        {/* ================= FORM AREA ================= */}
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
 
-        <section className="px-12 py-10">
+        <section
+          className="
+            px-12
+            py-10
+          "
+        >
 
           <div
-           className="
-      mx-auto
-      w-full
-      max-w-4xl
-      rounded-2xl
-      border
-      border-gray-200
-      bg-white
-      p-8
-      shadow-sm
-    "
+            className="
+              mx-auto
+              w-full
+              max-w-5xl
+              rounded-2xl
+              border
+              border-gray-200
+              bg-white
+              p-8
+              shadow-sm
+            "
           >
 
-            {/* ================= TITLE ================= */}
+            {/* ================================================= */}
+            {/* TITLE */}
+            {/* ================================================= */}
 
             <div className="mb-8">
 
@@ -202,6 +421,7 @@ function CategoryForm() {
                 Category Information
               </h2>
 
+
               <p
                 className="
                   mt-1
@@ -209,45 +429,55 @@ function CategoryForm() {
                   text-gray-500
                 "
               >
-                Add the details for your new
-                product category.
+
+                {isEditMode
+                  ? "Update the details of this category."
+                  : "Add the details for your new product category."}
+
               </p>
 
             </div>
 
 
-            {/* ================= BACKEND ERROR ================= */}
+            {/* ================================================= */}
+            {/* ERROR */}
+            {/* ================================================= */}
 
-            {createStatus === "failed" &&
-              createError && (
+            {formError && (
 
-                <div
-                  className="
-                    mb-6
-                    rounded-lg
-                    border
-                    border-red-200
-                    bg-red-50
-                    px-4
-                    py-3
-                    text-sm
-                    text-red-600
-                  "
-                >
-                  {createError}
-                </div>
+              <div
+                className="
+                  mb-6
+                  rounded-lg
+                  border
+                  border-red-200
+                  bg-red-50
+                  px-4
+                  py-3
+                  text-sm
+                  text-red-600
+                "
+              >
+                {formError}
+              </div>
 
-              )}
+            )}
 
 
-            {/* ================= FORM ================= */}
+            {/* ================================================= */}
+            {/* FORM */}
+            {/* ================================================= */}
 
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={
+                handleSubmit(onSubmit)
+              }
               className="space-y-7"
             >
 
-              {/* ================= CATEGORY NAME ================= */}
+              {/* ================================================= */}
+              {/* CATEGORY NAME */}
+              {/* ================================================= */}
 
               <div>
 
@@ -263,7 +493,13 @@ function CategoryForm() {
                 >
 
                   Category Name
-                  <span className="ml-1 text-red-500">
+
+                  <span
+                    className="
+                      ml-1
+                      text-red-500
+                    "
+                  >
                     *
                   </span>
 
@@ -295,9 +531,10 @@ function CategoryForm() {
                     text-sm
                     outline-none
                     transition
+
                     ${
                       errors.categoryName
-                        ? "border-red-400 focus:border-red-500"
+                        ? "border-red-400"
                         : "border-gray-300 focus:border-[#ff5722]"
                     }
                   `}
@@ -321,7 +558,9 @@ function CategoryForm() {
               </div>
 
 
-              {/* ================= ICON CLASS ================= */}
+              {/* ================================================= */}
+              {/* ICON */}
+              {/* ================================================= */}
 
               <div>
 
@@ -337,7 +576,13 @@ function CategoryForm() {
                 >
 
                   FontAwesome Icon Class
-                  <span className="ml-1 text-red-500">
+
+                  <span
+                    className="
+                      ml-1
+                      text-red-500
+                    "
+                  >
                     *
                   </span>
 
@@ -371,6 +616,7 @@ function CategoryForm() {
                       text-sm
                       outline-none
                       transition
+
                       ${
                         errors.iconClass
                           ? "border-red-400"
@@ -380,7 +626,7 @@ function CategoryForm() {
                   />
 
 
-                  {/* Icon Preview */}
+                  {/* PREVIEW */}
 
                   <div
                     className="
@@ -407,7 +653,11 @@ function CategoryForm() {
 
                     ) : (
 
-                      <span className="text-gray-300">
+                      <span
+                        className="
+                          text-gray-300
+                        "
+                      >
                         ?
                       </span>
 
@@ -446,7 +696,9 @@ function CategoryForm() {
               </div>
 
 
-              {/* ================= VISIBILITY ================= */}
+              {/* ================================================= */}
+              {/* VISIBILITY */}
+              {/* ================================================= */}
 
               {/* <div>
 
@@ -489,6 +741,7 @@ function CategoryForm() {
                       Active
                     </p>
 
+
                     <p
                       className="
                         mt-0.5
@@ -496,8 +749,8 @@ function CategoryForm() {
                         text-gray-500
                       "
                     >
-                      New categories are active by
-                      default.
+                      New categories are active
+                      by default.
                     </p>
 
                   </div>
@@ -538,7 +791,9 @@ function CategoryForm() {
               </div> */}
 
 
-              {/* ================= DESCRIPTION ================= */}
+              {/* ================================================= */}
+              {/* DESCRIPTION */}
+              {/* ================================================= */}
 
               <div>
 
@@ -560,7 +815,9 @@ function CategoryForm() {
                   id="description"
                   rows={5}
                   placeholder="Enter a short description for this category"
-                  {...register("description")}
+                  {...register(
+                    "description"
+                  )}
                   className="
                     w-full
                     resize-none
@@ -582,7 +839,9 @@ function CategoryForm() {
               </div>
 
 
-              {/* ================= ACTIONS ================= */}
+              {/* ================================================= */}
+              {/* ACTIONS */}
+              {/* ================================================= */}
 
               <div
                 className="
@@ -595,14 +854,14 @@ function CategoryForm() {
                 "
               >
 
-                {/* Back */}
-
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() =>
-                    navigate("/admin/categories")
+                    navigate(
+                      "/admin/categories"
+                    )
                   }
-                  disabled={isCreating}
                   className="
                     rounded-lg
                     border
@@ -623,11 +882,9 @@ function CategoryForm() {
                 </button>
 
 
-                {/* Create */}
-
                 <button
                   type="submit"
-                  disabled={isCreating}
+                  disabled={isSubmitting}
                   className="
                     rounded-lg
                     bg-[#ff5722]
@@ -644,9 +901,15 @@ function CategoryForm() {
                   "
                 >
 
-                  {isCreating
-                    ? "Creating..."
-                    : "Create Category"}
+                  {isSubmitting
+
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Creating..."
+
+                    : isEditMode
+                      ? "Update Category"
+                      : "Create Category"}
 
                 </button>
 
@@ -663,7 +926,6 @@ function CategoryForm() {
     </div>
 
   );
-
 }
 
 

@@ -50,6 +50,10 @@ function App() {
   path="/admin/categories/new"
   element={<CategoryForm />}
 />
+<Route
+  path="/admin/categories/edit/:categoryId"
+  element={<CategoryForm />}
+/>
 
         </Route>
       </Routes>

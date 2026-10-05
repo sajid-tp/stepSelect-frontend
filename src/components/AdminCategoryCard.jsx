@@ -2,7 +2,9 @@ function AdminCategoryCard({
   category,
   onEdit,
   onToggleStatus,
+  onDelete,
   toggling,
+  deleting,
 }) {
 
   const {
@@ -14,10 +16,20 @@ function AdminCategoryCard({
   } = category;
 
 
+  const isDeleting =
+    deleting === id;
+
+
+  const isToggling =
+    toggling === id;
+
+
   return (
+
     <div
       className={`
-        flex min-h-[315px] flex-col
+        flex
+        flex-col
         rounded-xl
         border
         bg-white
@@ -26,6 +38,7 @@ function AdminCategoryCard({
         transition-all
         duration-200
         hover:shadow-md
+
         ${
           !isActive
             ? "border-red-200"
@@ -34,18 +47,30 @@ function AdminCategoryCard({
       `}
     >
 
-      {/* ================= TOP ================= */}
+      {/* ================================================= */}
+      {/* TOP */}
+      {/* ================================================= */}
 
-      <div className="flex items-start justify-between">
+      <div
+        className="
+          flex
+          items-start
+          justify-between
+        "
+      >
 
-        {/* Icon */}
+        {/* Category Icon */}
 
         <div
           className={`
-            flex h-12 w-12
-            items-center justify-center
+            flex
+            h-12
+            w-12
+            items-center
+            justify-center
             rounded-full
             text-lg
+
             ${
               isActive
                 ? "bg-[#ffe1d6] text-[#ff5722]"
@@ -53,7 +78,9 @@ function AdminCategoryCard({
             }
           `}
         >
+
           <i className={iconClass}></i>
+
         </div>
 
 
@@ -70,6 +97,7 @@ function AdminCategoryCard({
             py-1
             text-xs
             font-semibold
+
             ${
               isActive
                 ? "border-green-200 bg-green-50 text-green-700"
@@ -83,6 +111,7 @@ function AdminCategoryCard({
               h-1.5
               w-1.5
               rounded-full
+
               ${
                 isActive
                   ? "bg-green-600"
@@ -91,14 +120,18 @@ function AdminCategoryCard({
             `}
           />
 
-          {isActive ? "Active" : "Inactive"}
+          {isActive
+            ? "Active"
+            : "Inactive"}
 
         </span>
 
       </div>
 
 
-      {/* ================= CATEGORY INFO ================= */}
+      {/* ================================================= */}
+      {/* CONTENT */}
+      {/* ================================================= */}
 
       <div className="mt-5 flex-1">
 
@@ -116,6 +149,7 @@ function AdminCategoryCard({
 
 
         {description ? (
+
           <p
             className="
               mt-3
@@ -127,7 +161,9 @@ function AdminCategoryCard({
           >
             {description}
           </p>
+
         ) : (
+
           <p
             className="
               mt-3
@@ -137,78 +173,237 @@ function AdminCategoryCard({
           >
             No description
           </p>
+
         )}
 
       </div>
 
 
-      {/* ================= ACTIONS ================= */}
+      {/* ================================================= */}
+      {/* ACTIONS */}
+      {/* ================================================= */}
 
-      <div className="mt-6 flex gap-2">
+      <div
+        className="
+          mt-6
+          flex
+          items-center
+          gap-2
+        "
+      >
 
-        {/* Edit */}
+        {/* ================================================= */}
+        {/* EDIT */}
+        {/* ================================================= */}
 
         <button
           type="button"
-          onClick={() => onEdit(category)}
+          disabled={
+            !isActive ||
+            isToggling ||
+            isDeleting
+          }
+          onClick={() =>
+            onEdit(category)
+          }
           className="
             flex-1
             rounded-md
-            border-2
-            border-gray-500
+            border
+            border-gray-300
             bg-white
             px-3
             py-2.5
             text-xs
-            font-bold
+            font-semibold
             uppercase
             tracking-wide
             text-gray-600
             transition
+            hover:border-gray-400
             hover:bg-gray-50
+            disabled:cursor-not-allowed
+            disabled:opacity-40
           "
         >
           Edit
         </button>
 
 
-        {/* Toggle */}
+        {/* ================================================= */}
+        {/* BLOCK / UNBLOCK */}
+        {/* ================================================= */}
 
         <button
           type="button"
-          disabled={toggling}
-          onClick={() => onToggleStatus(category)}
+          disabled={
+            isToggling ||
+            isDeleting
+          }
+          onClick={() =>
+            onToggleStatus(category)
+          }
           className={`
             flex-1
             rounded-md
             px-3
             py-2.5
             text-xs
-            font-bold
+            font-semibold
             uppercase
             tracking-wide
             text-white
             transition
             disabled:cursor-not-allowed
             disabled:opacity-50
+
             ${
               isActive
-                ? "bg-red-600 hover:bg-red-700"
+                ? "bg-red-500 hover:bg-red-600"
                 : "bg-gray-600 hover:bg-gray-700"
             }
           `}
         >
-          {toggling
+
+          {isToggling
             ? "Updating..."
             : isActive
               ? "Block"
               : "Unblock"}
+
+        </button>
+
+
+        {/* ================================================= */}
+        {/* DELETE */}
+        {/* ================================================= */}
+
+        <button
+          type="button"
+          disabled={
+            isDeleting ||
+            isToggling
+          }
+          onClick={() =>
+            onDelete(category)
+          }
+          title="Delete category"
+          aria-label={`Delete ${categoryName}`}
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            items-center
+            justify-center
+            rounded-md
+            border
+            border-red-200
+            bg-white
+            text-red-500
+            transition
+            hover:border-red-300
+            hover:bg-red-50
+            hover:text-red-600
+            disabled:cursor-not-allowed
+            disabled:opacity-40
+          "
+        >
+
+          {isDeleting ? (
+
+            /* Loading spinner */
+
+            <svg
+              className="
+                h-4
+                w-4
+                animate-spin
+              "
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="opacity-25"
+              />
+
+              <path
+                d="
+                  M21 12
+                  a9 9 0 0 1-9 9
+                "
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+
+            </svg>
+
+          ) : (
+
+            /* Trash icon */
+
+            <svg
+              className="
+                h-4
+                w-4
+              "
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+
+              <polyline
+                points="3 6 5 6 21 6"
+              />
+
+              <path
+                d="
+                  M19 6
+                  l-1 14
+                  H6
+                  L5 6
+                "
+              />
+
+              <path
+                d="M10 11v5"
+              />
+
+              <path
+                d="M14 11v5"
+              />
+
+              <path
+                d="
+                  M9 6
+                  V4
+                  h6
+                  v2
+                "
+              />
+
+            </svg>
+
+          )}
+
         </button>
 
       </div>
 
     </div>
+
   );
 }
+
 
 export default AdminCategoryCard;

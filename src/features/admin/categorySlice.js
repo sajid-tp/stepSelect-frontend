@@ -2,10 +2,13 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
 
-// ================= GET CATEGORIES =================
+// =====================================================
+// GET CATEGORIES
+// =====================================================
 
 export const getCategories = createAsyncThunk(
   "adminCategories/getCategories",
+
   async (
     {
       search = "",
@@ -29,25 +32,24 @@ export const getCategories = createAsyncThunk(
       return res.data;
 
     } catch (error) {
-
       return rejectWithValue(
         error.response?.data?.error?.message ||
         "Failed to fetch categories"
       );
-
     }
   }
 );
 
 
-// ================= CREATE CATEGORY =================
+// =====================================================
+// CREATE CATEGORY
+// =====================================================
 
 export const createCategory = createAsyncThunk(
   "adminCategories/createCategory",
+
   async (categoryData, { rejectWithValue }) => {
-
     try {
-
       const res = await axiosInstance.post(
         "/admin/categories",
         categoryData
@@ -56,26 +58,53 @@ export const createCategory = createAsyncThunk(
       return res.data;
 
     } catch (error) {
-
       return rejectWithValue(
         error.response?.data?.error?.message ||
         "Failed to create category"
       );
-
     }
-
   }
 );
 
 
-// ================= TOGGLE CATEGORY STATUS =================
+// =====================================================
+// UPDATE CATEGORY
+// =====================================================
+
+export const updateCategory = createAsyncThunk(
+  "adminCategories/updateCategory",
+
+  async (
+    { categoryId, categoryData },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await axiosInstance.patch(
+        `/admin/categories/${categoryId}`,
+        categoryData
+      );
+
+      return res.data;
+
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        "Failed to update category"
+      );
+    }
+  }
+);
+
+
+// =====================================================
+// TOGGLE CATEGORY STATUS
+// =====================================================
 
 export const toggleCategoryStatus = createAsyncThunk(
   "adminCategories/toggleCategoryStatus",
+
   async (categoryId, { rejectWithValue }) => {
-
     try {
-
       const res = await axiosInstance.patch(
         `/admin/categories/${categoryId}/status`
       );
@@ -83,18 +112,43 @@ export const toggleCategoryStatus = createAsyncThunk(
       return res.data;
 
     } catch (error) {
-
       return rejectWithValue(
         error.response?.data?.error?.message ||
         "Failed to update category status"
       );
-
     }
   }
 );
 
 
-// ================= SLICE =================
+// =====================================================
+// DELETE CATEGORY
+// =====================================================
+
+export const deleteCategory = createAsyncThunk(
+  "adminCategories/deleteCategory",
+
+  async (categoryId, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.delete(
+        `/admin/categories/${categoryId}`
+      );
+
+      return res.data;
+
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        "Failed to delete category"
+      );
+    }
+  }
+);
+
+
+// =====================================================
+// SLICE
+// =====================================================
 
 const adminCategorySlice = createSlice({
 
@@ -112,13 +166,21 @@ const adminCategorySlice = createSlice({
 
     limit: 5,
 
+    // GET
     status: "idle",
-
     error: null,
 
+    // CREATE
     createStatus: "idle",
-
     createError: null,
+
+    // UPDATE
+    updateStatus: "idle",
+    updateError: null,
+
+    // DELETE
+    deleteStatus: "idle",
+    deleteError: null,
 
   },
 
@@ -130,14 +192,15 @@ const adminCategorySlice = createSlice({
 
     builder
 
-      // ================= GET =================
+      // =================================================
+      // GET
+      // =================================================
 
       .addCase(
         getCategories.pending,
         (state) => {
 
           state.status = "loading";
-
           state.error = null;
 
         }
@@ -173,20 +236,22 @@ const adminCategorySlice = createSlice({
 
           state.status = "failed";
 
-          state.error = action.payload;
+          state.error =
+            action.payload;
 
         }
       )
 
 
-      // ================= CREATE =================
+      // =================================================
+      // CREATE
+      // =================================================
 
       .addCase(
         createCategory.pending,
         (state) => {
 
           state.createStatus = "loading";
-
           state.createError = null;
 
         }
@@ -197,7 +262,6 @@ const adminCategorySlice = createSlice({
         (state) => {
 
           state.createStatus = "succeeded";
-
           state.createError = null;
 
         }
@@ -209,13 +273,70 @@ const adminCategorySlice = createSlice({
 
           state.createStatus = "failed";
 
-          state.createError = action.payload;
+          state.createError =
+            action.payload;
 
         }
       )
 
 
-      // ================= TOGGLE =================
+      // =================================================
+      // UPDATE
+      // =================================================
+
+      .addCase(
+        updateCategory.pending,
+        (state) => {
+
+          state.updateStatus = "loading";
+          state.updateError = null;
+
+        }
+      )
+
+      .addCase(
+        updateCategory.fulfilled,
+        (state, action) => {
+
+          state.updateStatus = "succeeded";
+          state.updateError = null;
+
+          const updatedCategory =
+            action.payload;
+
+          const index =
+            state.categories.findIndex(
+              (category) =>
+                category.id ===
+                updatedCategory.id
+            );
+
+          if (index !== -1) {
+
+            state.categories[index] =
+              updatedCategory;
+
+          }
+
+        }
+      )
+
+      .addCase(
+        updateCategory.rejected,
+        (state, action) => {
+
+          state.updateStatus = "failed";
+
+          state.updateError =
+            action.payload;
+
+        }
+      )
+
+
+      // =================================================
+      // TOGGLE STATUS
+      // =================================================
 
       .addCase(
         toggleCategoryStatus.pending,
@@ -255,7 +376,69 @@ const adminCategorySlice = createSlice({
         toggleCategoryStatus.rejected,
         (state, action) => {
 
-          state.error = action.payload;
+          state.error =
+            action.payload;
+
+        }
+      )
+
+
+      // =================================================
+      // DELETE
+      // =================================================
+
+      .addCase(
+        deleteCategory.pending,
+        (state) => {
+
+          state.deleteStatus = "loading";
+          state.deleteError = null;
+
+        }
+      )
+
+      .addCase(
+        deleteCategory.fulfilled,
+        (state, action) => {
+
+          state.deleteStatus = "succeeded";
+          state.deleteError = null;
+
+          const deletedId =
+            action.payload.id;
+
+          state.categories =
+            state.categories.filter(
+              (category) =>
+                category.id !== deletedId
+            );
+
+          state.totalResults =
+            Math.max(
+              0,
+              state.totalResults - 1
+            );
+
+          state.totalPages =
+            Math.max(
+              1,
+              Math.ceil(
+                state.totalResults /
+                state.limit
+              )
+            );
+
+        }
+      )
+
+      .addCase(
+        deleteCategory.rejected,
+        (state, action) => {
+
+          state.deleteStatus = "failed";
+
+          state.deleteError =
+            action.payload;
 
         }
       );
