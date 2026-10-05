@@ -4,12 +4,14 @@ import adminAuthReducer from '../features/admin/authSlice'
 import adminUserReducer from '../features/admin/userSlice'
 import accountReducer from '../features/user/accountSlice'
 import addressReducer from '../features/user/addressSlice';
+import adminCategoryReducer from "../features/admin/categorySlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     account : accountReducer,
     address : addressReducer,
     adminAuth : adminAuthReducer,
-    adminUsers : adminUserReducer
+    adminUsers : adminUserReducer,
+    adminCategories : adminCategoryReducer,
   }
 });

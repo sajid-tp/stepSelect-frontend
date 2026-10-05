@@ -7,6 +7,7 @@ import {
 
 import AdminSidebar from "../../components/AdminSideBar";
 import Modal from "../../components/Modals";
+import AdminPagination from "../../components/AdminPagination";
 
 function Users() {
   const [search, setSearch] = useState("");
@@ -314,47 +315,13 @@ function Users() {
         </div>
 
         {/* ================= PAGINATION ================= */}
-        <div className="mt-6 flex items-center justify-between text-sm text-gray-500">
-
-          <p>
-            Page{" "}
-            <span className="font-medium text-gray-700">
-              {page}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-gray-700">
-              {totalPages}
-            </span>
-          </p>
-
-          <div className="flex gap-2">
-
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() =>
-                setPage((p) => p - 1)
-              }
-              className="rounded-md border border-gray-200 bg-white px-4 py-2 font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Previous
-            </button>
-
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() =>
-                setPage((p) => p + 1)
-              }
-              className="rounded-md border border-gray-200 bg-white px-4 py-2 font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next
-            </button>
-
-          </div>
-
-        </div>
-
+        <AdminPagination
+  currentPage={page}
+  totalPages={totalPages}
+  totalResults={totalUsers}
+  limit={10}
+  onPageChange={setPage}
+/>
       </main>
 
       {/* ================= CONFIRMATION MODAL ================= */}

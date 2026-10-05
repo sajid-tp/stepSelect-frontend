@@ -15,6 +15,7 @@ import Addresses from './pages/Addresses';
 import AdminDashboard from './pages/admin/adminDashboard';
 import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import Categories from "./pages/admin/Categories";
 
 
 function App() {
@@ -41,6 +42,10 @@ function App() {
        <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<Users />} />
+          <Route
+  path="/admin/categories"
+  element={<Categories />}
+/>
         </Route>
       </Routes>
     </BrowserRouter>
