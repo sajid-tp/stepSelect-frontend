@@ -19,6 +19,14 @@ import Categories from "./pages/admin/Categories";
 import CategoryForm from "./pages/admin/CategoryForm";
 import Brands from "./pages/admin/Brands";
 import BrandForm from "./pages/admin/BrandForm";
+import Products
+  from "./pages/admin/Products";
+
+import ProductDetails
+  from "./pages/admin/ProductDetails";
+
+import ProductForm
+  from "./pages/admin/ProductForm";
 
 function App() {
   return (
@@ -77,6 +85,26 @@ function App() {
       <BrandForm />
   }
 
+/>
+
+<Route
+  path="/admin/products"
+  element={<Products />}
+/>
+
+<Route
+  path="/admin/products/new"
+  element={<ProductForm />}
+/>
+
+<Route
+  path="/admin/products/:productId"
+  element={<ProductDetails />}
+/>
+
+<Route
+  path="/admin/products/edit/:productId"
+  element={<ProductForm />}
 />
 
         </Route>
