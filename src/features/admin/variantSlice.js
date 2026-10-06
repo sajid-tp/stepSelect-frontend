@@ -93,7 +93,7 @@ export const addVariant = createAsyncThunk(
     try {
 
       const response = await axiosInstance.post(
-        `/admin/variants/products/${productId}/variants`,
+        `/admin/variants/${productId}/variants`,
         variantData
       );
 
