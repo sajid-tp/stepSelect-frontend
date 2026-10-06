@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   useDispatch,
@@ -12,14 +15,14 @@ import {
 import AdminSidebar
   from "../../components/AdminSideBar";
 
-import AdminProductCard
-  from "../../components/AdminProductCard";
-
 import Pagination
   from "../../components/Pagination";
 
 import Modal
   from "../../components/Modals";
+
+import AdminProductCard
+  from "../../components/AdminProductCard";
 
 import {
   getProducts,
@@ -36,6 +39,26 @@ function Products() {
 
 
   // ===================================================
+  // REDUX
+  // ===================================================
+
+  const {
+    products,
+    totalResults,
+    totalPages,
+    currentPage,
+    limit,
+    status,
+    error,
+    deleteStatus,
+    statusUpdateStatus,
+  } = useSelector(
+    (state) =>
+      state.adminProducts
+  );
+
+
+  // ===================================================
   // LOCAL STATE
   // ===================================================
 
@@ -45,44 +68,22 @@ function Products() {
   const [page, setPage] =
     useState(1);
 
-  const [deletingProductId, setDeletingProductId] =
-    useState(null);
 
-  const [deleteModalOpen, setDeleteModalOpen] =
-    useState(false);
-
-  const [selectedProduct, setSelectedProduct] =
+  const [deleteTarget, setDeleteTarget] =
     useState(null);
 
 
-  // ===================================================
-  // REDUX
-  // ===================================================
+  /*
+    Keep track of which product's
+    switch is currently being changed.
+  */
 
-  const {
-    products = [],
-
-    totalResults = 0,
-
-    totalPages = 1,
-
-    currentPage = 1,
-
-    limit = 5,
-
-    status,
-
-    error,
-
-    deleteError,
-
-  } = useSelector(
-    (state) => state.adminProducts
-  );
+  const [statusTargetId, setStatusTargetId] =
+    useState(null);
 
 
   // ===================================================
-  // GET PRODUCTS
+  // FETCH PRODUCTS
   // ===================================================
 
   useEffect(() => {
@@ -91,7 +92,7 @@ function Products() {
       getProducts({
         search,
         page,
-        limit,
+        limit: 5,
       })
     );
 
@@ -99,7 +100,6 @@ function Products() {
     dispatch,
     search,
     page,
-    limit,
   ]);
 
 
@@ -107,7 +107,9 @@ function Products() {
   // SEARCH
   // ===================================================
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = (
+    e
+  ) => {
 
     setSearch(
       e.target.value
@@ -118,33 +120,11 @@ function Products() {
   };
 
 
-  const handleClearSearch = () => {
-
-    setSearch("");
-
-    setPage(1);
-
-  };
-
-
-  // ===================================================
-  // ADD
-  // ===================================================
-
-  const handleAddProduct = () => {
-
-    navigate(
-      "/admin/products/new"
-    );
-
-  };
-
-
   // ===================================================
   // EDIT
   // ===================================================
 
-  const handleEditProduct = (
+  const handleEdit = (
     product
   ) => {
 
@@ -164,7 +144,7 @@ function Products() {
   // VIEW
   // ===================================================
 
-  const handleViewProduct = (
+  const handleView = (
     product
   ) => {
 
@@ -179,59 +159,48 @@ function Products() {
   // DELETE
   // ===================================================
 
-  const handleDeleteProduct = (
+  const handleDelete = (
     product
   ) => {
 
-    setSelectedProduct(product);
-
-    setDeleteModalOpen(true);
+    setDeleteTarget(
+      product
+    );
 
   };
 
 
-  // ===================================================
-  // CONFIRM DELETE
-  // ===================================================
-
-  const handleConfirmDelete =
+  const confirmDelete =
     async () => {
 
-      if (!selectedProduct) {
+      if (!deleteTarget) {
         return;
       }
 
 
       try {
 
-        setDeletingProductId(
-          selectedProduct.id
-        );
-
-
-        const shouldGoToPreviousPage =
-          products.length === 1 &&
-          page > 1;
-
-
         await dispatch(
           deleteProduct(
-            selectedProduct.id
+            deleteTarget.id
           )
         ).unwrap();
 
 
-        setDeleteModalOpen(
-          false
-        );
-
-        setSelectedProduct(
+        setDeleteTarget(
           null
         );
 
 
+        /*
+          If we deleted the only product
+          on the current page, go back
+          one page.
+        */
+
         if (
-          shouldGoToPreviousPage
+          products.length === 1 &&
+          page > 1
         ) {
 
           setPage(
@@ -239,29 +208,13 @@ function Products() {
               previous - 1
           );
 
-        } else {
-
-          dispatch(
-            getProducts({
-              search,
-              page,
-              limit,
-            })
-          );
-
         }
 
       } catch (error) {
 
         console.error(
-          "Failed to delete product:",
+          "Delete product failed:",
           error
-        );
-
-      } finally {
-
-        setDeletingProductId(
-          null
         );
 
       }
@@ -276,22 +229,75 @@ function Products() {
   const handleToggleStatus =
     async (product) => {
 
+      /*
+        Prevent double clicking while
+        the current request is running.
+      */
+
+      if (
+        statusUpdateStatus ===
+        "loading"
+      ) {
+        return;
+      }
+
+
+      setStatusTargetId(
+        product.id
+      );
+
+
       try {
 
         await dispatch(
-          toggleProductStatus(
-            product.id
-          )
+          toggleProductStatus({
+
+            productId:
+              product.id,
+
+            /*
+              If currently true,
+              send false.
+
+              If currently false,
+              send true.
+            */
+
+            isActive:
+              !product.isActive,
+
+          })
         ).unwrap();
+
 
       } catch (error) {
 
         console.error(
-          "Failed to update product status:",
+          "Product status update failed:",
           error
         );
 
+      } finally {
+
+        setStatusTargetId(
+          null
+        );
+
       }
+
+    };
+
+
+  // ===================================================
+  // ADD PRODUCT
+  // ===================================================
+
+  const handleAddProduct =
+    () => {
+
+      navigate(
+        "/admin/products/new"
+      );
 
     };
 
@@ -309,12 +315,8 @@ function Products() {
       "
     >
 
-      {/* SIDEBAR */}
-
       <AdminSidebar />
 
-
-      {/* MAIN */}
 
       <main
         className="
@@ -329,9 +331,6 @@ function Products() {
 
         <header
           className="
-            flex
-            items-center
-            justify-between
             border-b
             border-gray-200
             bg-white
@@ -340,82 +339,75 @@ function Products() {
           "
         >
 
-          <div>
-
-            <p
-              className="
-                text-xs
-                font-semibold
-                uppercase
-                tracking-[0.16em]
-                text-gray-400
-              "
-            >
-              Catalog
-            </p>
-
-
-            <h1
-              className="
-                mt-1
-                text-4xl
-                font-bold
-                leading-none
-                text-gray-900
-              "
-            >
-
-              Product{" "}
-
-              <span
-                className="
-                  text-[#ff5722]
-                "
-              >
-                Management
-              </span>
-
-            </h1>
-
-          </div>
-
-
-          {/* ADD */}
-
-          <button
-            type="button"
-            onClick={handleAddProduct}
+          <div
             className="
               flex
               items-center
-              gap-2
-              rounded-full
-              bg-[#ff5722]
-              px-6
-              py-3
-              text-sm
-              font-bold
-              uppercase
-              tracking-wide
-              text-white
-              shadow-md
-              transition
-              hover:bg-[#f4511e]
+              justify-between
             "
           >
 
-            <span
+            <div>
+
+              <p
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.16em]
+                  text-gray-400
+                "
+              >
+                Catalog
+              </p>
+
+
+              <h1
+                className="
+                  mt-1
+                  text-4xl
+                  font-bold
+                  text-gray-900
+                "
+              >
+
+                Product{" "}
+
+                <span
+                  className="
+                    text-[#ff5722]
+                  "
+                >
+                  Management
+                </span>
+
+              </h1>
+
+            </div>
+
+
+            <button
+              type="button"
+              onClick={
+                handleAddProduct
+              }
               className="
-                text-xl
-                leading-none
+                rounded-lg
+                bg-[#ff5722]
+                px-6
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:bg-[#f4511e]
               "
             >
-              +
-            </span>
+              + Add New Product
+            </button>
 
-            Add New Product
-
-          </button>
+          </div>
 
         </header>
 
@@ -435,130 +427,49 @@ function Products() {
 
           <div
             className="
-              flex
-              items-center
-              justify-between
+              mb-8
             "
           >
 
-            <div
+            <input
+              type="text"
+              value={search}
+              onChange={
+                handleSearchChange
+              }
+              placeholder="Search products..."
               className="
-                relative
                 w-[450px]
+                rounded-lg
+                border
+                border-gray-300
+                bg-white
+                px-4
+                py-3
+                text-sm
+                outline-none
+                transition
+                focus:border-[#ff5722]
+                focus:ring-1
+                focus:ring-[#ff5722]
               "
-            >
-
-              <input
-                type="text"
-                value={search}
-                onChange={
-                  handleSearchChange
-                }
-                placeholder="Search product"
-                className="
-                  w-full
-                  rounded-lg
-                  border
-                  border-gray-300
-                  bg-white
-                  px-4
-                  py-3
-                  pr-20
-                  text-sm
-                  outline-none
-                  transition
-                  focus:border-[#ff5722]
-                  focus:ring-1
-                  focus:ring-[#ff5722]
-                "
-              />
-
-
-              {search && (
-
-                <button
-                  type="button"
-                  onClick={
-                    handleClearSearch
-                  }
-                  className="
-                    absolute
-                    right-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-sm
-                    font-medium
-                    text-gray-400
-                    hover:text-gray-700
-                  "
-                >
-                  Clear
-                </button>
-
-              )}
-
-            </div>
+            />
 
           </div>
 
 
-          {/* ERROR */}
-
-          {error && (
-
-            <div
-              className="
-                mt-6
-                rounded-lg
-                border
-                border-red-200
-                bg-red-50
-                px-4
-                py-3
-                text-sm
-                text-red-600
-              "
-            >
-              {error}
-            </div>
-
-          )}
-
-
-          {deleteError && (
-
-            <div
-              className="
-                mt-6
-                rounded-lg
-                border
-                border-red-200
-                bg-red-50
-                px-4
-                py-3
-                text-sm
-                text-red-600
-              "
-            >
-              {deleteError}
-            </div>
-
-          )}
-
-
+          {/* ================================================= */}
           {/* LOADING */}
+          {/* ================================================= */}
 
-          {status === "loading" ? (
+          {status === "loading" && (
 
             <div
               className="
-                mt-10
-                rounded-xl
-                border
-                border-gray-200
-                bg-white
-                p-12
-                text-center
+                flex
+                min-h-[300px]
+                items-center
+                justify-center
                 text-sm
                 text-gray-500
               "
@@ -566,103 +477,178 @@ function Products() {
               Loading products...
             </div>
 
-          ) : products.length === 0 ? (
+          )}
 
-            <div
-              className="
-                mt-10
-                rounded-xl
-                border
-                border-dashed
-                border-gray-300
-                bg-white
-                p-16
-                text-center
-              "
-            >
 
-              <h3
-                className="
-                  text-lg
-                  font-semibold
-                  text-gray-800
-                "
-              >
-                No products found
-              </h3>
+          {/* ================================================= */}
+          {/* ERROR */}
+          {/* ================================================= */}
 
-              <p
-                className="
-                  mt-2
-                  text-sm
-                  text-gray-500
-                "
-              >
-                Try changing your search
-                or add a new product.
-              </p>
-
-            </div>
-
-          ) : (
-
-            <>
-
-              {/* PRODUCT GRID */}
+          {status === "failed" &&
+            !products.length && (
 
               <div
                 className="
-                  mt-10
-                  grid
-                  grid-cols-1
-                  gap-6
-                  md:grid-cols-2
-                  xl:grid-cols-3
-                  2xl:grid-cols-4
+                  rounded-xl
+                  border
+                  border-red-200
+                  bg-red-50
+                  px-6
+                  py-5
+                  text-sm
+                  text-red-600
+                "
+              >
+                {error ||
+                  "Failed to load products."}
+              </div>
+
+            )}
+
+
+          {/* ================================================= */}
+          {/* EMPTY */}
+          {/* ================================================= */}
+
+          {status !== "loading" &&
+            !products.length &&
+            !error && (
+
+              <div
+                className="
+                  rounded-xl
+                  border
+                  border-gray-200
+                  bg-white
+                  px-6
+                  py-16
+                  text-center
                 "
               >
 
-                {products.map(
-                  (product) => (
+                <h3
+                  className="
+                    text-lg
+                    font-semibold
+                    text-gray-900
+                  "
+                >
+                  No products found
+                </h3>
 
-                    <AdminProductCard
-                      key={product.id}
-                      product={product}
-                      onEdit={
-                        handleEditProduct
-                      }
-                      onView={
-                        handleViewProduct
-                      }
-                      onDelete={
-                        handleDeleteProduct
-                      }
-                      deleting={
-                        deletingProductId
-                      }
-                    />
 
-                  )
-                )}
+                <p
+                  className="
+                    mt-2
+                    text-sm
+                    text-gray-500
+                  "
+                >
+                  Try changing your search
+                  or add a new product.
+                </p>
 
               </div>
 
+            )}
 
-              {/* PAGINATION */}
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalResults={totalResults}
-                limit={limit}
-                onPageChange={
-                  setPage
-                }
-              />
+          {/* ================================================= */}
+          {/* PRODUCTS */}
+          {/* ================================================= */}
 
-            </>
+          {products.length > 0 && (
+
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-6
+                md:grid-cols-2
+                xl:grid-cols-3
+                2xl:grid-cols-4
+              "
+            >
+
+              {products.map(
+                (product) => (
+
+                  <AdminProductCard
+
+                    key={
+                      product.id
+                    }
+
+                    product={
+                      product
+                    }
+
+                    onEdit={
+                      handleEdit
+                    }
+
+                    onView={
+                      handleView
+                    }
+
+                    onDelete={
+                      handleDelete
+                    }
+
+                    onToggleStatus={
+                      handleToggleStatus
+                    }
+
+                    statusLoading={
+                      statusTargetId ===
+                      product.id
+                    }
+
+                  />
+
+                )
+              )}
+
+            </div>
 
           )}
+
+
+          {/* ================================================= */}
+          {/* PAGINATION */}
+          {/* ================================================= */}
+
+          <div
+            className="mt-8"
+          >
+
+            <Pagination
+              currentPage={
+                currentPage ||
+                page
+              }
+
+              totalPages={
+                totalPages ||
+                1
+              }
+
+              totalResults={
+                totalResults ||
+                0
+              }
+
+              limit={
+                limit ||
+                5
+              }
+
+              onPageChange={
+                setPage
+              }
+            />
+
+          </div>
 
         </section>
 
@@ -674,23 +660,38 @@ function Products() {
       {/* ================================================= */}
 
       <Modal
-        open={deleteModalOpen}
+        open={
+          !!deleteTarget
+        }
+
         title="Delete Product"
+
         message={
-          `Are you sure you want to delete "${selectedProduct?.productName}"? This action cannot be undone.`
+          deleteTarget
+            ? `Are you sure you want to delete "${deleteTarget.productName}"?`
+            : ""
         }
+
         confirmText="Delete"
+
         cancelText="Cancel"
-        onConfirm={
-          handleConfirmDelete
-        }
-        onClose={() =>
-          setDeleteModalOpen(false)
-        }
-        loading={
-          deletingProductId !== null
-        }
+
         variant="danger"
+
+        loading={
+          deleteStatus ===
+          "loading"
+        }
+
+        onClose={() =>
+          setDeleteTarget(
+            null
+          )
+        }
+
+        onConfirm={
+          confirmDelete
+        }
       />
 
     </div>
