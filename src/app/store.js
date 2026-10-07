@@ -5,6 +5,7 @@ import adminAuthReducer from "../features/admin/authSlice";
 import adminUserReducer from "../features/admin/userSlice";
 import accountReducer from "../features/user/accountSlice";
 import addressReducer from "../features/user/addressSlice";
+import productsReducer from "../features/user/productSlice";
 import adminCategoryReducer
   from "../features/admin/categorySlice";
 
@@ -24,6 +25,8 @@ export const store = configureStore({
     account: accountReducer,
 
     address: addressReducer,
+
+    products : productsReducer,
 
     adminAuth: adminAuthReducer,
 
