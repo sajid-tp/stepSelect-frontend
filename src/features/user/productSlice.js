@@ -101,6 +101,24 @@ export const getBrands = createAsyncThunk(
 );
 
 
+
+export const getProductById = createAsyncThunk(
+  "userProducts/getProductById",
+  async (productId, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get(`/products/${productId}`);
+
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+        "Failed to fetch product"
+      );
+    }
+  }
+);
+
+
 // =====================================================
 // INITIAL STATE
 // =====================================================
@@ -125,6 +143,10 @@ const initialState = {
   // Product GET
   productStatus: "idle",
   productError: null,
+
+  productDetails: null,
+productDetailsStatus: "idle",
+productDetailsError: null,
 
   // Category GET
   categoryStatus: "idle",
@@ -248,7 +270,21 @@ const userProductSlice = createSlice({
             action.payload;
 
         }
-      );
+      )
+      .addCase(getProductById.pending, (state) => {
+  state.productDetailsStatus = "loading";
+  state.productDetailsError = null;
+})
+
+.addCase(getProductById.fulfilled, (state, action) => {
+  state.productDetailsStatus = "succeeded";
+  state.productDetails = action.payload.data || null;
+})
+
+.addCase(getProductById.rejected, (state, action) => {
+  state.productDetailsStatus = "failed";
+  state.productDetailsError = action.payload;
+});
 
 
     // =================================================

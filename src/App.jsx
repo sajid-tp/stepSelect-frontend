@@ -20,6 +20,7 @@ import CategoryForm from "./pages/admin/CategoryForm";
 import Brands from "./pages/admin/Brands";
 import BrandForm from "./pages/admin/BrandForm";
 import Shop from "./pages/Shop";
+import ProductDetailsPage from "./pages/ProductDetails"
 import Products
   from "./pages/admin/Products";
 
@@ -48,6 +49,10 @@ function App() {
         <Route path="/profile/addresses/new" element={<AddressForm />} />
         <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
         <Route path="/shop" element={<Shop />} />
+        <Route
+  path="/products/:productId"
+  element={<ProductDetailsPage />}
+/>
  
        {/* Admin routes */}
         <Route path="/admin/auth/login" element={<AdminLogin/>}/>
