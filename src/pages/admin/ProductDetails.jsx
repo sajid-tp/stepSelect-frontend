@@ -501,7 +501,7 @@ function ProductDetails() {
                 grid
                 grid-cols-1
                 gap-6
-                md:grid-cols-2
+                md:grid-cols-3
               "
             >
 

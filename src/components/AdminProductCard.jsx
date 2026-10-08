@@ -14,6 +14,7 @@ function AdminProductCard({
   statusLoading = false,
 }) {
 
+
   return (
 
     <div
@@ -246,33 +247,7 @@ function AdminProductCard({
         </div>
 
 
-        <div>
-
-          <p
-            className="
-              text-xs
-              font-medium
-              uppercase
-              tracking-wide
-              text-gray-400
-            "
-          >
-            Units
-          </p>
-
-
-          <p
-            className="
-              mt-1
-              text-base
-              font-semibold
-              text-gray-900
-            "
-          >
-            {product.units ?? "—"}
-          </p>
-
-        </div>
+       
 
       </div>
 
