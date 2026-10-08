@@ -11,6 +11,7 @@ import {
   clearSelectedProduct,
 } from "../../features/admin/productSlice";
 
+import ImageViewer from "../../components/ImageViewer";
 
 function ProductDetails() {
 
@@ -36,23 +37,7 @@ function ProductDetails() {
 
   const closeViewer = () => setViewer(null);
 
-  const showPrev = () =>
-    setViewer(
-      (prev) =>
-        prev && {
-          ...prev,
-          index: (prev.index - 1 + prev.images.length) % prev.images.length,
-        }
-    );
-
-  const showNext = () =>
-    setViewer(
-      (prev) =>
-        prev && {
-          ...prev,
-          index: (prev.index + 1) % prev.images.length,
-        }
-    );
+  
 
 
   // ===================================================
@@ -74,21 +59,7 @@ function ProductDetails() {
   // KEYBOARD CONTROLS FOR VIEWER
   // ===================================================
 
-  useEffect(() => {
 
-    if (!viewer) return;
-
-    const handleKey = (e) => {
-      if (e.key === "Escape") closeViewer();
-      if (e.key === "ArrowLeft") showPrev();
-      if (e.key === "ArrowRight") showNext();
-    };
-
-    window.addEventListener("keydown", handleKey);
-
-    return () => window.removeEventListener("keydown", handleKey);
-
-  }, [viewer]);
 
 
   // ===================================================
@@ -478,73 +449,17 @@ function ProductDetails() {
 
       {/* IMAGE VIEWER */}
 
-      {viewer && (
-
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4"
-          onClick={closeViewer}
-        >
-
-          {/* CLOSE */}
-          <button
-            type="button"
-            onClick={closeViewer}
-            aria-label="Close image viewer"
-            className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-2xl text-white transition hover:bg-white/20"
-          >
-            ×
-          </button>
-
-          {/* PREVIOUS */}
-          {viewer.images.length > 1 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                showPrev();
-              }}
-              aria-label="Previous image"
-              className="absolute left-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-3xl text-white transition hover:bg-white/20"
-            >
-              ‹
-            </button>
-          )}
-
-          {/* IMAGE */}
-          <div
-            className="flex max-h-[90vh] max-w-4xl flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={viewer.images[viewer.index]}
-              alt={`Product image ${viewer.index + 1}`}
-              className="max-h-[80vh] max-w-full rounded-lg object-contain"
-            />
-
-            <p className="mt-4 text-sm text-white/80">
-              {viewer.index + 1} / {viewer.images.length}
-            </p>
-          </div>
-
-          {/* NEXT */}
-          {viewer.images.length > 1 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                showNext();
-              }}
-              aria-label="Next image"
-              className="absolute right-6 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-3xl text-white transition hover:bg-white/20"
-            >
-              ›
-            </button>
-          )}
-
-        </div>
-
-      )}
-
+                {viewer && (
+  <ImageViewer
+    images={viewer.images}
+    index={viewer.index}
+    onClose={closeViewer}
+    onChange={(i) =>
+      setViewer((prev) => prev && { ...prev, index: i })
+    }
+  />
+)}
+      
     </div>
 
   );

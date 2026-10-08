@@ -13,7 +13,8 @@ import {
 
 import AdminSidebar from "../../components/AdminSideBar";
 import ImageCropper from "../../components/ImageCropper";
-
+import Modal from "../../components/Modals"; // same path as in Products.jsx
+import ImageViewer from "../../components/ImageViewer";
 import {
   createProduct,
   updateProduct,
@@ -177,6 +178,13 @@ const ProductForm = () => {
     },
   ]);
 
+  /*
+   * Ref on the Add / Edit Variant section so that
+   * clicking "Edit" can scroll straight to the form.
+   */
+
+  const variantFormRef = useRef(null);
+
 
   // ==================================================
   // IMAGE STATE
@@ -207,6 +215,22 @@ const ProductForm = () => {
 
 
   // ==================================================
+  // IMAGE VIEWER
+  // ==================================================
+
+  // null = closed, otherwise { images: [...], index: number }
+  const [viewer, setViewer] = useState(null);
+
+  const openViewer = (images, index) => {
+    setViewer({ images, index });
+  };
+
+  const closeViewer = () => setViewer(null);
+
+
+
+
+  // ==================================================
   // VARIANTS
   // ==================================================
 
@@ -220,6 +244,13 @@ const ProductForm = () => {
    */
 
   const [editingVariant, setEditingVariant] = useState(null);
+
+  /*
+   * Variant waiting for delete confirmation:
+   * { variant, index } or null
+   */
+
+  const [variantToDelete, setVariantToDelete] = useState(null);
 
 
   // ==================================================
@@ -1013,44 +1044,11 @@ const ProductForm = () => {
 
     setFormError("");
 
-    window.scrollTo({
-      top: 0,
+    // Scroll to the Edit Variant form (not the top of the page)
+    variantFormRef.current?.scrollIntoView({
       behavior: "smooth",
+      block: "start",
     });
-  };
-
-
-  // ==================================================
-  // DELETE VARIANT
-  // ==================================================
-
-  const handleDeleteVariant = async (variantId) => {
-
-    try {
-
-      setFormError("");
-
-      await dispatch(deleteVariant(variantId)).unwrap();
-
-      // Refresh actual backend state
-      await dispatch(
-        getVariants({
-          productId: existingProduct.id,
-          page: 1,
-          limit: 5,
-        })
-      ).unwrap();
-
-    } catch (error) {
-
-      console.error("DELETE VARIANT ERROR:", error);
-
-      setFormError(
-        typeof error === "string"
-          ? error
-          : "Failed to delete variant."
-      );
-    }
   };
 
 
@@ -1065,6 +1063,79 @@ const ProductForm = () => {
     );
 
     setFormError("");
+  };
+
+
+  // ==================================================
+  // DELETE VARIANT (WITH CONFIRMATION MODAL)
+  // ==================================================
+
+  // Only opens the modal
+  const handleDeleteVariantClick = (variant, index) => {
+    setVariantToDelete({ variant, index });
+  };
+
+  const handleCloseDeleteModal = () => {
+
+    if (variantDeleteStatus === "loading") {
+      return;
+    }
+
+    setVariantToDelete(null);
+  };
+
+  const confirmDeleteVariant = async () => {
+
+    if (!variantToDelete) {
+      return;
+    }
+
+    const { variant, index } = variantToDelete;
+
+    // Variant that isn't saved on the backend yet
+    if (!variant.id) {
+
+      handleRemoveLocalVariant(index);
+
+      setVariantToDelete(null);
+
+      return;
+    }
+
+    try {
+
+      setFormError("");
+
+      await dispatch(deleteVariant(variant.id)).unwrap();
+
+      // Refresh actual backend state
+      await dispatch(
+        getVariants({
+          productId: existingProduct.id,
+          page: 1,
+          limit: 5,
+        })
+      ).unwrap();
+
+      // If the deleted variant was open in the form, clear the form
+      if (editingVariant?.id === variant.id) {
+        resetVariantForm();
+      }
+
+      setVariantToDelete(null);
+
+    } catch (error) {
+
+      console.error("DELETE VARIANT ERROR:", error);
+
+      setVariantToDelete(null);
+
+      setFormError(
+        typeof error === "string"
+          ? error
+          : "Failed to delete variant."
+      );
+    }
   };
 
 
@@ -1243,35 +1314,23 @@ const ProductForm = () => {
           <div className="flex items-center gap-4">
 
             {isBackendVariant && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleEditVariant(variant)}
-                  className="text-sm font-medium text-orange-500 hover:text-orange-600"
-                >
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isDeletingVariant}
-                  onClick={() => handleDeleteVariant(variant.id)}
-                  className="text-sm font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
-                >
-                  Delete
-                </button>
-              </>
-            )}
-
-            {!isBackendVariant && (
               <button
                 type="button"
-                onClick={() => handleRemoveLocalVariant(index)}
-                className="text-sm font-medium text-red-500 hover:text-red-600"
+                onClick={() => handleEditVariant(variant)}
+                className="text-sm font-medium text-orange-500 hover:text-orange-600"
               >
-                Remove
+                Edit
               </button>
             )}
+
+            <button
+              type="button"
+              disabled={isDeletingVariant}
+              onClick={() => handleDeleteVariantClick(variant, index)}
+              className="text-sm font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
+            >
+              {isBackendVariant ? "Delete" : "Remove"}
+            </button>
 
           </div>
 
@@ -1324,12 +1383,21 @@ const ProductForm = () => {
 
               {variant.images.map((image, imageIndex) => (
 
-                <img
+                <button
                   key={`${image}-${imageIndex}`}
-                  src={image}
-                  alt={`${variant.color} ${imageIndex + 1}`}
-                  className="w-20 h-20 object-cover rounded-lg border border-slate-200"
-                />
+                  type="button"
+                  onClick={() => openViewer(variant.images, imageIndex)}
+                  title="View image"
+                  className="cursor-zoom-in overflow-hidden rounded-lg border border-slate-200 transition hover:border-[#ff5722] hover:shadow-md"
+                >
+
+                  <img
+                    src={image}
+                    alt={`${variant.color} ${imageIndex + 1}`}
+                    className="w-20 h-20 object-cover"
+                  />
+
+                </button>
 
               ))}
 
@@ -1603,7 +1671,10 @@ const ProductForm = () => {
         {/* IMPORTANT: THIS IS ABOVE EXISTING VARIANTS */}
         {/* ================================================= */}
 
-        <section className="bg-white border border-slate-200 rounded-xl shadow-sm mb-8">
+        <section
+          ref={variantFormRef}
+          className="bg-white border border-slate-200 rounded-xl shadow-sm mb-8 scroll-mt-6"
+        >
 
           <div className="px-8 py-8">
 
@@ -1772,11 +1843,20 @@ const ProductForm = () => {
                         className="relative"
                       >
 
-                        <img
-                          src={image}
-                          alt={`Existing ${index + 1}`}
-                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
-                        />
+                        <button
+                          type="button"
+                          onClick={() => openViewer(existingImageUrls, index)}
+                          title="View image"
+                          className="block cursor-zoom-in overflow-hidden rounded-lg border border-slate-200 transition hover:border-[#ff5722] hover:shadow-md"
+                        >
+
+                          <img
+                            src={image}
+                            alt={`Existing ${index + 1}`}
+                            className="w-24 h-24 object-cover"
+                          />
+
+                        </button>
 
                         <button
                           type="button"
@@ -1816,11 +1896,25 @@ const ProductForm = () => {
                         className="relative"
                       >
 
-                        <img
-                          src={item.preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
-                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openViewer(
+                              imageItems.map((i) => i.preview),
+                              index
+                            )
+                          }
+                          title="View image"
+                          className="block cursor-zoom-in overflow-hidden rounded-lg border border-slate-200 transition hover:border-[#ff5722] hover:shadow-md"
+                        >
+
+                          <img
+                            src={item.preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-24 h-24 object-cover"
+                          />
+
+                        </button>
 
                         <button
                           type="button"
@@ -2060,6 +2154,10 @@ const ProductForm = () => {
       </main>
 
 
+      {/* ================================================= */}
+      {/* IMAGE CROPPER */}
+      {/* ================================================= */}
+
       {cropImageIndex !== null &&
         imageItems[cropImageIndex] && (
 
@@ -2071,6 +2169,54 @@ const ProductForm = () => {
           />
 
         )}
+
+
+      {/* ================================================= */}
+      {/* IMAGE VIEWER */}
+      {/* ================================================= */}
+
+      {viewer && (
+  <ImageViewer
+    images={viewer.images}
+    index={viewer.index}
+    onClose={closeViewer}
+    onChange={(i) =>
+      setViewer((prev) => prev && { ...prev, index: i })
+    }
+  />
+)}
+
+      {/* ================================================= */}
+      {/* DELETE VARIANT MODAL */}
+      {/* ================================================= */}
+
+      <Modal
+        open={!!variantToDelete}
+        title={
+          variantToDelete?.variant?.id
+            ? "Delete Variant"
+            : "Remove Variant"
+        }
+        message={
+          variantToDelete
+            ? `Are you sure you want to ${
+                variantToDelete.variant.id ? "delete" : "remove"
+              } the "${variantToDelete.variant.color}" variant? ${
+                variantToDelete.variant.id
+                  ? "This action cannot be undone."
+                  : ""
+              }`
+            : ""
+        }
+        confirmText={
+          variantToDelete?.variant?.id ? "Delete" : "Remove"
+        }
+        cancelText="Cancel"
+        variant="danger"
+        loading={isDeletingVariant}
+        onClose={handleCloseDeleteModal}
+        onConfirm={confirmDeleteVariant}
+      />
 
     </div>
   );
