@@ -79,111 +79,52 @@ function AdminProductCard({
         )}
 
 
-        {/* ================================================= */}
-        {/* STATUS TOGGLE */}
-        {/* ================================================= */}
 
-        <div
-          className="
-            absolute
-            right-3
-            top-3
-            flex
-            items-center
-            gap-2
-            rounded-full
-            bg-white
-            px-2.5
-            py-1.5
-            shadow-sm
-          "
-        >
-
-          <span
-            className={`
-              text-xs
-              font-semibold
-              ${
-                product.isActive
-                  ? "text-green-600"
-                  : "text-gray-400"
-              }
-            `}
-          >
-            {product.isActive
-              ? "Active"
-              : "Inactive"}
-          </span>
-
-
-          {/* SWITCH */}
-
-         <button
-  type="button"
-  disabled={statusLoading}
-  onClick={() => onToggleStatus(product)}
-  className={`
-    relative
-    h-6
-    w-11
-    shrink-0
-    rounded-full
-    transition-colors
-    duration-200
-    focus:outline-none
-    disabled:cursor-not-allowed
-    disabled:opacity-60
-    ${
-      product.isActive
-        ? "bg-[#ff5722]"
-        : "bg-gray-300"
-    }
-  `}
->
-  <span
-    className={`
-      absolute
-      top-1/2
-      h-5
-      w-5
-      -translate-y-1/2
-      rounded-full
-      bg-white
-      shadow-sm
-      transition-all
-      duration-200
-      ${
-        product.isActive
-          ? "left-[22px]"
-          : "left-[2px]"
-      }
-    `}
-  />
-</button>
-
-        </div>
 
       </div>
 
 
-      {/* ================================================= */}
-      {/* BRAND */}
-      {/* ================================================= */}
+      {/* BRAND + STATUS */}
 
-      <p
-        className="
-          mt-4
-          text-xs
-          font-semibold
-          uppercase
-          tracking-wide
-          text-[#ff5722]
-        "
-      >
-        {product.brand?.name ||
-          "—"}
-      </p>
+<div className="mt-4 flex items-center justify-between gap-3">
 
+  <p className="text-xs font-semibold uppercase tracking-wide text-[#ff5722]">
+    {product.brand?.name || "—"}
+  </p>
+
+  <div className="flex items-center gap-2">
+
+    <span
+      className={`text-xs font-semibold ${
+        product.isActive ? "text-green-600" : "text-gray-400"
+      }`}
+    >
+      {product.isActive ? "Active" : "Inactive"}
+    </span>
+
+    <button
+      type="button"
+      disabled={statusLoading}
+      onClick={() => onToggleStatus(product)}
+      className={`
+        relative h-6 w-11 shrink-0 rounded-full
+        transition-colors duration-200 focus:outline-none
+        disabled:cursor-not-allowed disabled:opacity-60
+        ${product.isActive ? "bg-[#ff5722]" : "bg-gray-300"}
+      `}
+    >
+      <span
+        className={`
+          absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full
+          bg-white shadow-sm transition-all duration-200
+          ${product.isActive ? "left-[22px]" : "left-[2px]"}
+        `}
+      />
+    </button>
+
+  </div>
+
+</div>
 
       {/* ================================================= */}
       {/* PRODUCT NAME */}
