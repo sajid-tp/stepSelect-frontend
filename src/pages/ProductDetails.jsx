@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import Navbar from "../components/Navbar";
 import { getProductById } from "../features/user/productSlice";
-
+import ImageViewer from "../components/ImageViewer";
 
 const PAGE_PADDING = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16";
 
@@ -36,7 +36,7 @@ function ProductDetailsPage() {
   const [colorIndex, setColorIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
-
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   useEffect(() => {
 
@@ -224,10 +224,11 @@ function ProductDetailsPage() {
               {images[selectedImage] ? (
 
                 <img
-                  src={images[selectedImage]}
-                  alt={productDetails.name}
-                  className="h-full w-full object-cover"
-                />
+  src={images[selectedImage]}
+  alt={productDetails.name}
+  onClick={() => setViewerOpen(true)}
+  className="h-full w-full cursor-zoom-in object-cover"
+/>
 
               ) : (
 
@@ -540,6 +541,15 @@ function ProductDetailsPage() {
         </div>
 
       </main>
+
+      {viewerOpen && images.length > 0 && (
+  <ImageViewer
+    images={images}
+    index={selectedImage}
+    onClose={() => setViewerOpen(false)}
+    onChange={setSelectedImage}
+  />
+)}
 
     </div>
   );
