@@ -50,11 +50,11 @@ function Signup() {
       ? 'Enter a valid email address'
       : '',
 
-    password: !form.password
-      ? 'Password is required'
-      : form.password.length < 6
-      ? 'Password must be at least 6 characters'
-      : '',
+password: !form.password
+  ? 'Password is required'
+  : !/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(form.password)
+  ? 'Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character'
+  : '',
 
     confirmPassword: !form.confirmPassword
       ? 'Please confirm your password'

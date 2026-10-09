@@ -18,6 +18,120 @@ import {
 } from "../../features/admin/brandSlice";
 
 
+/*
+|--------------------------------------------------------------------------
+| VALIDATION RULES
+|--------------------------------------------------------------------------
+*/
+
+const RULES = {
+  NAME_MIN: 2,
+  NAME_MAX: 50,
+
+  DESCRIPTION_MIN: 10,
+  DESCRIPTION_MAX: 500,
+
+  LOGO_MAX: 500,
+};
+
+// Starts with a letter/number; allows letters, numbers, spaces and  - ' . , & ( ) !
+const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s\-'.,&()!]*$/;
+
+// Collapses repeated spaces: "New   Balance " -> "New Balance"
+const normalizeSpaces = (value) =>
+  String(value || "").trim().replace(/\s+/g, " ");
+
+
+const validateBrandName = (value) => {
+  const name = normalizeSpaces(value);
+
+  if (!name) {
+    return "Brand name is required.";
+  }
+
+  if (name.length < RULES.NAME_MIN) {
+    return `Brand name must be at least ${RULES.NAME_MIN} characters.`;
+  }
+
+  if (name.length > RULES.NAME_MAX) {
+    return `Brand name cannot exceed ${RULES.NAME_MAX} characters.`;
+  }
+
+  if (!NAME_REGEX.test(name)) {
+    return "Brand name must start with a letter or number and can only contain letters, numbers, spaces and - ' . , & ( ) !";
+  }
+
+  return "";
+};
+
+
+// Description is optional, but if it is entered it must be meaningful
+const validateDescription = (value) => {
+  const text = String(value || "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  if (text.length < RULES.DESCRIPTION_MIN) {
+    return `Description must be at least ${RULES.DESCRIPTION_MIN} characters (or leave it empty).`;
+  }
+
+  if (text.length > RULES.DESCRIPTION_MAX) {
+    return `Description cannot exceed ${RULES.DESCRIPTION_MAX} characters.`;
+  }
+
+  if (!/[A-Za-z]/.test(text)) {
+    return "Description must contain readable text, not only numbers or symbols.";
+  }
+
+  return "";
+};
+
+
+// Logo is optional, but if it is entered it must be a valid http(s) URL
+const validateLogo = (value) => {
+  const url = String(value || "").trim();
+
+  if (!url) {
+    return "";
+  }
+
+  if (url.length > RULES.LOGO_MAX) {
+    return `Logo URL cannot exceed ${RULES.LOGO_MAX} characters.`;
+  }
+
+  if (/\s/.test(url)) {
+    return "Logo URL cannot contain spaces.";
+  }
+
+  let parsed;
+
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "Enter a valid URL, e.g. https://example.com/logo.png";
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    return "Logo URL must start with http:// or https://";
+  }
+
+  if (!parsed.hostname.includes(".")) {
+    return "Enter a valid URL, e.g. https://example.com/logo.png";
+  }
+
+  return "";
+};
+
+
+const VALIDATORS = {
+  brandName: validateBrandName,
+  description: validateDescription,
+  logo: validateLogo,
+};
+
+
 function BrandForm() {
   const dispatch = useDispatch();
 
@@ -52,6 +166,9 @@ function BrandForm() {
 
 
   const [errors, setErrors] = useState({});
+
+  // true when the logo URL is valid but the image could not be loaded
+  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
 
 
   /*
@@ -107,6 +224,30 @@ function BrandForm() {
       ...previous,
       [name]: "",
     }));
+
+    if (name === "logo") {
+      setLogoLoadFailed(false);
+    }
+  };
+
+
+  /*
+  |--------------------------------------------------------------------------
+  | VALIDATE ONE FIELD (ON BLUR)
+  |--------------------------------------------------------------------------
+  */
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+
+    const validate = VALIDATORS[name];
+
+    if (!validate) return;
+
+    setErrors((previous) => ({
+      ...previous,
+      [name]: validate(value),
+    }));
   };
 
 
@@ -119,10 +260,13 @@ function BrandForm() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.brandName.trim()) {
-      newErrors.brandName =
-        "Brand name is required.";
-    }
+    Object.keys(VALIDATORS).forEach((field) => {
+      const message = VALIDATORS[field](formData[field]);
+
+      if (message) {
+        newErrors[field] = message;
+      }
+    });
 
     setErrors(newErrors);
 
@@ -144,7 +288,7 @@ function BrandForm() {
     }
 
     const payload = {
-      brandName: formData.brandName.trim(),
+      brandName: normalizeSpaces(formData.brandName),
 
       description:
         formData.description.trim(),
@@ -187,6 +331,33 @@ function BrandForm() {
   const serverError = isEditMode
     ? updateError
     : createError;
+
+
+  // Shared style helper for inputs
+  const fieldClass = (hasError) => `
+    w-full rounded-lg
+    border bg-white
+    px-4 py-3 text-sm
+    text-gray-900
+    outline-none transition
+    placeholder:text-gray-400
+    focus:ring-2
+
+    ${
+      hasError
+        ? "border-red-400 focus:border-red-400 focus:ring-red-100"
+        : "border-gray-200 focus:border-[#ff5722] focus:ring-[#ff5722]/10"
+    }
+
+    disabled:cursor-not-allowed
+    disabled:bg-gray-50
+  `;
+
+
+  // Show the preview only when the URL itself is valid
+  const showLogoPreview =
+    formData.logo.trim() &&
+    !validateLogo(formData.logo);
 
 
   /*
@@ -293,7 +464,7 @@ function BrandForm() {
             )}
 
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
 
               {/* BRAND NAME */}
               <div className="mb-6">
@@ -318,34 +489,27 @@ function BrandForm() {
                   type="text"
                   value={formData.brandName}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  maxLength={RULES.NAME_MAX}
                   placeholder="Enter brand name"
                   disabled={isSubmitting}
-                  className={`
-                    w-full rounded-lg
-                    border bg-white
-                    px-4 py-3 text-sm
-                    text-gray-900
-                    outline-none transition
-                    placeholder:text-gray-400
-                    focus:ring-2
-
-                    ${
-                      errors.brandName
-                        ? "border-red-400 focus:border-red-400 focus:ring-red-100"
-                        : "border-gray-200 focus:border-[#ff5722] focus:ring-[#ff5722]/10"
-                    }
-
-                    disabled:cursor-not-allowed
-                    disabled:bg-gray-50
-                  `}
+                  className={fieldClass(errors.brandName)}
                 />
 
 
-                {errors.brandName && (
-                  <p className="mt-2 text-xs text-red-500">
-                    {errors.brandName}
+                <div className="mt-2 flex justify-between">
+                  {errors.brandName ? (
+                    <p className="text-xs text-red-500">
+                      {errors.brandName}
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+
+                  <p className="text-xs text-gray-400">
+                    {formData.brandName.length}/{RULES.NAME_MAX}
                   </p>
-                )}
+                </div>
               </div>
 
 
@@ -368,29 +532,31 @@ function BrandForm() {
                   rows={5}
                   value={formData.description}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  maxLength={RULES.DESCRIPTION_MAX}
                   placeholder="Enter brand description"
                   disabled={isSubmitting}
-                  className="
-                    w-full resize-none
-                    rounded-lg border
-                    border-gray-200
-                    bg-white px-4 py-3
-                    text-sm text-gray-900
-                    outline-none transition
-                    placeholder:text-gray-400
-                    focus:border-[#ff5722]
-                    focus:ring-2
-                    focus:ring-[#ff5722]/10
-                    disabled:cursor-not-allowed
-                    disabled:bg-gray-50
-                  "
+                  className={`${fieldClass(errors.description)} resize-none`}
                 />
+
+
+                <div className="mt-2 flex justify-between">
+                  {errors.description ? (
+                    <p className="text-xs text-red-500">
+                      {errors.description}
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+
+                  <p className="text-xs text-gray-400">
+                    {formData.description.length}/{RULES.DESCRIPTION_MAX}
+                  </p>
+                </div>
               </div>
 
 
               {/* LOGO */}
-
-              
               <div className="mb-8">
                 <label
                   htmlFor="logo"
@@ -409,47 +575,47 @@ function BrandForm() {
                   type="text"
                   value={formData.logo}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="https://example.com/logo.png"
                   disabled={isSubmitting}
-                  className="
-                    w-full rounded-lg
-                    border border-gray-200
-                    bg-white px-4 py-3
-                    text-sm text-gray-900
-                    outline-none transition
-                    placeholder:text-gray-400
-                    focus:border-[#ff5722]
-                    focus:ring-2
-                    focus:ring-[#ff5722]/10
-                    disabled:cursor-not-allowed
-                    disabled:bg-gray-50
-                  "
+                  className={fieldClass(errors.logo)}
                 />
 
 
-                <p className="mt-2 text-xs text-gray-400">
-                  Enter the URL of the brand logo.
-                </p>
+                {errors.logo ? (
+                  <p className="mt-2 text-xs text-red-500">
+                    {errors.logo}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-gray-400">
+                    Optional. Enter the URL of the brand logo.
+                  </p>
+                )}
 
 
                 {/* LOGO PREVIEW */}
-                {formData.logo.trim() && (
+                {showLogoPreview && (
                   <div className="mt-4">
                     <p className="mb-2 text-xs font-medium text-gray-500">
                       Preview
                     </p>
 
                     <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                      <img
-                        src={formData.logo}
-                        alt="Logo preview"
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display =
-                            "none";
-                        }}
-                      />
+                      {!logoLoadFailed && (
+                        <img
+                          src={formData.logo.trim()}
+                          alt="Logo preview"
+                          className="h-full w-full object-contain"
+                          onError={() => setLogoLoadFailed(true)}
+                        />
+                      )}
                     </div>
+
+                    {logoLoadFailed && (
+                      <p className="mt-2 text-xs text-amber-600">
+                        This image could not be loaded. Check that the URL points directly to an image.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

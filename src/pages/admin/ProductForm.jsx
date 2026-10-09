@@ -70,6 +70,9 @@ const GENDER_OPTIONS = [
   { label: "Unisex", value: "unisex" },
 ];
 
+// Must match the backend GENDERS array
+const VALID_GENDERS = GENDER_OPTIONS.map((g) => g.value);
+
 
 // ==================================================
 // SIZE OPTIONS
@@ -84,6 +87,243 @@ const SIZE_OPTIONS = [
   "UK 11",
   "UK 12",
 ];
+
+
+// ==================================================
+// VALIDATION RULES
+// ==================================================
+
+const RULES = {
+  NAME_MIN: 3,
+  NAME_MAX: 100,
+
+  DESCRIPTION_MIN: 20,
+  DESCRIPTION_MAX: 1000,
+
+  PRICE_MAX: 1000000,
+
+  STOCK_MAX: 100000,
+
+  MIN_IMAGES: 3, // backend: "A variant must have minimum 3 images."
+  MAX_IMAGES: 10,
+  MAX_IMAGE_SIZE_MB: 5,
+};
+
+// Starts with a letter/number; allows letters, numbers, spaces and  - ' . , & ( ) / +
+const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s\-'.,&()/+]*$/;
+
+// ObjectId-like (24 hex chars) - same idea as mongoose.Types.ObjectId.isValid
+const OBJECT_ID_REGEX = /^[a-fA-F0-9]{24}$/;
+
+// Collapses repeated spaces: "Air   Zoom  41 " -> "Air Zoom 41"
+const normalizeSpaces = (value) =>
+  String(value || "").trim().replace(/\s+/g, " ");
+
+
+const validateName = (value) => {
+
+  const name = normalizeSpaces(value);
+
+  if (!name) {
+    return "Product name is required.";
+  }
+
+  if (name.length < RULES.NAME_MIN) {
+    return `Product name must be at least ${RULES.NAME_MIN} characters.`;
+  }
+
+  if (name.length > RULES.NAME_MAX) {
+    return `Product name cannot exceed ${RULES.NAME_MAX} characters.`;
+  }
+
+  if (!NAME_REGEX.test(name)) {
+    return "Product name must start with a letter or number and can only contain letters, numbers, spaces and - ' . , & ( ) / +";
+  }
+
+  if (!/[A-Za-z]/.test(name)) {
+    return "Product name must contain at least one letter.";
+  }
+
+  return "";
+};
+
+
+const validateDescription = (value) => {
+
+  const text = String(value || "").trim();
+
+  if (!text) {
+    return "Product description is required.";
+  }
+
+  if (text.length < RULES.DESCRIPTION_MIN) {
+    return `Description must be at least ${RULES.DESCRIPTION_MIN} characters.`;
+  }
+
+  if (text.length > RULES.DESCRIPTION_MAX) {
+    return `Description cannot exceed ${RULES.DESCRIPTION_MAX} characters.`;
+  }
+
+  if (!/[A-Za-z]/.test(text)) {
+    return "Description must contain readable text, not only numbers or symbols.";
+  }
+
+  return "";
+};
+
+
+const validateBrand = (value) => {
+
+  if (!value) {
+    return "Please select a brand.";
+  }
+
+  if (!OBJECT_ID_REGEX.test(String(value))) {
+    return "Invalid brand selected.";
+  }
+
+  return "";
+};
+
+
+const validateCategory = (value) => {
+
+  if (!value) {
+    return "Please select a category.";
+  }
+
+  if (!OBJECT_ID_REGEX.test(String(value))) {
+    return "Invalid category selected.";
+  }
+
+  return "";
+};
+
+
+const validateGender = (value) => {
+
+  if (!value) {
+    return "Please select a gender.";
+  }
+
+  if (!VALID_GENDERS.includes(String(value).trim().toLowerCase())) {
+    return "Gender must be men, women or unisex.";
+  }
+
+  return "";
+};
+
+
+const validateColor = (value) => {
+
+  const text = normalizeSpaces(value);
+
+  if (!text) {
+    return "Please select a color.";
+  }
+
+  if (text.length > 40) {
+    return "Color cannot exceed 40 characters.";
+  }
+
+  return "";
+};
+
+
+const validatePrice = (value) => {
+
+  if (value === "" || value === null || value === undefined) {
+    return "Price is required.";
+  }
+
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return "Price must be a valid number.";
+  }
+
+  if (number <= 0) {
+    return "Price must be greater than 0.";
+  }
+
+  if (number > RULES.PRICE_MAX) {
+    return `Price cannot exceed ₹${RULES.PRICE_MAX.toLocaleString()}.`;
+  }
+
+  // Maximum 2 decimal places
+  if (!/^\d+(\.\d{1,2})?$/.test(String(value).trim())) {
+    return "Price can have at most 2 decimal places.";
+  }
+
+  return "";
+};
+
+
+const validateSizeValue = (value) => {
+
+  if (!String(value || "").trim()) {
+    return "Select a size.";
+  }
+
+  return "";
+};
+
+
+const validateStock = (value) => {
+
+  if (value === "" || value === null || value === undefined) {
+    return "Stock is required.";
+  }
+
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return "Stock must be a number.";
+  }
+
+  if (number < 0) {
+    return "Stock cannot be negative.";
+  }
+
+  if (!Number.isInteger(number)) {
+    return "Stock must be a whole number.";
+  }
+
+  if (number > RULES.STOCK_MAX) {
+    return `Stock cannot exceed ${RULES.STOCK_MAX.toLocaleString()}.`;
+  }
+
+  return "";
+};
+
+
+// Blocks characters that make no sense in a whole-number input
+const blockInvalidIntegerKeys = (e) => {
+  if (["e", "E", "+", "-", "."].includes(e.key)) {
+    e.preventDefault();
+  }
+};
+
+// Price may have decimals but never e / + / -
+const blockInvalidPriceKeys = (e) => {
+  if (["e", "E", "+", "-"].includes(e.key)) {
+    e.preventDefault();
+  }
+};
+
+
+// Small helpers for consistent styling
+const inputClass = (hasError) =>
+  `w-full h-11 border rounded-lg px-4 text-sm outline-none bg-white focus:ring-1 ${
+    hasError
+      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
+      : "border-slate-300 focus:border-orange-500 focus:ring-orange-500"
+  }`;
+
+const FieldError = ({ message }) =>
+  message ? (
+    <p className="text-xs text-red-500 mt-1">{message}</p>
+  ) : null;
 
 
 const ProductForm = () => {
@@ -135,8 +375,8 @@ const ProductForm = () => {
   } = useSelector((state) => state.adminVariants);
 
   const [gender, setGender] = useState(
-  existingProduct?.gender || ""
-);
+    existingProduct?.gender || ""
+  );
 
   const { categories } = useSelector(
     (state) => state.adminCategories
@@ -238,8 +478,6 @@ const ProductForm = () => {
   const closeViewer = () => setViewer(null);
 
 
-
-
   // ==================================================
   // VARIANTS
   // ==================================================
@@ -267,7 +505,56 @@ const ProductForm = () => {
   // ERRORS
   // ==================================================
 
+  // General (banner) error
   const [formError, setFormError] = useState("");
+
+  /*
+   * Field-level errors for the Product Details section:
+   * { productName, brandId, categoryId, gender, description }
+   */
+  const [detailErrors, setDetailErrors] = useState({});
+
+  /*
+   * Field-level errors for the Variant form:
+   * { color, price, images, sizeList, sizes: { [index]: { size, stock } } }
+   */
+  const [variantErrors, setVariantErrors] = useState({});
+
+  const clearDetailError = (field) => {
+    setDetailErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const clearVariantError = (field) => {
+    setVariantErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const clearSizeError = (index, field) => {
+    setVariantErrors((previous) => {
+      const rowErrors = previous.sizes?.[index];
+      if (!rowErrors?.[field]) return previous;
+
+      const nextRow = { ...rowErrors };
+      delete nextRow[field];
+
+      return {
+        ...previous,
+        sizes: {
+          ...previous.sizes,
+          [index]: nextRow,
+        },
+      };
+    });
+  };
 
 
   // ==================================================
@@ -377,31 +664,30 @@ const ProductForm = () => {
 
   const validateProductDetails = () => {
 
-    if (!productName.trim()) {
-      setFormError("Product name is required.");
+    const errors = {};
+
+    const nameError = validateName(productName);
+    if (nameError) errors.productName = nameError;
+
+    const brandError = validateBrand(brandId);
+    if (brandError) errors.brandId = brandError;
+
+    const categoryError = validateCategory(categoryId);
+    if (categoryError) errors.categoryId = categoryError;
+
+    const genderError = validateGender(gender);
+    if (genderError) errors.gender = genderError;
+
+    const descriptionError = validateDescription(description);
+    if (descriptionError) errors.description = descriptionError;
+
+    setDetailErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setFormError("Please fix the highlighted fields in Product Details.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return false;
     }
-
-
-    if (!description.trim()) {
-      setFormError("Product description is required.");
-      return false;
-    }
-
-    if (!brandId) {
-      setFormError("Please select a brand.");
-      return false;
-    }
-
-    if (!categoryId) {
-      setFormError("Please select a category.");
-      return false;
-    }
-
-    if (!gender) {
-  setFormError("Please select a gender.");
-  return false;
-}
 
     return true;
   };
@@ -433,11 +719,11 @@ const ProductForm = () => {
             productId: existingProduct.id,
 
             productData: {
-              productName: productName.trim(),
+              productName: normalizeSpaces(productName),
               description: description.trim(),
               brandId,
               categoryId,
-              gender
+              gender,
             },
           })
         ).unwrap();
@@ -450,7 +736,9 @@ const ProductForm = () => {
         setDetailsSaved(false);
 
         setFormError(
-          error || "Failed to update product details."
+          typeof error === "string"
+            ? error
+            : "Failed to update product details."
         );
       }
 
@@ -484,31 +772,64 @@ const ProductForm = () => {
     if (selectedFiles.length === 0) return;
 
     setFormError("");
+    clearVariantError("images");
 
-    const validFiles = selectedFiles.filter((file) => {
-      const isImage = file.type.startsWith("image/");
-      const isWithinSize = file.size <= 5 * 1024 * 1024;
-      return isImage && isWithinSize;
-    });
+    const maxBytes = RULES.MAX_IMAGE_SIZE_MB * 1024 * 1024;
 
-    if (validFiles.length !== selectedFiles.length) {
-      setFormError("Only image files under 5 MB are allowed.");
+    const notImages = selectedFiles.filter(
+      (file) => !file.type.startsWith("image/")
+    );
+
+    const tooLarge = selectedFiles.filter(
+      (file) =>
+        file.type.startsWith("image/") && file.size > maxBytes
+    );
+
+    const validFiles = selectedFiles.filter(
+      (file) =>
+        file.type.startsWith("image/") && file.size <= maxBytes
+    );
+
+    const messages = [];
+
+    if (notImages.length > 0) {
+      messages.push(
+        `${notImages.length} file(s) skipped: only image files are allowed.`
+      );
+    }
+
+    if (tooLarge.length > 0) {
+      messages.push(
+        `${tooLarge.length} image(s) skipped: each image must be under ${RULES.MAX_IMAGE_SIZE_MB} MB.`
+      );
     }
 
     setImageItems((previous) => {
 
       const availableSlots =
-        10 - existingImageUrls.length - previous.length;
+        RULES.MAX_IMAGES - existingImageUrls.length - previous.length;
 
       if (availableSlots <= 0) {
-        setFormError("You can select a maximum of 10 images.");
+        setVariantErrors((prev) => ({
+          ...prev,
+          images: `You can select a maximum of ${RULES.MAX_IMAGES} images.`,
+        }));
         return previous;
       }
 
       const filesToAdd = validFiles.slice(0, availableSlots);
 
       if (filesToAdd.length < validFiles.length) {
-        setFormError("You can select a maximum of 10 images.");
+        messages.push(
+          `Only ${RULES.MAX_IMAGES} images are allowed. Extra images were skipped.`
+        );
+      }
+
+      if (messages.length > 0) {
+        setVariantErrors((prev) => ({
+          ...prev,
+          images: messages.join(" "),
+        }));
       }
 
       const newItems = filesToAdd.map((file) => ({
@@ -556,6 +877,7 @@ const ProductForm = () => {
 
       setIsCropping(true);
       setFormError("");
+      clearVariantError("images");
 
       const oldPreview = item.preview;
       const newPreview = URL.createObjectURL(croppedFile);
@@ -608,6 +930,7 @@ const ProductForm = () => {
     );
 
     setFormError("");
+    clearVariantError("images");
   };
 
 
@@ -625,6 +948,7 @@ const ProductForm = () => {
     });
 
     setFormError("");
+    clearVariantError("images");
 
     if (cropImageIndex === index) {
       setCropImageIndex(null);
@@ -661,6 +985,14 @@ const ProductForm = () => {
     setSizes((previous) =>
       previous.filter((_, i) => i !== index)
     );
+
+    // Row indexes shift after removal, so drop stale row errors
+    setVariantErrors((previous) => {
+      const next = { ...previous };
+      delete next.sizes;
+      delete next.sizeList;
+      return next;
+    });
   };
 
 
@@ -685,6 +1017,8 @@ const ProductForm = () => {
     );
 
     setFormError("");
+    clearSizeError(index, field);
+    clearVariantError("sizeList");
   };
 
 
@@ -694,40 +1028,49 @@ const ProductForm = () => {
 
   const validateVariant = () => {
 
-    if (!color.trim()) {
-      setFormError("Please select a color.");
-      return false;
-    }
+    const errors = {};
 
-    // Each color can only be added once per product
-    const colorAlreadyUsed = variants.some(
-      (variant) =>
-        variant.color?.trim().toLowerCase() ===
-          color.trim().toLowerCase() &&
-        (editingVariant
-          ? variant.id !== editingVariant.id
-          : true)
-    );
+    // ---------- COLOR ----------
 
-    if (colorAlreadyUsed) {
-      setFormError(
-        "This color already exists for this product. Edit that variant instead."
+    const colorError = validateColor(color);
+
+    if (colorError) {
+
+      errors.color = colorError;
+
+    } else {
+
+      // Each color can only be added once per product
+      const colorAlreadyUsed = variants.some(
+        (variant) =>
+          variant.color?.trim().toLowerCase() ===
+            color.trim().toLowerCase() &&
+          (editingVariant
+            ? variant.id !== editingVariant.id
+            : true)
       );
-      return false;
+
+      if (colorAlreadyUsed) {
+        errors.color =
+          "This color already exists for this product. Edit that variant instead.";
+      }
     }
 
-    if (
-      price === "" ||
-      Number.isNaN(Number(price)) ||
-      Number(price) < 0
-    ) {
-      setFormError("Please enter a valid price.");
-      return false;
+
+    // ---------- PRICE ----------
+
+    const priceError = validatePrice(price);
+
+    if (priceError) {
+      errors.price = priceError;
     }
+
+
+    // ---------- IMAGES ----------
 
     /*
      * Existing images + newly selected images
-     * must be at least 3.
+     * must be at least 3 and at most 10.
      */
 
     const totalImages =
@@ -738,53 +1081,65 @@ const ProductForm = () => {
     );
 
     if (hasUncroppedImages) {
-      setFormError(
-        "Please crop and resize all selected images before saving the variant."
-      );
-      return false;
+      errors.images =
+        "Please crop and resize all selected images before saving the variant.";
+    } else if (totalImages < RULES.MIN_IMAGES) {
+      errors.images = `A variant must have at least ${RULES.MIN_IMAGES} images (you have ${totalImages}).`;
+    } else if (totalImages > RULES.MAX_IMAGES) {
+      errors.images = `You can use a maximum of ${RULES.MAX_IMAGES} images.`;
     }
 
-    if (totalImages < 3) {
-      setFormError("Please provide at least 3 images.");
-      return false;
-    }
 
-    if (totalImages > 10) {
-      setFormError("You can use a maximum of 10 images.");
-      return false;
-    }
+    // ---------- SIZES ----------
 
     if (sizes.length === 0) {
-      setFormError("At least one size is required.");
-      return false;
+
+      errors.sizeList = "At least one size is required.";
+
+    } else {
+
+      const rowErrors = {};
+
+      sizes.forEach((item, index) => {
+
+        const sizeError = validateSizeValue(item.size);
+        const stockError = validateStock(item.stock);
+
+        if (sizeError || stockError) {
+          rowErrors[index] = {};
+          if (sizeError) rowErrors[index].size = sizeError;
+          if (stockError) rowErrors[index].stock = stockError;
+        }
+      });
+
+      // Each size can only be added once
+      const seen = new Set();
+
+      sizes.forEach((item, index) => {
+
+        const name = item.size.trim().toLowerCase();
+
+        if (!name) return;
+
+        if (seen.has(name)) {
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            size: "This size is already added.",
+          };
+        }
+
+        seen.add(name);
+      });
+
+      if (Object.keys(rowErrors).length > 0) {
+        errors.sizes = rowErrors;
+      }
     }
 
-    for (const item of sizes) {
+    setVariantErrors(errors);
 
-      if (!item.size.trim()) {
-        setFormError("Please select a size for every row.");
-        return false;
-      }
-
-      if (
-        item.stock === "" ||
-        Number.isNaN(Number(item.stock)) ||
-        Number(item.stock) < 0
-      ) {
-        setFormError(
-          "Please enter a valid stock value for every size."
-        );
-        return false;
-      }
-    }
-
-    // Each size can only be added once
-    const sizeNames = sizes.map((item) =>
-      item.size.trim().toLowerCase()
-    );
-
-    if (new Set(sizeNames).size !== sizeNames.length) {
-      setFormError("Each size can only be added once.");
+    if (Object.keys(errors).length > 0) {
+      setFormError("Please fix the highlighted fields in the variant form.");
       return false;
     }
 
@@ -828,6 +1183,7 @@ const ProductForm = () => {
       fileInputRef.current.value = "";
     }
 
+    setVariantErrors({});
     setFormError("");
   };
 
@@ -859,7 +1215,7 @@ const ProductForm = () => {
   const buildVariantData = (imageUrls) => {
 
     return {
-      color: color.trim(),
+      color: normalizeSpaces(color),
 
       price: Number(price),
 
@@ -908,7 +1264,11 @@ const ProductForm = () => {
           ...uploadedUrls,
         ];
 
-        if (finalImageUrls.length < 3) {
+        if (finalImageUrls.length < RULES.MIN_IMAGES) {
+          setVariantErrors((previous) => ({
+            ...previous,
+            images: "A variant must have at least 3 images.",
+          }));
           setFormError("A variant must have at least 3 images.");
           return;
         }
@@ -1059,6 +1419,7 @@ const ProductForm = () => {
 
     setImageItems([]);
 
+    setVariantErrors({});
     setFormError("");
 
     // Scroll to the Edit Variant form (not the top of the page)
@@ -1170,6 +1531,7 @@ const ProductForm = () => {
 
     /*
      * New product must have at least one variant.
+     * (Backend: "At least one variant is required.")
      */
 
     if (!isEditMode && variants.length === 0) {
@@ -1177,6 +1539,34 @@ const ProductForm = () => {
         "Please add at least one variant before finishing."
       );
       return;
+    }
+
+    /*
+     * Safety net: every variant must satisfy the backend rules
+     * (3+ images, at least one size, valid price...).
+     */
+
+    for (const variant of variants) {
+
+      if (
+        !Array.isArray(variant.images) ||
+        variant.images.length < RULES.MIN_IMAGES
+      ) {
+        setFormError(
+          `The "${variant.color}" variant must have at least ${RULES.MIN_IMAGES} images.`
+        );
+        return;
+      }
+
+      if (
+        !Array.isArray(variant.sizes) ||
+        variant.sizes.length === 0
+      ) {
+        setFormError(
+          `The "${variant.color}" variant must have at least one size.`
+        );
+        return;
+      }
     }
 
     try {
@@ -1200,11 +1590,11 @@ const ProductForm = () => {
             productId: existingProduct.id,
 
             productData: {
-              productName: productName.trim(),
+              productName: normalizeSpaces(productName),
               description: description.trim(),
               brandId,
               categoryId,
-              gender
+              gender,
             },
           })
         ).unwrap();
@@ -1228,12 +1618,12 @@ const ProductForm = () => {
 
       await dispatch(
         createProduct({
-          productName: productName.trim(),
+          productName: normalizeSpaces(productName),
           description: description.trim(),
           brandId,
           categoryId,
           variants,
-          gender
+          gender,
         })
       ).unwrap();
 
@@ -1248,6 +1638,8 @@ const ProductForm = () => {
           ? error
           : "Failed to save product."
       );
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -1548,14 +1940,35 @@ const ProductForm = () => {
                 <input
                   type="text"
                   value={productName}
+                  maxLength={RULES.NAME_MAX}
                   onChange={(e) => {
                     setProductName(e.target.value);
                     setFormError("");
+                    clearDetailError("productName");
                     setDetailsSaved(false);
                   }}
+                  onBlur={() => {
+                    const message = validateName(productName);
+                    if (message) {
+                      setDetailErrors((prev) => ({
+                        ...prev,
+                        productName: message,
+                      }));
+                    }
+                  }}
                   placeholder="Air Zoom Pegasus 41"
-                  className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className={inputClass(detailErrors.productName)}
                 />
+
+                <div className="flex justify-between">
+
+                  <FieldError message={detailErrors.productName} />
+
+                  <p className="text-xs text-slate-400 mt-1 ml-auto">
+                    {productName.length}/{RULES.NAME_MAX}
+                  </p>
+
+                </div>
 
               </div>
 
@@ -1573,9 +1986,10 @@ const ProductForm = () => {
                   onChange={(e) => {
                     setBrandId(e.target.value);
                     setFormError("");
+                    clearDetailError("brandId");
                     setDetailsSaved(false);
                   }}
-                  className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className={inputClass(detailErrors.brandId)}
                 >
 
                   <option value="">
@@ -1591,6 +2005,8 @@ const ProductForm = () => {
                   ))}
 
                 </select>
+
+                <FieldError message={detailErrors.brandId} />
 
               </div>
 
@@ -1608,9 +2024,10 @@ const ProductForm = () => {
                   onChange={(e) => {
                     setCategoryId(e.target.value);
                     setFormError("");
+                    clearDetailError("categoryId");
                     setDetailsSaved(false);
                   }}
-                  className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className={inputClass(detailErrors.categoryId)}
                 >
 
                   <option value="">
@@ -1627,41 +2044,47 @@ const ProductForm = () => {
 
                 </select>
 
+                <FieldError message={detailErrors.categoryId} />
+
               </div>
+
 
               {/* GENDER */}
 
-<div>
+              <div>
 
-  <label className="block text-sm font-medium text-slate-700 mb-2">
-    Gender
-  </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Gender
+                </label>
 
-  <select
-    value={gender}
-    onChange={(e) => {
-      setGender(e.target.value);
-      setFormError("");
-      setDetailsSaved(false);
-    }}
-    className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-  >
+                <select
+                  value={gender}
+                  onChange={(e) => {
+                    setGender(e.target.value);
+                    setFormError("");
+                    clearDetailError("gender");
+                    setDetailsSaved(false);
+                  }}
+                  className={inputClass(detailErrors.gender)}
+                >
 
-    <option value="">
-      Select Gender
-    </option>
+                  <option value="">
+                    Select Gender
+                  </option>
 
-    {GENDER_OPTIONS.map((option) => (
+                  {GENDER_OPTIONS.map((option) => (
 
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
 
-    ))}
+                  ))}
 
-  </select>
+                </select>
 
-</div>
+                <FieldError message={detailErrors.gender} />
+
+              </div>
 
             </div>
 
@@ -1676,15 +2099,40 @@ const ProductForm = () => {
 
               <textarea
                 value={description}
+                maxLength={RULES.DESCRIPTION_MAX}
                 onChange={(e) => {
                   setDescription(e.target.value);
                   setFormError("");
+                  clearDetailError("description");
                   setDetailsSaved(false);
+                }}
+                onBlur={() => {
+                  const message = validateDescription(description);
+                  if (message) {
+                    setDetailErrors((prev) => ({
+                      ...prev,
+                      description: message,
+                    }));
+                  }
                 }}
                 placeholder="Enter product description..."
                 rows={5}
-                className="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm outline-none resize-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                className={`w-full border rounded-lg px-4 py-3 text-sm outline-none resize-none focus:ring-1 ${
+                  detailErrors.description
+                    ? "border-red-400 focus:border-red-500 focus:ring-red-500"
+                    : "border-slate-300 focus:border-orange-500 focus:ring-orange-500"
+                }`}
               />
+
+              <div className="flex justify-between">
+
+                <FieldError message={detailErrors.description} />
+
+                <p className="text-xs text-slate-400 mt-1 ml-auto">
+                  {description.length}/{RULES.DESCRIPTION_MAX}
+                </p>
+
+              </div>
 
             </div>
 
@@ -1786,8 +2234,9 @@ const ProductForm = () => {
                   onChange={(e) => {
                     setColor(e.target.value);
                     setFormError("");
+                    clearVariantError("color");
                   }}
-                  className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className={inputClass(variantErrors.color)}
                 >
 
                   <option value="">
@@ -1813,6 +2262,8 @@ const ProductForm = () => {
 
                 </select>
 
+                <FieldError message={variantErrors.color} />
+
               </div>
 
 
@@ -1821,20 +2272,25 @@ const ProductForm = () => {
               <div>
 
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Price
+                  Price (₹)
                 </label>
 
                 <input
                   type="number"
                   min="0"
+                  step="0.01"
                   value={price}
+                  onKeyDown={blockInvalidPriceKeys}
                   onChange={(e) => {
                     setPrice(e.target.value);
                     setFormError("");
+                    clearVariantError("price");
                   }}
                   placeholder="4999"
-                  className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className={inputClass(variantErrors.price)}
                 />
+
+                <FieldError message={variantErrors.price} />
 
               </div>
 
@@ -1849,7 +2305,13 @@ const ProductForm = () => {
                 Variant Images
               </label>
 
-              <div className="border border-slate-300 rounded-lg px-4 py-3">
+              <div
+                className={`border rounded-lg px-4 py-3 ${
+                  variantErrors.images
+                    ? "border-red-400"
+                    : "border-slate-300"
+                }`}
+              >
 
                 <input
                   ref={fileInputRef}
@@ -1873,8 +2335,12 @@ const ProductForm = () => {
               </div>
 
               <p className="text-xs text-slate-400 mt-2">
-                Select 3 to 10 images. Each image must be under 5 MB.
+                Select {RULES.MIN_IMAGES} to {RULES.MAX_IMAGES} images. Each image must be under {RULES.MAX_IMAGE_SIZE_MB} MB.
+                {" "}
+                ({existingImageUrls.length + imageItems.length}/{RULES.MAX_IMAGES} selected)
               </p>
+
+              <FieldError message={variantErrors.images} />
 
 
               {/* EXISTING IMAGES */}
@@ -2020,92 +2486,114 @@ const ProductForm = () => {
                 <button
                   type="button"
                   onClick={handleAddSize}
-                  className="text-sm font-medium text-[#ff5722] hover:text-[#f4511e]"
+                  disabled={sizes.length >= SIZE_OPTIONS.length}
+                  className="text-sm font-medium text-[#ff5722] hover:text-[#f4511e] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   + Add Size
                 </button>
 
               </div>
 
+              <FieldError message={variantErrors.sizeList} />
+
 
               <div className="space-y-3">
 
-                {sizes.map((item, index) => (
+                {sizes.map((item, index) => {
 
-                  <div
-                    key={index}
-                    className="flex gap-3 items-center"
-                  >
+                  const rowErrors = variantErrors.sizes?.[index] || {};
 
-                    {/* SIZE DROPDOWN */}
+                  return (
 
-                    <select
-                      value={item.size}
-                      onChange={(e) =>
-                        handleSizeChange(index, "size", e.target.value)
-                      }
-                      className="flex-1 h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    <div
+                      key={index}
+                      className="flex gap-3 items-start"
                     >
 
-                      <option value="">
-                        Select Size
-                      </option>
+                      {/* SIZE DROPDOWN */}
 
-                      {/* keeps an old custom size (like "uk89") visible when editing */}
-                      {item.size && !SIZE_OPTIONS.includes(item.size) && (
+                      <div className="flex-1">
 
-                        <option value={item.size}>
-                          {item.size}
-                        </option>
+                        <select
+                          value={item.size}
+                          onChange={(e) =>
+                            handleSizeChange(index, "size", e.target.value)
+                          }
+                          className={inputClass(rowErrors.size)}
+                        >
+
+                          <option value="">
+                            Select Size
+                          </option>
+
+                          {/* keeps an old custom size (like "uk89") visible when editing */}
+                          {item.size && !SIZE_OPTIONS.includes(item.size) && (
+
+                            <option value={item.size}>
+                              {item.size}
+                            </option>
+
+                          )}
+
+                          {SIZE_OPTIONS.map((option) => (
+
+                            <option
+                              key={option}
+                              value={option}
+                              disabled={sizes.some(
+                                (s, i) => i !== index && s.size === option
+                              )}
+                            >
+                              {option}
+                            </option>
+
+                          ))}
+
+                        </select>
+
+                        <FieldError message={rowErrors.size} />
+
+                      </div>
+
+
+                      {/* STOCK */}
+
+                      <div className="w-40">
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={item.stock}
+                          onKeyDown={blockInvalidIntegerKeys}
+                          onChange={(e) =>
+                            handleSizeChange(index, "stock", e.target.value)
+                          }
+                          placeholder="Stock"
+                          className={inputClass(rowErrors.stock)}
+                        />
+
+                        <FieldError message={rowErrors.stock} />
+
+                      </div>
+
+
+                      {sizes.length > 1 && (
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSize(index)}
+                          className="text-red-500 hover:text-red-600 text-lg h-11"
+                        >
+                          ×
+                        </button>
 
                       )}
 
-                      {SIZE_OPTIONS.map((option) => (
+                    </div>
 
-                        <option
-                          key={option}
-                          value={option}
-                          disabled={sizes.some(
-                            (s, i) => i !== index && s.size === option
-                          )}
-                        >
-                          {option}
-                        </option>
-
-                      ))}
-
-                    </select>
-
-
-                    {/* STOCK */}
-
-                    <input
-                      type="number"
-                      min="0"
-                      value={item.stock}
-                      onChange={(e) =>
-                        handleSizeChange(index, "stock", e.target.value)
-                      }
-                      placeholder="Stock"
-                      className="w-40 h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                    />
-
-
-                    {sizes.length > 1 && (
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSize(index)}
-                        className="text-red-500 hover:text-red-600 text-lg"
-                      >
-                        ×
-                      </button>
-
-                    )}
-
-                  </div>
-
-                ))}
+                  );
+                })}
 
               </div>
 
@@ -2229,15 +2717,15 @@ const ProductForm = () => {
       {/* ================================================= */}
 
       {viewer && (
-  <ImageViewer
-    images={viewer.images}
-    index={viewer.index}
-    onClose={closeViewer}
-    onChange={(i) =>
-      setViewer((prev) => prev && { ...prev, index: i })
-    }
-  />
-)}
+        <ImageViewer
+          images={viewer.images}
+          index={viewer.index}
+          onClose={closeViewer}
+          onChange={(i) =>
+            setViewer((prev) => prev && { ...prev, index: i })
+          }
+        />
+      )}
 
       {/* ================================================= */}
       {/* DELETE VARIANT MODAL */}
