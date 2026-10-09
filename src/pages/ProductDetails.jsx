@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import Navbar from "../components/Navbar";
 import { getProductById } from "../features/user/productSlice";
+import { addToCart } from "../features/user/cartSlice";
 import ImageViewer from "../components/ImageViewer";
 
 const PAGE_PADDING = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16";
@@ -22,6 +23,7 @@ function ProductDetailsPage() {
   const { productId } = useParams();
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
 
   const {
@@ -32,11 +34,16 @@ function ProductDetailsPage() {
     (state) => state.products
   );
 
+  const user = useSelector((state) => state.auth?.user);
+
 
   const [colorIndex, setColorIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [viewerOpen, setViewerOpen] = useState(false);
+
+  const [adding, setAdding] = useState(false);
+  const [cartMessage, setCartMessage] = useState(null); // { type, text }
 
   useEffect(() => {
 
@@ -45,6 +52,7 @@ function ProductDetailsPage() {
     setColorIndex(0);
     setSelectedSize(null);
     setSelectedImage(0);
+    setCartMessage(null);
 
   }, [dispatch, productId]);
 
@@ -54,6 +62,14 @@ function ProductDetailsPage() {
     setColorIndex(index);
     setSelectedSize(null);
     setSelectedImage(0);
+    setCartMessage(null);
+
+  };
+
+  const handleSizeChange = (size) => {
+
+    setSelectedSize(size);
+    setCartMessage(null);
 
   };
 
@@ -161,10 +177,61 @@ function ProductDetailsPage() {
 
   const discount = Number(activeVariant?.discountPercent) || 0;
 
+  // same rounding as the shop card and the cart, so the price never changes between pages
   const finalPrice =
     discount > 0
-      ? Number((price - (price * discount) / 100).toFixed(2))
+      ? Math.round(price - (price * discount) / 100)
       : price;
+
+
+  // =====================================================
+  // ADD TO CART
+  // =====================================================
+
+  const handleAddToCart = async () => {
+
+    if (!activeVariant || !activeSize || adding) return;
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    setAdding(true);
+    setCartMessage(null);
+
+    try {
+
+      const result = await dispatch(
+        addToCart({
+          variantId: activeVariant.id,
+          size: activeSize.size,
+          quantity: 1,
+        })
+      ).unwrap();
+
+      setCartMessage({
+        type: "success",
+        text: result.message || "Item added to cart.",
+      });
+
+    } catch (message) {
+
+      setCartMessage({
+        type: "error",
+        text:
+          typeof message === "string"
+            ? message
+            : "Could not add to cart.",
+      });
+
+    } finally {
+
+      setAdding(false);
+
+    }
+
+  };
 
 
   // =====================================================
@@ -224,11 +291,11 @@ function ProductDetailsPage() {
               {images[selectedImage] ? (
 
                 <img
-  src={images[selectedImage]}
-  alt={productDetails.name}
-  onClick={() => setViewerOpen(true)}
-  className="h-full w-full cursor-zoom-in object-cover"
-/>
+                  src={images[selectedImage]}
+                  alt={productDetails.name}
+                  onClick={() => setViewerOpen(true)}
+                  className="h-full w-full cursor-zoom-in object-cover"
+                />
 
               ) : (
 
@@ -478,7 +545,7 @@ function ProductDetailsPage() {
                         key={size}
                         type="button"
                         disabled={outOfStock}
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => handleSizeChange(size)}
                         className={`h-12 rounded-lg border px-2 text-sm font-medium transition ${
                           isActive
                             ? "border-gray-900 bg-gray-900 text-white"
@@ -530,11 +597,33 @@ function ProductDetailsPage() {
 
             <button
               type="button"
-              disabled={stock <= 0}
+              onClick={handleAddToCart}
+              disabled={stock <= 0 || adding}
               className="mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-[#f4511e] px-6 text-sm font-semibold text-white transition hover:bg-[#e64a19] disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              Add to Cart
+              {adding ? "Adding..." : "Add to Cart"}
             </button>
+
+            {cartMessage && (
+
+              <p
+                role="status"
+                className={`mt-3 text-sm font-medium ${
+                  cartMessage.type === "success"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {cartMessage.text}{" "}
+
+                {cartMessage.type === "success" && (
+                  <Link to="/cart" className="underline">
+                    View cart
+                  </Link>
+                )}
+              </p>
+
+            )}
 
           </div>
 
@@ -543,13 +632,13 @@ function ProductDetailsPage() {
       </main>
 
       {viewerOpen && images.length > 0 && (
-  <ImageViewer
-    images={images}
-    index={selectedImage}
-    onClose={() => setViewerOpen(false)}
-    onChange={setSelectedImage}
-  />
-)}
+        <ImageViewer
+          images={images}
+          index={selectedImage}
+          onClose={() => setViewerOpen(false)}
+          onChange={setSelectedImage}
+        />
+      )}
 
     </div>
   );

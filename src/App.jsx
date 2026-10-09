@@ -12,6 +12,7 @@ import EditProfile from './pages/EditProfile';
 import ChangeEmail from './pages/ChangeEmail';
 import AddressForm from './pages/AddressForm';
 import Addresses from './pages/Addresses';
+import Cart from "./pages/Cart";
 import AdminDashboard from './pages/admin/adminDashboard';
 import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
@@ -49,6 +50,7 @@ function App() {
         <Route path="/profile/addresses/new" element={<AddressForm />} />
         <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/cart" element={<Cart />} />
         <Route
   path="/products/:productId"
   element={<ProductDetailsPage />}

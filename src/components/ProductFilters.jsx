@@ -1,13 +1,22 @@
+const GENDERS = [
+  { label: "Men", value: "men" },
+  { label: "Women", value: "women" },
+  { label: "Unisex", value: "unisex" },
+];
+
+
 function ProductFilters({
   categories,
   brands,
 
-  selectedCategory,
-  selectedBrand,
+  selectedGender,
+  selectedCategories,
+  selectedBrands,
 
   minPrice,
   maxPrice,
 
+  onGenderChange,
   onCategoryChange,
   onBrandChange,
 
@@ -18,8 +27,9 @@ function ProductFilters({
 }) {
 
   const hasFilters =
-    selectedCategory ||
-    selectedBrand ||
+    selectedGender ||
+  selectedCategories.length > 0 ||
+  selectedBrands.length > 0 ||
     minPrice ||
     maxPrice;
 
@@ -81,6 +91,79 @@ function ProductFilters({
 
 
       {/* ================================================= */}
+      {/* GENDER */}
+      {/* ================================================= */}
+
+      <div
+        className="
+          border-b
+          border-gray-200
+          py-5
+        "
+      >
+
+        <h3
+          className="
+            mb-4
+            text-sm
+            font-semibold
+            text-gray-900
+          "
+        >
+          Gender
+        </h3>
+
+
+        <div className="space-y-3">
+
+          {GENDERS.map((gender) => (
+
+            <label
+              key={gender.value}
+              className="
+                flex
+                cursor-pointer
+                items-center
+                gap-3
+                text-sm
+                text-gray-600
+              "
+            >
+
+              <input
+                type="radio"
+                name="gender"
+                value={gender.value}
+                checked={
+                  selectedGender ===
+                  gender.value
+                }
+                onChange={() =>
+                  onGenderChange(
+                    gender.value
+                  )
+                }
+                className="
+                  h-4
+                  w-4
+                  accent-[#f4511e]
+                "
+              />
+
+              <span>
+                {gender.label}
+              </span>
+
+            </label>
+
+          ))}
+
+        </div>
+
+      </div>
+
+
+      {/* ================================================= */}
       {/* CATEGORY */}
       {/* ================================================= */}
 
@@ -121,13 +204,10 @@ function ProductFilters({
             >
 
               <input
-                type="radio"
+                type="checkbox"
                 name="category"
                 value={category.id}
-                checked={
-                  selectedCategory ===
-                  category.id
-                }
+                checked={selectedCategories.includes(category.id)}
                 onChange={() =>
                   onCategoryChange(
                     category.id
@@ -277,13 +357,10 @@ function ProductFilters({
             >
 
               <input
-                type="radio"
+                type="checkbox"
                 name="brand"
                 value={brand.id}
-                checked={
-                  selectedBrand ===
-                  brand.id
-                }
+                checked={selectedBrands.includes(brand.id)}
                 onChange={() =>
                   onBrandChange(
                     brand.id

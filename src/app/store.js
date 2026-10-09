@@ -6,39 +6,25 @@ import adminUserReducer from "../features/admin/userSlice";
 import accountReducer from "../features/user/accountSlice";
 import addressReducer from "../features/user/addressSlice";
 import productsReducer from "../features/user/productSlice";
-import adminCategoryReducer
-  from "../features/admin/categorySlice";
-
-import adminBrandsReducer
-  from "../features/admin/brandSlice";
-
-import adminProductReducer
-  from "../features/admin/productSlice";
-import adminVariantReducer from '../features/admin/variantSlice'
+import cartReducer from "../features/user/cartSlice";
+import adminCategoryReducer from "../features/admin/categorySlice";
+import adminBrandsReducer from "../features/admin/brandSlice";
+import adminProductReducer from "../features/admin/productSlice";
+import adminVariantReducer from "../features/admin/variantSlice";
 
 export const store = configureStore({
-
   reducer: {
-
     auth: authReducer,
-
     account: accountReducer,
-
     address: addressReducer,
-
-    products : productsReducer,
+    products: productsReducer,
+    cart: cartReducer,
 
     adminAuth: adminAuthReducer,
-
     adminUsers: adminUserReducer,
-
     adminCategories: adminCategoryReducer,
-
     adminBrands: adminBrandsReducer,
-
     adminProducts: adminProductReducer,
-
-    adminVariants : adminVariantReducer
+    adminVariants: adminVariantReducer,
   },
-
 });

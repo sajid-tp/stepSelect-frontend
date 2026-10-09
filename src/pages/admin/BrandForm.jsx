@@ -389,6 +389,8 @@ function BrandForm() {
 
 
               {/* LOGO */}
+
+              
               <div className="mb-8">
                 <label
                   htmlFor="logo"

@@ -64,6 +64,13 @@ const COLOR_OPTIONS = [
 ];
 
 
+const GENDER_OPTIONS = [
+  { label: "Men", value: "men" },
+  { label: "Women", value: "women" },
+  { label: "Unisex", value: "unisex" },
+];
+
+
 // ==================================================
 // SIZE OPTIONS
 // ==================================================
@@ -127,6 +134,9 @@ const ProductForm = () => {
     error: variantsError,
   } = useSelector((state) => state.adminVariants);
 
+  const [gender, setGender] = useState(
+  existingProduct?.gender || ""
+);
 
   const { categories } = useSelector(
     (state) => state.adminCategories
@@ -372,6 +382,7 @@ const ProductForm = () => {
       return false;
     }
 
+
     if (!description.trim()) {
       setFormError("Product description is required.");
       return false;
@@ -386,6 +397,11 @@ const ProductForm = () => {
       setFormError("Please select a category.");
       return false;
     }
+
+    if (!gender) {
+  setFormError("Please select a gender.");
+  return false;
+}
 
     return true;
   };
@@ -421,6 +437,7 @@ const ProductForm = () => {
               description: description.trim(),
               brandId,
               categoryId,
+              gender
             },
           })
         ).unwrap();
@@ -1187,6 +1204,7 @@ const ProductForm = () => {
               description: description.trim(),
               brandId,
               categoryId,
+              gender
             },
           })
         ).unwrap();
@@ -1215,6 +1233,7 @@ const ProductForm = () => {
           brandId,
           categoryId,
           variants,
+          gender
         })
       ).unwrap();
 
@@ -1609,6 +1628,40 @@ const ProductForm = () => {
                 </select>
 
               </div>
+
+              {/* GENDER */}
+
+<div>
+
+  <label className="block text-sm font-medium text-slate-700 mb-2">
+    Gender
+  </label>
+
+  <select
+    value={gender}
+    onChange={(e) => {
+      setGender(e.target.value);
+      setFormError("");
+      setDetailsSaved(false);
+    }}
+    className="w-full h-11 border border-slate-300 rounded-lg px-4 text-sm outline-none bg-white focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+  >
+
+    <option value="">
+      Select Gender
+    </option>
+
+    {GENDER_OPTIONS.map((option) => (
+
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+
+    ))}
+
+  </select>
+
+</div>
 
             </div>
 

@@ -517,8 +517,8 @@ function CategoryForm() {
                         "Category name is required",
 
                       validate: (value) =>
-                        (value.trim().length > 6 && value.trim().length<20) ||
-                        "Category name should be between 6 and 20 characters",
+                        (value.trim().length >= 3 && value.trim().length<20) ||
+                        "Category name should be between 3 and 20 characters",
                     }
                   )}
                   className={`

@@ -218,9 +218,9 @@ export default function AccountSidebar() {
           </NavLink>
 
           {/* My Cart */}
-          <button
-            type="button"
-            className={staticItemClass}
+          <NavLink
+            to="/cart"
+            className={navItemClass}
           >
             <svg
               width="16"
@@ -236,7 +236,7 @@ export default function AccountSidebar() {
             </svg>
 
             My Cart
-          </button>
+          </NavLink>
 
           {/* Logout - Mobile */}
           <button
