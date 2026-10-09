@@ -6,7 +6,9 @@ import Navbar from "../components/Navbar";
 import { getProductById } from "../features/user/productSlice";
 import { addToCart } from "../features/user/cartSlice";
 import ImageViewer from "../components/ImageViewer";
+import RelatedProducts from "../components/RelatedProducts";
 
+import {  getCart } from "../features/user/cartSlice";
 const PAGE_PADDING = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16";
 
 // "red", "#ff0000" -> true.  "White / Orange" -> false (shown as a text pill)
@@ -34,6 +36,10 @@ function ProductDetailsPage() {
     (state) => state.products
   );
 
+
+const cartItems = useSelector((state) => state.cart.items);
+const cartStatus = useSelector((state) => state.cart.status);
+
   const user = useSelector((state) => state.auth?.user);
 
 
@@ -47,6 +53,8 @@ function ProductDetailsPage() {
 
   useEffect(() => {
 
+    window.scrollTo({ top: 0 });
+
     dispatch(getProductById(productId));
 
     setColorIndex(0);
@@ -56,6 +64,10 @@ function ProductDetailsPage() {
 
   }, [dispatch, productId]);
 
+
+  useEffect(() => {
+  if (user && cartStatus === "idle") dispatch(getCart());
+}, [dispatch, user, cartStatus]);
 
   const handleColorChange = (index) => {
 
@@ -188,6 +200,18 @@ function ProductDetailsPage() {
   // ADD TO CART
   // =====================================================
 
+
+const isInCart = Boolean(
+  activeVariant &&
+    activeSize &&
+    cartItems.some(
+      (item) =>
+        String(item.variantId) === String(activeVariant.id) &&
+        item.size === String(activeSize.size)
+    )
+);
+
+
   const handleAddToCart = async () => {
 
     if (!activeVariant || !activeSize || adding) return;
@@ -232,7 +256,6 @@ function ProductDetailsPage() {
     }
 
   };
-
 
   // =====================================================
   // RENDER
@@ -597,11 +620,11 @@ function ProductDetailsPage() {
 
             <button
               type="button"
-              onClick={handleAddToCart}
+              onClick={isInCart ? () => navigate("/cart") : handleAddToCart}
               disabled={stock <= 0 || adding}
               className="mt-6 flex h-12 w-full items-center justify-center rounded-lg bg-[#f4511e] px-6 text-sm font-semibold text-white transition hover:bg-[#e64a19] disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {adding ? "Adding..." : "Add to Cart"}
+              {adding ? "Adding..." : isInCart ? "Added to Cart ✓ View cart" : "Add to Cart"}
             </button>
 
             {cartMessage && (
@@ -630,6 +653,15 @@ function ProductDetailsPage() {
         </div>
 
       </main>
+  
+
+
+
+<RelatedProducts
+  productId={productId}
+  
+/>
+      
 
       {viewerOpen && images.length > 0 && (
         <ImageViewer

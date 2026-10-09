@@ -36,7 +36,7 @@ export const getProducts = createAsyncThunk(
             maxPrice,
             sort,
             page,
-            limit,
+            limit : limit +1
           },
         }
       );
@@ -119,6 +119,34 @@ export const getProductById = createAsyncThunk(
     }
   }
 );
+export const getRelatedProducts = createAsyncThunk(
+  "userProducts/getRelatedProducts",
+  async ({ productId, limit = 12 }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get("/products", {
+        params: {
+          search: "",
+          category: "",
+          brand: "",
+          gender: "",
+          minPrice: "",
+          maxPrice: "",
+          sort: "",
+          page: 1,
+          limit: 12,
+        },
+      });
+
+      return (res.data.data?.products || [])
+        .filter((product) => String(product.id) !== String(productId))
+        .slice(0, limit);
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message || "Failed to fetch products"
+      );
+    }
+  }
+);
 
 
 // =====================================================
@@ -157,6 +185,12 @@ productDetailsError: null,
   // Brand GET
   brandStatus: "idle",
   brandError: null,
+
+  relatedProducts: [],
+relatedProductsFor: null,
+relatedStatus: "idle",
+relatedError: null,
+relatedRequestId: null,
 
 };
 
@@ -288,6 +322,25 @@ const userProductSlice = createSlice({
   state.productDetailsError = action.payload;
 });
 
+builder
+  .addCase(getRelatedProducts.pending, (state, action) => {
+    state.relatedStatus = "loading";
+    state.relatedError = null;
+    state.relatedProducts = [];
+    state.relatedProductsFor = String(action.meta.arg.productId);
+    state.relatedRequestId = action.meta.requestId;
+  })
+  .addCase(getRelatedProducts.fulfilled, (state, action) => {
+    if (action.meta.requestId !== state.relatedRequestId) return; // outdated reply
+    state.relatedStatus = "succeeded";
+    state.relatedProducts = action.payload;
+  })
+  .addCase(getRelatedProducts.rejected, (state, action) => {
+    if (action.meta.requestId !== state.relatedRequestId) return;
+    state.relatedStatus = "failed";
+    state.relatedError = action.payload || "Failed to load products";
+    state.relatedProducts = [];
+  });
 
     // =================================================
     // GET BRANDS
