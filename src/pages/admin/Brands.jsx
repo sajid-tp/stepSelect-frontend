@@ -28,6 +28,18 @@ import {
 } from "../../features/admin/brandSlice";
 
 
+// ===================================================
+// SORT OPTIONS (constant, so it lives outside the component)
+// ===================================================
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name_asc", label: "Name (A → Z)" },
+  { value: "name_desc", label: "Name (Z → A)" },
+];
+
+
 function Brands() {
 
   const dispatch = useDispatch();
@@ -65,6 +77,9 @@ function Brands() {
   const [page, setPage] =
     useState(1);
 
+  const [sort, setSort] =
+    useState("newest");
+
   const [activeTab, setActiveTab] =
     useState("all");
 
@@ -91,6 +106,7 @@ function Brands() {
       getBrands({
         search,
         page,
+        sort,
       })
     );
 
@@ -98,6 +114,7 @@ function Brands() {
     dispatch,
     search,
     page,
+    sort,
   ]);
 
 
@@ -109,6 +126,22 @@ function Brands() {
     (e) => {
 
       setSearch(
+        e.target.value
+      );
+
+      setPage(1);
+
+    };
+
+
+  // ===================================================
+  // SORT
+  // ===================================================
+
+  const handleSortChange =
+    (e) => {
+
+      setSort(
         e.target.value
       );
 
@@ -286,6 +319,7 @@ function Brands() {
             getBrands({
               search,
               page,
+              sort,
             })
           );
 
@@ -470,7 +504,8 @@ function Brands() {
 
             <div
               className="
-                w-[450px]
+                w-full
+                max-w-[450px]
               "
             >
 
@@ -506,141 +541,221 @@ function Brands() {
 
 
           {/* ================================================= */}
-          {/* TABS */}
+          {/* TABS + SORT */}
           {/* ================================================= */}
 
           <div
             className="
               mb-10
               flex
-              items-center
-              gap-9
+              items-end
+              justify-between
               border-b
               border-gray-200
             "
           >
 
-            {/* ALL BRANDS */}
+            {/* TABS */}
 
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("all")
-              }
-              className={`
-                relative
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "all"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
-                }
-              `}
+            <div
+              className="
+                flex
+                items-center
+                gap-9
+              "
             >
 
-              All brands
+              {/* ALL BRANDS */}
 
-              {activeTab === "all" && (
-
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
-
-              )}
-
-            </button>
-
-
-            {/* ACTIVE */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("active")
-              }
-              className={`
-                relative
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "active"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("all")
                 }
-              `}
+                className={`
+                  relative
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "all"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                All brands
+
+                {activeTab === "all" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+
+              {/* ACTIVE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("active")
+                }
+                className={`
+                  relative
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "active"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                Active
+
+                {activeTab === "active" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+
+              {/* INACTIVE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("inactive")
+                }
+                className={`
+                  relative
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "inactive"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                Inactive
+
+                {activeTab === "inactive" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+            </div>
+
+
+            {/* SORT DROPDOWN */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                pb-3
+              "
             >
 
-              Active
-
-              {activeTab === "active" && (
-
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
-
-              )}
-
-            </button>
+              <label
+                htmlFor="brand-sort"
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-wide
+                  text-gray-400
+                "
+              >
+                Sort by
+              </label>
 
 
-            {/* INACTIVE */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("inactive")
-              }
-              className={`
-                relative
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "inactive"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
+              <select
+                id="brand-sort"
+                value={sort}
+                onChange={
+                  handleSortChange
                 }
-              `}
-            >
+                className="
+                  cursor-pointer
+                  rounded-lg
+                  border
+                  border-gray-300
+                  bg-white
+                  py-2
+                  pl-3
+                  pr-8
+                  text-sm
+                  text-gray-700
+                  outline-none
+                  transition
+                  focus:border-[#ff5722]
+                  focus:ring-1
+                  focus:ring-[#ff5722]
+                "
+              >
 
-              Inactive
+                {SORT_OPTIONS.map(
+                  (opt) => (
 
-              {activeTab === "inactive" && (
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
 
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
+                  )
+                )}
 
-              )}
+              </select>
 
-            </button>
+            </div>
 
           </div>
 

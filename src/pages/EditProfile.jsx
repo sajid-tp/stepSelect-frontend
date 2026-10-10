@@ -24,6 +24,9 @@ function EditProfile() {
 
   const profile = useSelector((state) => state.account?.profile);
 
+
+const isGoogleUser = Boolean(profile?.isGoogleUser);
+
   // --------------------------------------------------
   // Personal Information Form
   // --------------------------------------------------
@@ -619,90 +622,88 @@ function EditProfile() {
               }
               error={personalErrors.username?.message}
             />
+{!isGoogleUser && (
+  <>
+    <FormField
+      label="Email Address"
+      name="email"
+      type="email"
+      value={profile?.email || ''}
+      disabled
+      readOnly
+    />
 
-            <FormField
-              label="Email Address"
-              name="email"
-              type="email"
-              value={profile?.email || ''}
-              disabled
-              readOnly
-            />
+    {/* Email Success */}
+    {emailSuccess && (
+      <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+        {emailSuccess}
+      </p>
+    )}
 
-            {/* Email Success */}
-            {emailSuccess && (
-              <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                {emailSuccess}
-              </p>
-            )}
+    {/* Change Email */}
+    {!isChangingEmail ? (
+      <p className="text-[11px] text-muted -mt-2 mb-4">
+        Need to change your email?{' '}
 
-            {/* Change Email */}
-            {!isChangingEmail ? (
-              <p className="text-[11px] text-muted -mt-2 mb-4">
-                Need to change your email?{' '}
+        <button
+          type="button"
+          onClick={() => {
+            setIsChangingEmail(true);
+            setEmailError('');
+            setEmailSuccess('');
+          }}
+          className="text-[#f4511e] font-semibold hover:underline"
+        >
+          Update it here
+        </button>
+      </p>
+    ) : (
+      <div className="mb-4 rounded-md border border-line bg-gray-50 p-4">
+        <FormField
+          label="New Email Address"
+          name="newEmail"
+          type="email"
+          placeholder="Enter your new email"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSendEmailOtp();
+            }
+          }}
+          error={emailError}
+        />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsChangingEmail(true);
-                    setEmailError('');
-                    setEmailSuccess('');
-                  }}
-                  className="text-[#f4511e] font-semibold hover:underline"
-                >
-                  Update it here
-                </button>
-              </p>
-            ) : (
-              <div className="mb-4 rounded-md border border-line bg-gray-50 p-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSendEmailOtp}
+            disabled={isSendingEmailOtp}
+            className="rounded-md bg-[#f4511e] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e04515] disabled:opacity-50"
+          >
+            {isSendingEmailOtp
+              ? 'Sending code...'
+              : 'Send verification code'}
+          </button>
 
-                <FormField
-                  label="New Email Address"
-                  name="newEmail"
-                  type="email"
-                  placeholder="Enter your new email"
-                  value={newEmail}
-                  onChange={(e) =>
-                    setNewEmail(e.target.value)
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSendEmailOtp();
-                    }
-                  }}
-                  error={emailError}
-                />
-
-                <div className="flex items-center gap-3">
-
-                  <button
-                    type="button"
-                    onClick={handleSendEmailOtp}
-                    disabled={isSendingEmailOtp}
-                    className="rounded-md bg-[#f4511e] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e04515] disabled:opacity-50"
-                  >
-                    {isSendingEmailOtp
-                      ? 'Sending code...'
-                      : 'Send verification code'}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsChangingEmail(false);
-                      setNewEmail('');
-                      setEmailError('');
-                    }}
-                    disabled={isSendingEmailOtp}
-                    className="text-xs font-semibold text-muted hover:text-ink"
-                  >
-                    Cancel
-                  </button>
-
-                </div>
-              </div>
-            )}
+          <button
+            type="button"
+            onClick={() => {
+              setIsChangingEmail(false);
+              setNewEmail('');
+              setEmailError('');
+            }}
+            disabled={isSendingEmailOtp}
+            className="text-xs font-semibold text-muted hover:text-ink"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )}
+  </>
+)}
 
             <FormField
               label="Phone Number"
@@ -739,7 +740,7 @@ function EditProfile() {
         {/* --------------------------------------------- */}
         {/* Security Settings */}
         {/* --------------------------------------------- */}
-
+{!isGoogleUser && (
         <div className="rounded-2xl border border-line bg-white p-8 shadow-xs mb-8">
 
           <h2 className="text-xl font-bold mb-6">
@@ -858,7 +859,7 @@ function EditProfile() {
           </form>
 
         </div>
-
+)}
         {/* Back to Account */}
         <div className="text-center">
           <Link

@@ -18,6 +18,8 @@ export const getProducts = createAsyncThunk(
       search = "",
       page = 1,
       limit = 5,
+      sort = "newest",
+      status = "all",
     } = {},
     { rejectWithValue }
   ) => {
@@ -32,6 +34,8 @@ export const getProducts = createAsyncThunk(
               search,
               page,
               limit,
+              sort,
+              status,
             },
           }
         );
@@ -39,6 +43,7 @@ export const getProducts = createAsyncThunk(
       return response.data;
 
     } catch (error) {
+      // ...unchangedcatch (error) {
 
       return rejectWithValue(
         error.response?.data?.error?.message ||

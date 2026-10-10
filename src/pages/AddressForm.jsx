@@ -92,14 +92,14 @@ function AddressForm() {
 
     if (!values.pinCode.trim()) {
       newErrors.pinCode = 'PIN code is required';
-    } else if (!/^\d{4,10}$/.test(values.pinCode.trim())) {
-      newErrors.pinCode = 'Enter a valid PIN code';
+    } else if (!/^\d{6}$/.test(values.pinCode.trim())) {
+      newErrors.pinCode = 'Enter a valid PIN code with 6 digits';
     }
 
     if (!values.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10,15}$/.test(values.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Phone number must be 10–15 digits';
+    } else if (!/^\d{10}$/.test(values.phoneNumber.trim())) {
+      newErrors.phoneNumber = 'Phone number must be 10 digits';
     }
 
     if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {

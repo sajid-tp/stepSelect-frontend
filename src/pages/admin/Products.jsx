@@ -31,6 +31,26 @@ import {
 } from "../../features/admin/productSlice";
 
 
+// ===================================================
+// CONSTANTS (outside the component, they never change)
+// ===================================================
+
+const PAGE_LIMIT = 5;
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name_asc", label: "Name (A → Z)" },
+  { value: "name_desc", label: "Name (Z → A)" },
+];
+
+const STATUS_TABS = [
+  { value: "all", label: "All products" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
+
 function Products() {
 
   const dispatch = useDispatch();
@@ -68,6 +88,13 @@ function Products() {
   const [page, setPage] =
     useState(1);
 
+  const [sort, setSort] =
+    useState("newest");
+
+  // "all" | "active" | "inactive"
+  const [statusFilter, setStatusFilter] =
+    useState("all");
+
 
   const [deleteTarget, setDeleteTarget] =
     useState(null);
@@ -92,7 +119,9 @@ function Products() {
       getProducts({
         search,
         page,
-        limit: 5,
+        limit: PAGE_LIMIT,
+        sort,
+        status: statusFilter,
       })
     );
 
@@ -100,6 +129,8 @@ function Products() {
     dispatch,
     search,
     page,
+    sort,
+    statusFilter,
   ]);
 
 
@@ -113,6 +144,40 @@ function Products() {
 
     setSearch(
       e.target.value
+    );
+
+    setPage(1);
+
+  };
+
+
+  // ===================================================
+  // SORT
+  // ===================================================
+
+  const handleSortChange = (
+    e
+  ) => {
+
+    setSort(
+      e.target.value
+    );
+
+    setPage(1);
+
+  };
+
+
+  // ===================================================
+  // STATUS TAB CHANGE
+  // ===================================================
+
+  const handleStatusFilterChange = (
+    value
+  ) => {
+
+    setStatusFilter(
+      value
     );
 
     setPage(1);
@@ -268,6 +333,31 @@ function Products() {
 
           })
         ).unwrap();
+
+
+        /*
+          The list is filtered on the server,
+          so on the Active / Inactive tabs the
+          toggled product no longer belongs
+          there. Refetch to update the list
+          and the pagination counts.
+        */
+
+        if (
+          statusFilter !== "all"
+        ) {
+
+          dispatch(
+            getProducts({
+              search,
+              page,
+              limit: PAGE_LIMIT,
+              sort,
+              status: statusFilter,
+            })
+          );
+
+        }
 
 
       } catch (error) {
@@ -439,7 +529,8 @@ function Products() {
               }
               placeholder="Search products..."
               className="
-                w-[450px]
+                w-full
+                max-w-[450px]
                 rounded-lg
                 border
                 border-gray-300
@@ -454,6 +545,151 @@ function Products() {
                 focus:ring-[#ff5722]
               "
             />
+
+          </div>
+
+
+          {/* ================================================= */}
+          {/* TABS + SORT */}
+          {/* ================================================= */}
+
+          <div
+            className="
+              mb-8
+              flex
+              items-end
+              justify-between
+              border-b
+              border-gray-200
+            "
+          >
+
+            {/* STATUS TABS */}
+
+            <div
+              className="
+                flex
+                gap-8
+              "
+            >
+
+              {STATUS_TABS.map(
+                (tab) => (
+
+                  <button
+                    key={tab.value}
+                    type="button"
+                    onClick={() =>
+                      handleStatusFilterChange(
+                        tab.value
+                      )
+                    }
+                    className={`
+                      relative
+                      px-1
+                      pb-4
+                      text-sm
+                      font-medium
+                      transition
+                      ${
+                        statusFilter === tab.value
+                          ? "text-[#071a33]"
+                          : "text-gray-500 hover:text-gray-800"
+                      }
+                    `}
+                  >
+
+                    {tab.label}
+
+                    {statusFilter === tab.value && (
+
+                      <span
+                        className="
+                          absolute
+                          bottom-0
+                          left-0
+                          h-[2px]
+                          w-full
+                          bg-[#ff5722]
+                        "
+                      />
+
+                    )}
+
+                  </button>
+
+                )
+              )}
+
+            </div>
+
+
+            {/* SORT DROPDOWN */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                pb-3
+              "
+            >
+
+              <label
+                htmlFor="product-sort"
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-wide
+                  text-gray-400
+                "
+              >
+                Sort by
+              </label>
+
+
+              <select
+                id="product-sort"
+                value={sort}
+                onChange={
+                  handleSortChange
+                }
+                className="
+                  cursor-pointer
+                  rounded-lg
+                  border
+                  border-gray-300
+                  bg-white
+                  py-2
+                  pl-3
+                  pr-8
+                  text-sm
+                  text-gray-700
+                  outline-none
+                  transition
+                  focus:border-[#ff5722]
+                  focus:ring-1
+                  focus:ring-[#ff5722]
+                "
+              >
+
+                {SORT_OPTIONS.map(
+                  (opt) => (
+
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+            </div>
 
           </div>
 
@@ -544,8 +780,15 @@ function Products() {
                     text-gray-500
                   "
                 >
-                  Try changing your search
-                  or add a new product.
+
+                  {search
+                    ? "Try searching with a different product name."
+                    : statusFilter === "active"
+                      ? "There are no active products."
+                      : statusFilter === "inactive"
+                        ? "There are no inactive products."
+                        : "Try changing your search or add a new product."}
+
                 </p>
 
               </div>
@@ -640,7 +883,7 @@ function Products() {
 
               limit={
                 limit ||
-                5
+                PAGE_LIMIT
               }
 
               onPageChange={

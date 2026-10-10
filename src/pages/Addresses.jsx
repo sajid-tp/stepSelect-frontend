@@ -1,10 +1,12 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
+import { useEffect,useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import AccountSidebar from '../components/AccountSideBar';
 import { fetchAddresses, deleteAddress } from '../features/user/addressSlice';
+import Modal from '../components/Modals';
+
 
 function Addresses() {
   const dispatch = useDispatch();
@@ -15,9 +17,33 @@ function Addresses() {
     if (status === 'idle') dispatch(fetchAddresses());
   }, [status, dispatch]);
 
-  const handleDelete = (id) => {
-    dispatch(deleteAddress(id));
-  };
+// Opens the confirmation modal
+const handleDelete = (id) => {
+  setSelectedAddressId(id);
+  setShowDeleteModal(true);
+};
+
+// Deletes only after confirmation
+const handleDeleteAddress = async () => {
+  if (!selectedAddressId) return;
+
+  setIsDeleting(true);
+
+  try {
+    await dispatch(deleteAddress(selectedAddressId)).unwrap();
+
+    setShowDeleteModal(false);
+    setSelectedAddressId(null);
+  } catch (error) {
+    console.error('Failed to delete address:', error);
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [isDeleting, setIsDeleting] = useState(false);
+const [selectedAddressId, setSelectedAddressId] = useState(null);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -119,6 +145,17 @@ function Addresses() {
       </main>
 
       <Footer />
+      <Modal
+  open={showDeleteModal}
+  title="Delete Address"
+  message="Are you sure you want to delete this address? This action cannot be undone."
+  confirmText="Delete"
+  cancelText="Cancel"
+  onConfirm={handleDeleteAddress}
+  onClose={() => setShowDeleteModal(false)}
+  loading={isDeleting}
+  variant="danger"
+/>
     </div>
   );
 }

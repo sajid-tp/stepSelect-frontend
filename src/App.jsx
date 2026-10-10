@@ -21,6 +21,7 @@ import CategoryForm from "./pages/admin/CategoryForm";
 import Brands from "./pages/admin/Brands";
 import BrandForm from "./pages/admin/BrandForm";
 import Shop from "./pages/Shop";
+import GuestRoute from './components/GuestRoute';
 import ProductDetailsPage from "./pages/ProductDetails"
 import Products
   from "./pages/admin/Products";
@@ -38,8 +39,10 @@ function App() {
       <Routes>
         {/* User routes */}
         <Route path="/" element={<Home />} />
+          <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+         </Route>
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/update-password" element={<UpdatePassword />} />
@@ -57,7 +60,9 @@ function App() {
 />
  
        {/* Admin routes */}
+         <Route element={<GuestRoute />}>
         <Route path="/admin/auth/login" element={<AdminLogin/>}/>
+        </Route>
        <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<Users />} />

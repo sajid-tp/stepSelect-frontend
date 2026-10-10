@@ -61,7 +61,7 @@ function Login() {
 
     try {
       await dispatch(loginUser(form)).unwrap();
-      navigate('/');
+       navigate('/', { replace: true });
     } catch (err) {
    
     }
@@ -77,7 +77,7 @@ function Login() {
     try {
       const token = credentialResponse.credential;
       await dispatch(googleLogin({ token })).unwrap();
-      navigate('/');
+       navigate('/', { replace: true });
     } catch (err) {
      
     }

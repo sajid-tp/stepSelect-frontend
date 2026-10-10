@@ -80,7 +80,7 @@ function AdminLogin() {
     try {
       await dispatch(loginAdmin(form)).unwrap();
 
-      navigate("/admin");
+      navigate("/admin", { replace: true });
     } catch (err) {
       console.log("Admin login failed:", err);
     }

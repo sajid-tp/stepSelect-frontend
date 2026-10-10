@@ -28,6 +28,18 @@ import {
 } from "../../features/admin/categorySlice";
 
 
+// ===================================================
+// SORT OPTIONS (constant, so it lives outside the component)
+// ===================================================
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "name_asc", label: "Name (A → Z)" },
+  { value: "name_desc", label: "Name (Z → A)" },
+];
+
+
 function Categories() {
 
   const dispatch = useDispatch();
@@ -48,6 +60,9 @@ function Categories() {
 
   const [page, setPage] =
     useState(1);
+
+  const [sort, setSort] =
+    useState("newest");
 
   const [togglingCategoryId, setTogglingCategoryId] =
     useState(null);
@@ -95,6 +110,7 @@ function Categories() {
         search,
         page,
         limit,
+        sort,
       })
     );
 
@@ -103,6 +119,7 @@ function Categories() {
     search,
     page,
     limit,
+    sort,
   ]);
 
 
@@ -126,6 +143,22 @@ function Categories() {
     () => {
 
       setSearch("");
+
+      setPage(1);
+
+    };
+
+
+  // ===================================================
+  // SORT
+  // ===================================================
+
+  const handleSortChange =
+    (e) => {
+
+      setSort(
+        e.target.value
+      );
 
       setPage(1);
 
@@ -276,6 +309,7 @@ function Categories() {
               search,
               page,
               limit,
+              sort,
             })
           );
 
@@ -523,14 +557,14 @@ function Categories() {
             className="
               flex
               items-center
-              justify-between
             "
           >
 
             <div
               className="
                 relative
-                w-[450px]
+                w-full
+                max-w-[450px]
               "
             >
 
@@ -589,143 +623,223 @@ function Categories() {
 
 
           {/* ================================================= */}
-          {/* TABS */}
+          {/* TABS + SORT */}
           {/* ================================================= */}
 
           <div
             className="
               mt-14
               flex
-              gap-8
+              items-end
+              justify-between
               border-b
               border-gray-200
             "
           >
 
-            {/* ALL CATEGORIES */}
+            {/* TABS */}
 
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("all")
-              }
-              className={`
-                relative
-                px-1
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "all"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
-                }
-              `}
+            <div
+              className="
+                flex
+                gap-8
+              "
             >
 
-              All categories
+              {/* ALL CATEGORIES */}
 
-              {activeTab === "all" && (
-
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
-
-              )}
-
-            </button>
-
-
-            {/* ACTIVE */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("active")
-              }
-              className={`
-                relative
-                px-1
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "active"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("all")
                 }
-              `}
+                className={`
+                  relative
+                  px-1
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "all"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                All categories
+
+                {activeTab === "all" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+
+              {/* ACTIVE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("active")
+                }
+                className={`
+                  relative
+                  px-1
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "active"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                Active
+
+                {activeTab === "active" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+
+              {/* INACTIVE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleTabChange("inactive")
+                }
+                className={`
+                  relative
+                  px-1
+                  pb-4
+                  text-sm
+                  font-medium
+                  transition
+                  ${
+                    activeTab === "inactive"
+                      ? "text-[#071a33]"
+                      : "text-gray-500 hover:text-gray-800"
+                  }
+                `}
+              >
+
+                Inactive
+
+                {activeTab === "inactive" && (
+
+                  <span
+                    className="
+                      absolute
+                      bottom-0
+                      left-0
+                      h-[2px]
+                      w-full
+                      bg-[#ff5722]
+                    "
+                  />
+
+                )}
+
+              </button>
+
+            </div>
+
+
+            {/* SORT DROPDOWN */}
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                pb-3
+              "
             >
 
-              Active
-
-              {activeTab === "active" && (
-
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
-
-              )}
-
-            </button>
+              <label
+                htmlFor="category-sort"
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-wide
+                  text-gray-400
+                "
+              >
+                Sort by
+              </label>
 
 
-            {/* INACTIVE */}
-
-            <button
-              type="button"
-              onClick={() =>
-                handleTabChange("inactive")
-              }
-              className={`
-                relative
-                px-1
-                pb-4
-                text-sm
-                font-medium
-                transition
-                ${
-                  activeTab === "inactive"
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
+              <select
+                id="category-sort"
+                value={sort}
+                onChange={
+                  handleSortChange
                 }
-              `}
-            >
+                className="
+                  cursor-pointer
+                  rounded-lg
+                  border
+                  border-gray-300
+                  bg-white
+                  py-2
+                  pl-3
+                  pr-8
+                  text-sm
+                  text-gray-700
+                  outline-none
+                  transition
+                  focus:border-[#ff5722]
+                  focus:ring-1
+                  focus:ring-[#ff5722]
+                "
+              >
 
-              Inactive
+                {SORT_OPTIONS.map(
+                  (opt) => (
 
-              {activeTab === "inactive" && (
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
 
-                <span
-                  className="
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    w-full
-                    bg-[#ff5722]
-                  "
-                />
+                  )
+                )}
 
-              )}
+              </select>
 
-            </button>
+            </div>
 
           </div>
 
