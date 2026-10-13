@@ -6,7 +6,7 @@ function Pagination({
   onPageChange,
 }) {
   // No pagination needed
-  if (!totalResults || totalPages <= 1) {
+  if (!totalResults) {
     return null;
   }
 

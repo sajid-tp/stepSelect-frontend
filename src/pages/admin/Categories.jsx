@@ -537,6 +537,9 @@ function Categories() {
 
         </header>
 
+        
+    
+
 
         {/* ================================================= */}
         {/* CONTENT */}
@@ -592,6 +595,8 @@ function Categories() {
                   focus:ring-[#ff5722]
                 "
               />
+
+
 
 
               {search && (

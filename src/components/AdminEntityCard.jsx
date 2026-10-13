@@ -185,7 +185,7 @@ function AdminEntityCard({
         <button
           type="button"
           onClick={() => onEdit(item)}
-          disabled={!item.isActive}
+          // disabled={!item.isActive}
           className={`
             flex-1
             rounded-lg

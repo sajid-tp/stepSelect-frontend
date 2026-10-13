@@ -508,6 +508,10 @@ const ProductForm = () => {
   // General (banner) error
   const [formError, setFormError] = useState("");
 
+  // Modal shown when a new product has no variants
+  const [showVariantRequiredModal, setShowVariantRequiredModal] =
+    useState(false);
+
   /*
    * Field-level errors for the Product Details section:
    * { productName, brandId, categoryId, gender, description }
@@ -1535,9 +1539,7 @@ const ProductForm = () => {
      */
 
     if (!isEditMode && variants.length === 0) {
-      setFormError(
-        "Please add at least one variant before finishing."
-      );
+      setShowVariantRequiredModal(true);
       return;
     }
 
@@ -2726,6 +2728,29 @@ const ProductForm = () => {
           }
         />
       )}
+
+      {/* ================================================= */}
+      {/* VARIANT REQUIRED MODAL */}
+      {/* ================================================= */}
+
+      <Modal
+        open={showVariantRequiredModal}
+        title="Variant Required"
+        message="Please add at least one variant before finishing this product."
+        confirmText="Add Variant"
+        cancelText="Cancel"
+        variant="primary"
+        onClose={() => setShowVariantRequiredModal(false)}
+        onConfirm={() => {
+          setShowVariantRequiredModal(false);
+          setTimeout(() => {
+            variantFormRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }, 100);
+        }}
+      />
 
       {/* ================================================= */}
       {/* DELETE VARIANT MODAL */}

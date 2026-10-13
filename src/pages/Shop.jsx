@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import Pagination from "../components/Pagination";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
-
+import useDebounce from "../hooks/useDebounce";
 import {
   getProducts,
   getCategories,
@@ -36,7 +36,7 @@ function Shop() {
   const user = useSelector((state) => state.auth?.user);
   const cartItems = useSelector((state) => state.cart.items);
   const cartStatus = useSelector((state) => state.cart.status);
-
+  
   // ---------- local state ----------
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -46,7 +46,7 @@ function Shop() {
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
-
+  const debouncedSearch = useDebounce(search, 300);
   // ---------- categories + brands ----------
   useEffect(() => {
     if (categoryStatus === "idle") dispatch(getCategories());
@@ -66,7 +66,7 @@ function Shop() {
   const loadProducts = useCallback(() => {
     dispatch(
       getProducts({
-        search,
+        search : debouncedSearch,
         category: selectedCategories.join(","),
         brand: selectedBrands.join(","),
         gender: selectedGender,
@@ -79,13 +79,13 @@ function Shop() {
     );
   }, [
     dispatch,
-    search,
     selectedCategories,
     selectedBrands,
     selectedGender,
     minPrice,
     maxPrice,
     page,
+    debouncedSearch
   ]);
 
   useEffect(() => {
