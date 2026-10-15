@@ -9,6 +9,11 @@ import ImageViewer from "../components/ImageViewer";
 import RelatedProducts from "../components/RelatedProducts";
 
 import {  getCart } from "../features/user/cartSlice";
+import {
+  getWishlistIds,
+  addToWishlist,
+  removeFromWishlist,
+} from "../features/user/wishlistSlice";
 const PAGE_PADDING = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16";
 
 // "red", "#ff0000" -> true.  "White / Orange" -> false (shown as a text pill)
@@ -41,6 +46,8 @@ const cartItems = useSelector((state) => state.cart.items);
 const cartStatus = useSelector((state) => state.cart.status);
 
   const user = useSelector((state) => state.auth?.user);
+  const wishlistIds = useSelector((state) => state.wishlist.ids);
+  const wishlistIdsStatus = useSelector((state) => state.wishlist.idsStatus);
 
 
   const [colorIndex, setColorIndex] = useState(0);
@@ -50,6 +57,7 @@ const cartStatus = useSelector((state) => state.cart.status);
 
   const [adding, setAdding] = useState(false);
   const [cartMessage, setCartMessage] = useState(null); // { type, text }
+  const [wishlistBusy, setWishlistBusy] = useState(false);
 
   useEffect(() => {
 
@@ -68,6 +76,10 @@ const cartStatus = useSelector((state) => state.cart.status);
   useEffect(() => {
   if (user && cartStatus === "idle") dispatch(getCart());
 }, [dispatch, user, cartStatus]);
+
+  useEffect(() => {
+    if (user && wishlistIdsStatus === "idle") dispatch(getWishlistIds());
+  }, [dispatch, user, wishlistIdsStatus]);
 
   const handleColorChange = (index) => {
 
@@ -212,6 +224,60 @@ const isInCart = Boolean(
 );
 
 
+  // =====================================================
+  // WISHLIST (selected colour + size; stock is not required)
+  // =====================================================
+
+  const wishlistSize = activeSize || sizes[0] || null;
+
+  const isInWishlist = Boolean(
+    activeVariant &&
+      wishlistSize &&
+      wishlistIds.some(
+        (line) =>
+          String(line.variantId) === String(activeVariant.id) &&
+          String(line.size) === String(wishlistSize.size)
+      )
+  );
+
+  const handleToggleWishlist = async () => {
+    if (!activeVariant || !wishlistSize || wishlistBusy) return;
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    setWishlistBusy(true);
+    setCartMessage(null);
+
+    try {
+      const payload = {
+        variantId: activeVariant.id,
+        size: String(wishlistSize.size),
+      };
+
+      const result = isInWishlist
+        ? await dispatch(removeFromWishlist(payload)).unwrap()
+        : await dispatch(
+            addToWishlist({ ...payload, productId: productDetails.id || productId })
+          ).unwrap();
+
+      setCartMessage({
+        type: "success",
+        text: result.message || "Wishlist updated.",
+        wishlist: true,
+      });
+    } catch (message) {
+      setCartMessage({
+        type: "error",
+        text: typeof message === "string" ? message : "Could not update wishlist.",
+      });
+    } finally {
+      setWishlistBusy(false);
+    }
+  };
+
   const handleAddToCart = async () => {
 
     if (!activeVariant || !activeSize || adding) return;
@@ -333,14 +399,17 @@ const isInCart = Boolean(
 
               <button
                 type="button"
-                aria-label="Add to wishlist"
-                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition hover:scale-105"
+                onClick={handleToggleWishlist}
+                disabled={wishlistBusy}
+                aria-pressed={isInWishlist}
+                aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm transition hover:scale-105 disabled:opacity-60"
               >
 
                 <svg
-                  className="h-5 w-5 text-gray-900"
+                  className={`h-5 w-5 ${isInWishlist ? "text-red-500" : "text-gray-900"}`}
                   viewBox="0 0 24 24"
-                  fill="none"
+                  fill={isInWishlist ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -640,8 +709,11 @@ const isInCart = Boolean(
                 {cartMessage.text}{" "}
 
                 {cartMessage.type === "success" && (
-                  <Link to="/cart" className="underline">
-                    View cart
+                  <Link
+                    to={cartMessage.wishlist ? "/wishlist" : "/cart"}
+                    className="underline"
+                  >
+                    {cartMessage.wishlist ? "View wishlist" : "View cart"}
                   </Link>
                 )}
               </p>

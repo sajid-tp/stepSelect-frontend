@@ -7,6 +7,7 @@ import Pagination from "../components/Pagination";
 import ProductCard from "../components/ProductCard";
 import ProductFilters from "../components/ProductFilters";
 import useDebounce from "../hooks/useDebounce";
+import useWishlist from "../hooks/useWishlist";
 import {
   getProducts,
   getCategories,
@@ -61,6 +62,9 @@ function Shop() {
   }, [dispatch, user, cartStatus]);
 
   const productIdsInCart = new Set(cartItems.map((item) => String(item.productId)));
+
+  // ---------- wishlist (filled hearts) ----------
+  const { productIdsInWishlist, toggleProduct } = useWishlist();
 
   // ---------- products ----------
   const loadProducts = useCallback(() => {
@@ -156,6 +160,11 @@ function Shop() {
   };
 
   const isLoading = productStatus === "loading";
+
+  console.log("Categories:", categories);
+console.log("Brands:", brands);
+console.log("Category status:", categoryStatus);
+console.log("Brand status:", brandStatus);
 
   // ---------- render ----------
   return (
@@ -343,6 +352,8 @@ function Shop() {
                       onAddToCart={handleAddToCart}
                       inCart={productIdsInCart.has(String(product.id))}
                       onViewCart={() => navigate("/cart")}
+                      inWishlist={productIdsInWishlist.has(String(product.id))}
+                      onToggleWishlist={toggleProduct}
                     />
                   ))}
                 </div>

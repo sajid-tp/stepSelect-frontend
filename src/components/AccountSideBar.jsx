@@ -179,9 +179,9 @@ export default function AccountSidebar() {
           </button>
 
           {/* Wishlist */}
-          <button
-            type="button"
-            className={staticItemClass}
+          <NavLink
+            to="/wishlist"
+            className={navItemClass}
           >
             <svg
               width="16"
@@ -195,7 +195,7 @@ export default function AccountSidebar() {
             </svg>
 
             Wishlist
-          </button>
+          </NavLink>
 
           {/* Addresses */}
           <NavLink

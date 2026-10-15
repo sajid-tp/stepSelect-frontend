@@ -13,8 +13,8 @@ export const getCategories = createAsyncThunk(
     {
       search = "",
       page = 1,
-      limit = 5,
-      sort
+      sort,
+      status
     },
     { rejectWithValue }
   ) => {
@@ -25,8 +25,8 @@ export const getCategories = createAsyncThunk(
           params: {
             search,
             page,
-            limit,
-            sort
+            sort,
+            status
           },
         }
       );
@@ -166,7 +166,7 @@ const adminCategorySlice = createSlice({
 
     currentPage: 1,
 
-    limit: 5,
+    limit: 8,
 
     // GET
     status: "idle",
@@ -216,6 +216,7 @@ const adminCategorySlice = createSlice({
 
           state.categories =
             action.payload.categories;
+      
 
           state.totalResults =
             action.payload.totalResults;

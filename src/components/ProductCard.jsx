@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-function ProductCard({ product, onAddToCart, inCart = false, onViewCart }) {
-  const [liked, setLiked] = useState(false);
+function ProductCard({
+  product,
+  onAddToCart,
+  inCart = false,
+  onViewCart,
+  inWishlist = false,
+  onToggleWishlist,
+}) {
+  const [wishing, setWishing] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,11 +48,21 @@ function ProductCard({ product, onAddToCart, inCart = false, onViewCart }) {
     }
   };
 
-  const handleWishlist = (e) => {
+  const handleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    setLiked((previous) => !previous);
+    if (wishing) return;
+
+    try {
+      setWishing(true);
+      setError("");
+      await onToggleWishlist?.(product);
+    } catch (message) {
+      setError(typeof message === "string" ? message : "Could not update wishlist.");
+    } finally {
+      setWishing(false);
+    }
   };
 
   return (
@@ -76,15 +93,17 @@ function ProductCard({ product, onAddToCart, inCart = false, onViewCart }) {
           <button
             type="button"
             onClick={handleWishlist}
-            aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105"
+            disabled={wishing}
+            aria-pressed={inWishlist}
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 disabled:opacity-60"
           >
             <span
               className={`text-[20px] leading-none transition-colors ${
-                liked ? "text-red-500" : "text-gray-700"
+                inWishlist ? "text-red-500" : "text-gray-700"
               }`}
             >
-              {liked ? "♥" : "♡"}
+              {inWishlist ? "♥" : "♡"}
             </span>
           </button>
         </div>

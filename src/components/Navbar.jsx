@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 
 import { logoutUser, logout } from "../features/user/authSlice";
+import { getWishlistIds } from "../features/user/wishlistSlice";
 import Modal from "./Modals";
 
 function Navbar() {
@@ -10,6 +11,8 @@ function Navbar() {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.auth.user);
+  const wishlistCount = useSelector((state) => state.wishlist.wishlistCount);
+  const wishlistIdsStatus = useSelector((state) => state.wishlist.idsStatus);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,6 +25,11 @@ function Navbar() {
 
   const navLinkClass = ({ isActive }) =>
     `text-[13px] ${isActive ? "font-semibold text-ink" : "text-muted"}`;
+
+  // Load the wishlist count for the badge (once per login)
+  useEffect(() => {
+    if (user && wishlistIdsStatus === "idle") dispatch(getWishlistIds());
+  }, [dispatch, user, wishlistIdsStatus]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -111,7 +119,7 @@ function Navbar() {
           {/* DESKTOP RIGHT SIDE */}
           <div className="hidden items-center gap-[18px] md:flex">
             {/* Search */}
-            <button className="flex text-ink" aria-label="Search">
+            {/* <button className="flex text-ink" aria-label="Search">
               <svg
                 width="18"
                 height="18"
@@ -123,11 +131,11 @@ function Navbar() {
                 <circle cx="11" cy="11" r="7" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-            </button>
+            </button> */}
 
             {/* Wishlist */}
             {user && (
-              <Link to="/wishlist" className="flex text-ink" aria-label="Wishlist">
+              <Link to="/wishlist" className="relative flex text-ink" aria-label="Wishlist">
                 <svg
                   width="18"
                   height="18"
@@ -138,6 +146,12 @@ function Navbar() {
                 >
                   <path d="M12 21s-7.5-4.6-10-9.1C.5 8.6 2 5 5.5 5c2 0 3.4 1.1 4.5 2.6C11.1 6.1 12.5 5 14.5 5 18 5 19.5 8.6 18 11.9 15.5 16.4 12 21 12 21z" />
                 </svg>
+
+                {wishlistCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4511e] px-1 text-[10px] font-semibold leading-none text-white">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
               </Link>
             )}
 
@@ -291,7 +305,7 @@ function Navbar() {
                 className={navLinkClass}
                 onClick={() => setMobileOpen(false)}
               >
-                Wishlist
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}
               </Link>
             )}
 

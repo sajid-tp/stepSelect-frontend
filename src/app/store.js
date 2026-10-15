@@ -7,6 +7,7 @@ import accountReducer from "../features/user/accountSlice";
 import addressReducer from "../features/user/addressSlice";
 import productsReducer from "../features/user/productSlice";
 import cartReducer from "../features/user/cartSlice";
+import wishlistReducer from "../features/user/wishlistSlice";
 import adminCategoryReducer from "../features/admin/categorySlice";
 import adminBrandsReducer from "../features/admin/brandSlice";
 import adminProductReducer from "../features/admin/productSlice";
@@ -19,6 +20,7 @@ export const store = configureStore({
     address: addressReducer,
     products: productsReducer,
     cart: cartReducer,
+    wishlist: wishlistReducer,
 
     adminAuth: adminAuthReducer,
     adminUsers: adminUserReducer,

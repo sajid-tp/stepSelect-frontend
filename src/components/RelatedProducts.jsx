@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import { getRelatedProducts } from "../features/user/productSlice";
 import { getCart, quickAddToCart } from "../features/user/cartSlice";
+import useWishlist from "../hooks/useWishlist";
 
 // cards stay between 200px and 240px wide, however wide the screen is
 const GRID =
@@ -31,6 +32,8 @@ const { relatedProducts, relatedProductsFor, relatedStatus, relatedError } = use
   }, [dispatch, user, cartStatus]);
 
   const productIdsInCart = new Set(cartItems.map((item) => String(item.productId)));
+
+  const { productIdsInWishlist, toggleProduct } = useWishlist();
 
   const handleAddToCart = async (product) => {
     if (!user) {
@@ -81,6 +84,8 @@ if (!isLoading && relatedStatus === "failed") {
                 onAddToCart={handleAddToCart}
                 inCart={productIdsInCart.has(String(product.id))}
                 onViewCart={() => navigate("/cart")}
+                inWishlist={productIdsInWishlist.has(String(product.id))}
+                onToggleWishlist={toggleProduct}
               />
             ))}
       </div>

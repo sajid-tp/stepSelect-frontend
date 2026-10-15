@@ -28,9 +28,6 @@ import {
 } from "../../features/admin/categorySlice";
 
 
-// ===================================================
-// SORT OPTIONS (constant, so it lives outside the component)
-// ===================================================
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
@@ -47,10 +44,6 @@ function Categories() {
   const navigate =
     useNavigate();
 
-
-  // ===================================================
-  // LOCAL STATE
-  // ===================================================
 
   const [search, setSearch] =
     useState("");
@@ -71,18 +64,12 @@ function Categories() {
     useState(null);
 
 
-  // Delete confirmation modal
-
   const [deleteModalOpen, setDeleteModalOpen] =
     useState(false);
 
   const [selectedCategory, setSelectedCategory] =
     useState(null);
 
-
-  // ===================================================
-  // REDUX
-  // ===================================================
 
   const {
     categories = [],
@@ -99,18 +86,14 @@ function Categories() {
   );
 
 
-  // ===================================================
-  // GET CATEGORIES
-  // ===================================================
-
   useEffect(() => {
 
     dispatch(
       getCategories({
         search,
         page,
-        limit,
         sort,
+        status : activeTab
       })
     );
 
@@ -118,14 +101,9 @@ function Categories() {
     dispatch,
     search,
     page,
-    limit,
     sort,
+    activeTab
   ]);
-
-
-  // ===================================================
-  // SEARCH
-  // ===================================================
 
   const handleSearchChange =
     (e) => {
@@ -149,10 +127,6 @@ function Categories() {
     };
 
 
-  // ===================================================
-  // SORT
-  // ===================================================
-
   const handleSortChange =
     (e) => {
 
@@ -163,11 +137,6 @@ function Categories() {
       setPage(1);
 
     };
-
-
-  // ===================================================
-  // EDIT
-  // ===================================================
 
   const handleEditCategory =
     (category) => {
@@ -182,11 +151,6 @@ function Categories() {
       );
 
     };
-
-
-  // ===================================================
-  // TOGGLE STATUS
-  // ===================================================
 
   const handleToggleStatus =
     async (category) => {
@@ -221,10 +185,6 @@ function Categories() {
     };
 
 
-  // ===================================================
-  // OPEN DELETE MODAL
-  // ===================================================
-
   const handleDeleteCategory =
     (category) => {
 
@@ -238,10 +198,6 @@ function Categories() {
 
     };
 
-
-  // ===================================================
-  // CONFIRM DELETE
-  // ===================================================
 
   const handleConfirmDelete =
     async () => {
@@ -257,14 +213,6 @@ function Categories() {
           selectedCategory.id
         );
 
-
-        /*
-         * If this is the only category
-         * on the current page and we're
-         * not on page 1, move to the
-         * previous page after deletion.
-         */
-
         const shouldGoToPreviousPage =
           categories.length === 1 &&
           page > 1;
@@ -277,9 +225,7 @@ function Categories() {
         ).unwrap();
 
 
-        // Close modal after successful delete
-
-        setDeleteModalOpen(
+      setDeleteModalOpen(
           false
         );
 
@@ -299,10 +245,6 @@ function Categories() {
 
         } else {
 
-          /*
-           * Refresh current page because
-           * the backend is paginated.
-           */
 
           dispatch(
             getCategories({
@@ -333,18 +275,8 @@ function Categories() {
 
     };
 
-
-  // ===================================================
-  // CLOSE DELETE MODAL
-  // ===================================================
-
   const handleCloseDeleteModal =
     () => {
-
-      /*
-       * Don't allow closing while
-       * delete request is running.
-       */
 
       if (
         deletingCategoryId !== null
@@ -363,50 +295,16 @@ function Categories() {
 
     };
 
-
-  // ===================================================
-  // TAB CHANGE
-  // ===================================================
-
   const handleTabChange =
     (value) => {
 
       setActiveTab(value);
+      setPage(1);
 
     };
 
 
-  // ===================================================
-  // FILTER CATEGORIES
-  // ===================================================
 
-  const filteredCategories =
-    categories.filter(
-      (category) => {
-
-        if (
-          activeTab === "active"
-        ) {
-          return category.isActive;
-        }
-
-
-        if (
-          activeTab === "inactive"
-        ) {
-          return !category.isActive;
-        }
-
-
-        return true;
-
-      }
-    );
-
-
-  // ===================================================
-  // RENDER
-  // ===================================================
 
   return (
 
@@ -417,27 +315,14 @@ function Categories() {
       "
     >
 
-      {/* ================================================= */}
-      {/* SIDEBAR */}
-      {/* ================================================= */}
-
       <AdminSidebar />
 
-
-      {/* ================================================= */}
-      {/* MAIN */}
-      {/* ================================================= */}
-
-      <main
+  <main
         className="
           ml-[214px]
           min-h-screen
         "
       >
-
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
 
         <header
           className="
@@ -491,11 +376,6 @@ function Categories() {
 
           </div>
 
-
-          {/* ================================================= */}
-          {/* ADD CATEGORY */}
-          {/* ================================================= */}
-
           <button
             type="button"
             onClick={() =>
@@ -537,24 +417,12 @@ function Categories() {
 
         </header>
 
-        
-    
-
-
-        {/* ================================================= */}
-        {/* CONTENT */}
-        {/* ================================================= */}
-
         <section
           className="
             px-12
             py-10
           "
         >
-
-          {/* ================================================= */}
-          {/* SEARCH */}
-          {/* ================================================= */}
 
           <div
             className="
@@ -626,11 +494,6 @@ function Categories() {
 
           </div>
 
-
-          {/* ================================================= */}
-          {/* TABS + SORT */}
-          {/* ================================================= */}
-
           <div
             className="
               mt-14
@@ -642,16 +505,12 @@ function Categories() {
             "
           >
 
-            {/* TABS */}
-
             <div
               className="
                 flex
                 gap-8
               "
             >
-
-              {/* ALL CATEGORIES */}
 
               <button
                 type="button"
@@ -693,8 +552,6 @@ function Categories() {
               </button>
 
 
-              {/* ACTIVE */}
-
               <button
                 type="button"
                 onClick={() =>
@@ -733,9 +590,6 @@ function Categories() {
                 )}
 
               </button>
-
-
-              {/* INACTIVE */}
 
               <button
                 type="button"
@@ -777,9 +631,6 @@ function Categories() {
               </button>
 
             </div>
-
-
-            {/* SORT DROPDOWN */}
 
             <div
               className="
@@ -848,11 +699,6 @@ function Categories() {
 
           </div>
 
-
-          {/* ================================================= */}
-          {/* ERROR */}
-          {/* ================================================= */}
-
           {(status === "failed" ||
             deleteError) && (
 
@@ -878,11 +724,6 @@ function Categories() {
 
           )}
 
-
-          {/* ================================================= */}
-          {/* LOADING */}
-          {/* ================================================= */}
-
           {status === "loading" && (
 
             <div
@@ -905,13 +746,9 @@ function Categories() {
           )}
 
 
-          {/* ================================================= */}
-          {/* CATEGORY GRID */}
-          {/* ================================================= */}
-
           {status !== "loading" && (
 
-            filteredCategories.length > 0 ? (
+            categories.length > 0 ? (
 
               <div
                 className="
@@ -925,7 +762,7 @@ function Categories() {
                 "
               >
 
-                {filteredCategories.map(
+                {categories.map(
                   (category) => (
 
                     <AdminEntityCard
@@ -1004,12 +841,7 @@ function Categories() {
 
           )}
 
-
-          {/* ================================================= */}
-          {/* PAGINATION */}
-          {/* ================================================= */}
-
-          {activeTab === "all" && (
+          
 
             <Pagination
               currentPage={currentPage}
@@ -1019,17 +851,12 @@ function Categories() {
               onPageChange={setPage}
             />
 
-          )}
+          
 
         </section>
 
 
       </main>
-
-
-      {/* ================================================= */}
-      {/* DELETE CONFIRMATION MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={deleteModalOpen}
