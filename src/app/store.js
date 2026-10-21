@@ -7,11 +7,14 @@ import accountReducer from "../features/user/accountSlice";
 import addressReducer from "../features/user/addressSlice";
 import productsReducer from "../features/user/productSlice";
 import cartReducer from "../features/user/cartSlice";
+import checkoutReducer from "../features/user/checkoutSlice"
 import wishlistReducer from "../features/user/wishlistSlice";
+
 import adminCategoryReducer from "../features/admin/categorySlice";
 import adminBrandsReducer from "../features/admin/brandSlice";
 import adminProductReducer from "../features/admin/productSlice";
 import adminVariantReducer from "../features/admin/variantSlice";
+import adminCouponReducer from "../features/admin/couponSlice";
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +24,7 @@ export const store = configureStore({
     products: productsReducer,
     cart: cartReducer,
     wishlist: wishlistReducer,
+    checkout : checkoutReducer,
 
     adminAuth: adminAuthReducer,
     adminUsers: adminUserReducer,
@@ -28,5 +32,6 @@ export const store = configureStore({
     adminBrands: adminBrandsReducer,
     adminProducts: adminProductReducer,
     adminVariants: adminVariantReducer,
+    adminCoupons: adminCouponReducer,
   },
 });

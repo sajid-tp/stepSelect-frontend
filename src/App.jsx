@@ -24,6 +24,10 @@ import BrandForm from "./pages/admin/BrandForm";
 import Shop from "./pages/Shop";
 import GuestRoute from './components/GuestRoute';
 import ProductDetailsPage from "./pages/ProductDetails"
+import Coupons from "./pages/admin/Coupons";
+import CouponForm from "./pages/admin/CouponForm";
+import Checkout from './pages/checkOut';
+import OrderSuccess from './pages/orderSuccess';
 import Products
   from "./pages/admin/Products";
 
@@ -55,6 +59,11 @@ function App() {
         <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route
+  path="/order-success/:orderId"
+  element={<OrderSuccess />}
+/>
         <Route path="/wishlist" element={<Wishlist />} />
         <Route
   path="/products/:productId"
@@ -102,6 +111,10 @@ function App() {
   }
 
 />
+
+<Route path="/admin/coupons" element={<Coupons />} />
+<Route path="/admin/coupons/new" element={<CouponForm />} />
+<Route path="/admin/coupons/edit/:couponId" element={<CouponForm />} />
 
 <Route
   path="/admin/products"
