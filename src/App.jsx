@@ -28,6 +28,8 @@ import Coupons from "./pages/admin/Coupons";
 import CouponForm from "./pages/admin/CouponForm";
 import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
+import Orders from './pages/Orders';
+import OrderDetails from './pages/OrderDetails';
 import Products
   from "./pages/admin/Products";
 
@@ -61,9 +63,11 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route
-  path="/order-success/:orderId"
+  path="/order-success/:orderNumber"
   element={<OrderSuccess />}
 />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:orderNumber" element={<OrderDetails />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route
   path="/products/:productId"

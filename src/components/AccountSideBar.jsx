@@ -139,9 +139,9 @@ export default function AccountSidebar() {
           </NavLink>
 
           {/* Order History */}
-          <button
-            type="button"
-            className={staticItemClass}
+          <NavLink
+            to="/orders"
+            className={navItemClass}
           >
             <svg
               width="16"
@@ -156,7 +156,7 @@ export default function AccountSidebar() {
             </svg>
 
             Order History
-          </button>
+          </NavLink>
 
           {/* My Wallet */}
           <button
