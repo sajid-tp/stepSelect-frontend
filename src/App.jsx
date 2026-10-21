@@ -26,6 +26,8 @@ import GuestRoute from './components/GuestRoute';
 import ProductDetailsPage from "./pages/ProductDetails"
 import Coupons from "./pages/admin/Coupons";
 import CouponForm from "./pages/admin/CouponForm";
+import AdminOrders from "./pages/admin/Orders";
+import AdminOrderEdit from "./pages/admin/OrderEdit";
 import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
 import Orders from './pages/Orders';
@@ -119,6 +121,9 @@ function App() {
 <Route path="/admin/coupons" element={<Coupons />} />
 <Route path="/admin/coupons/new" element={<CouponForm />} />
 <Route path="/admin/coupons/edit/:couponId" element={<CouponForm />} />
+
+<Route path="/admin/orders" element={<AdminOrders />} />
+<Route path="/admin/orders/:orderId" element={<AdminOrderEdit />} />
 
 <Route
   path="/admin/products"
