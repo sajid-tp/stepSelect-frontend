@@ -17,6 +17,7 @@ import {
 import {
   clearAdminOrder,
   getAdminOrder,
+  handleAdminReturn,
   updateAdminOrderStatus,
 } from "../../features/admin/orderSlice";
 
@@ -59,6 +60,11 @@ function OrderEdit() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [toast, setToast] = useState(null); // { type, text }
 
+  // return requests
+  const [returnBusy, setReturnBusy] = useState(false);
+  const [rejectItemId, setRejectItemId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   useEffect(() => {
     dispatch(clearAdminOrder());
     dispatch(getAdminOrder(orderId));
@@ -98,6 +104,35 @@ function OrderEdit() {
       setSaving(false);
       setConfirmCancel(false);
     }
+  };
+
+  /* ---------------- RETURN REQUESTS ---------------- */
+  const doReturn = async (itemId, action, reason = "") => {
+    if (!order || returnBusy) return;
+
+    try {
+      setReturnBusy(true);
+      const result = await dispatch(
+        handleAdminReturn({ orderId: order.id, itemId, action, reason })
+      ).unwrap();
+
+      setToast({ type: "success", text: result.message || "Return updated." });
+      setRejectItemId(null);
+      setRejectReason("");
+    } catch (err) {
+      setToast({
+        type: "error",
+        text: typeof err === "string" ? err : "Could not update the return.",
+      });
+    } finally {
+      setReturnBusy(false);
+    }
+  };
+
+  const closeRejectModal = () => {
+    if (returnBusy) return;
+    setRejectItemId(null);
+    setRejectReason("");
   };
 
   const handleSaveClick = () => {
@@ -269,12 +304,56 @@ function OrderEdit() {
                                   {item.cancelledQuantity} cancelled
                                 </span>
                               )}
-                              {item.status === "return_requested" && (
-                                <span className="text-xs text-gray-500">
-                                  {item.returnReason}
-                                </span>
-                              )}
                             </div>
+
+                            {/* return request: the admin decides here */}
+                            {item.status === "return_requested" && (
+                              <div className="mt-3 rounded-lg border border-orange-100 bg-orange-50 p-3 text-xs text-gray-600">
+                                <p>
+                                  <span className="font-semibold">Reason:</span>{" "}
+                                  {item.returnReason}
+                                  {item.returnRequestedQuantity > 0 &&
+                                    ` (${item.returnRequestedQuantity} unit${
+                                      item.returnRequestedQuantity > 1 ? "s" : ""
+                                    })`}
+                                </p>
+                                {item.returnDescription && (
+                                  <p className="mt-1 break-words">
+                                    {item.returnDescription}
+                                  </p>
+                                )}
+                                {item.returnRequestedAt && (
+                                  <p className="mt-1 text-gray-400">
+                                    Requested {formatDateTime(item.returnRequestedAt)}
+                                  </p>
+                                )}
+                                <div className="mt-3 flex gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={returnBusy}
+                                    onClick={() => doReturn(item.id, "approve")}
+                                    className="rounded-md bg-green-600 px-3 py-1.5 font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={returnBusy}
+                                    onClick={() => setRejectItemId(item.id)}
+                                    className="rounded-md bg-red-600 px-3 py-1.5 font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* last rejection, if any */}
+                            {item.returnRejectReason && item.status !== "return_requested" && (
+                              <p className="mt-2 text-xs text-red-500">
+                                Return rejected: {item.returnRejectReason}
+                              </p>
+                            )}
                           </div>
 
                           <div className="shrink-0 text-right">
@@ -457,6 +536,58 @@ function OrderEdit() {
           if (!saving) setConfirmCancel(false);
         }}
       />
+
+      {/* REJECT RETURN (reason is required) */}
+      {rejectItemId && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeRejectModal();
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2 className="text-lg font-bold text-gray-900">Reject this return?</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              The customer will see this reason on their order.
+            </p>
+
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              maxLength={300}
+              rows={4}
+              placeholder="e.g. The shoes show signs of wear, so they can't be returned."
+              className="mt-4 w-full rounded-lg border border-gray-200 p-3 text-sm text-gray-800 outline-none focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10"
+            />
+            <p className="mt-1 text-right text-xs text-gray-400">
+              {rejectReason.length}/300
+            </p>
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeRejectModal}
+                disabled={returnBusy}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                onClick={() => doReturn(rejectItemId, "reject", rejectReason.trim())}
+                disabled={returnBusy || !rejectReason.trim()}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {returnBusy ? "Rejecting..." : "Reject return"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TOAST */}
       {toast && (

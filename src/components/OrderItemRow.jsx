@@ -102,6 +102,12 @@ function OrderItemRow({
             </p>
           )}
 
+          {item.returnRejectReason && item.status !== "return_requested" && (
+            <p className="mt-1 text-xs text-red-600">
+              Return rejected: {item.returnRejectReason}
+            </p>
+          )}
+
           <div className="mt-3 flex flex-wrap gap-2">
             {item.canCancel && (
               <button

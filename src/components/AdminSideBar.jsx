@@ -64,6 +64,25 @@ const menuItems = [
   },
 
   {
+    name: "Inventory",
+    path: "/admin/inventory",
+    icon: (
+      <svg
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path d="M21 8 12 3 3 8v8l9 5 9-5V8Z" />
+        <path d="m3 8 9 5 9-5" />
+        <path d="M12 13v8" />
+      </svg>
+    ),
+  },
+
+  {
     name: "Users",
     path: "/admin/users",
     icon: (

@@ -93,6 +93,26 @@ export const updateAdminOrderStatus = createAsyncThunk(
 );
 
 // =====================================================
+// APPROVE / REJECT A RETURN REQUEST (one item)
+// =====================================================
+export const handleAdminReturn = createAsyncThunk(
+  "adminOrders/handleAdminReturn",
+  async ({ orderId, itemId, action, reason }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/admin/orders/${orderId}/items/${itemId}/return`,
+        { action, reason }
+      );
+      return { message: response.data.message, order: response.data.data };
+    } catch (error) {
+      return rejectWithValue(
+        getErrorMessage(error, "Failed to update the return request.")
+      );
+    }
+  }
+);
+
+// =====================================================
 // SLICE
 // =====================================================
 const initialState = {
@@ -159,6 +179,12 @@ const adminOrderSlice = createSlice({
             ? { ...o, status: updated.status, paymentStatus: updated.paymentStatus }
             : o
         );
+      })
+
+      // ----- return approved / rejected: show the refreshed order -----
+      .addCase(handleAdminReturn.fulfilled, (state, action) => {
+        state.current = action.payload.order;
+        state.currentStatus = "succeeded";
       });
   },
 });

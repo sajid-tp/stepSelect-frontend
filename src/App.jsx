@@ -28,6 +28,7 @@ import Coupons from "./pages/admin/Coupons";
 import CouponForm from "./pages/admin/CouponForm";
 import AdminOrders from "./pages/admin/Orders";
 import AdminOrderEdit from "./pages/admin/OrderEdit";
+import AdminInventory from "./pages/admin/Inventory";
 import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
 import Orders from './pages/Orders';
@@ -124,6 +125,7 @@ function App() {
 
 <Route path="/admin/orders" element={<AdminOrders />} />
 <Route path="/admin/orders/:orderId" element={<AdminOrderEdit />} />
+<Route path="/admin/inventory" element={<AdminInventory />} />
 
 <Route
   path="/admin/products"

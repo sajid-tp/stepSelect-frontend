@@ -17,6 +17,7 @@ import adminProductReducer from "../features/admin/productSlice";
 import adminVariantReducer from "../features/admin/variantSlice";
 import adminCouponReducer from "../features/admin/couponSlice";
 import adminOrderReducer from "../features/admin/orderSlice";
+import adminInventoryReducer from "../features/admin/inventorySlice";
 
 export const store = configureStore({
   reducer: {
@@ -37,5 +38,6 @@ export const store = configureStore({
     adminVariants: adminVariantReducer,
     adminCoupons: adminCouponReducer,
     adminOrders: adminOrderReducer,
+    adminInventory: adminInventoryReducer,
   },
 });
