@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
+import { addToCart, quickAddToCart } from "./cartSlice";
 
 // =====================================================
 // HELPER FUNCTIONS
@@ -388,6 +389,28 @@ const wishlistSlice = createSlice({
         ),
         (state, action) => {
           addLine(state, action.payload);
+        }
+      )
+
+      // ADDED TO CART
+      // The server takes that colour + size off the wishlist when it goes into the cart,
+      // so drop the line here too. This is what turns the red heart back to empty in the shop.
+      .addMatcher(
+        isAnyOf(addToCart.fulfilled, quickAddToCart.fulfilled),
+        (state, action) => {
+          const line = action.payload?.added || action.meta?.arg;
+          if (!line || !line.variantId) return;
+
+          state.ids = state.ids.filter(
+            (saved) => !sameLine(saved, line.variantId, line.size)
+          );
+
+          state.items = state.items.filter(
+            (saved) => !sameLine(saved, line.variantId, line.size)
+          );
+
+          state.wishlistCount = state.ids.length;
+          state.pagination.totalItems = state.wishlistCount;
         }
       );
   },

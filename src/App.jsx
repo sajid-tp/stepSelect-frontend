@@ -33,6 +33,9 @@ import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailedPage from './pages/PaymentFailedPage';
+import DemoRazorpayHost from './components/DemoRazorpayHost';
 import Products
   from "./pages/admin/Products";
 
@@ -46,6 +49,7 @@ function App() {
   return (
     <BrowserRouter>
     <BlockedModal/>
+    <DemoRazorpayHost />
       <Routes>
         {/* User routes */}
         <Route path="/" element={<Home />} />
@@ -69,6 +73,8 @@ function App() {
   path="/order-success/:orderNumber"
   element={<OrderSuccess />}
 />
+        <Route path="/payment-success/:orderNumber" element={<PaymentSuccessPage />} />
+        <Route path="/payment-failed/:orderNumber" element={<PaymentFailedPage />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:orderNumber" element={<OrderDetails />} />
         <Route path="/wishlist" element={<Wishlist />} />

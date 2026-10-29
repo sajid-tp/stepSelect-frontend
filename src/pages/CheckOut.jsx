@@ -17,20 +17,24 @@ import {
 } from "../features/user/checkoutSlice";
 import { addAddress, updateAddress } from "../features/user/addressSlice";
 import { getCart } from "../features/user/cartSlice";
+import { getWishlistIds } from "../features/user/wishlistSlice";
+import useOnlinePayment from "../hooks/useOnlinePayment";
 
 /*
 |--------------------------------------------------------------------------
 | STATIC DATA
 |--------------------------------------------------------------------------
-| Only COD is supported by the backend today (checkoutService.placeOrder).
-| The other methods are shown, disabled, as in the design. When you add one,
-| add its id to PAYMENT_METHODS in orderConstants.js and it switches on here.
+| The server sends data.paymentMethods: COD plus every online gateway that has its
+| keys (or demo mode) in server/.env for Razorpay. A method that is not in that list is shown
+| greyed out. Online methods open the gateway (see hooks/useOnlinePayment.js).
 */
 const PAYMENT_OPTIONS = [
   { id: "COD", label: "Cash on Delivery", note: "Pay when your order arrives" },
+  { id: "RAZORPAY", label: "Razorpay", note: "Cards, UPI, Netbanking" },
   { id: "WALLET", label: "My Wallet", note: "Coming soon" },
-  { id: "RAZORPAY", label: "Razorpay", note: "Cards, UPI, Netbanking · Coming soon" },
 ];
+
+const ONLINE_METHODS = ["RAZORPAY"];
 
 const ISSUE_TEXT = {
   UNAVAILABLE: "No longer available",
@@ -180,6 +184,8 @@ function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState("");
 
+  const { payNow } = useOnlinePayment();
+
   /* ---------- load ---------- */
   useEffect(() => {
     dispatch(resetCheckout()); // never flash a previous visit's data
@@ -225,11 +231,18 @@ function Checkout() {
     setPlaceError("");
 
     try {
+      // Razorpay: create the order, open the payment, then the success / failed page
+      if (ONLINE_METHODS.includes(paymentMethod)) {
+        await payNow({ addressId: selectedAddressId, gateway: paymentMethod });
+        return; // payNow moves to the right page by itself
+      }
+
       const order = await dispatch(
         placeOrder({ addressId: selectedAddressId, paymentMethod })
       ).unwrap();
 
       dispatch(getCart()); // the server emptied the cart; refresh the navbar badge
+      dispatch(getWishlistIds()); // ...and took the bought pairs off the wishlist: keep the hearts in sync
       navigate(`/order-success/${order.orderNumber}`, {
         replace: true,
         state: { order },
@@ -419,7 +432,11 @@ function Checkout() {
                     return (
                       <PaymentOption
                         key={option.id}
-                        option={option}
+                        option={
+                          enabled || option.id === "WALLET"
+                            ? option
+                            : { ...option, note: "Not available right now" }
+                        }
                         enabled={enabled}
                         selected={paymentMethod === option.id}
                         onSelect={() => enabled && setPaymentMethod(option.id)}
@@ -554,7 +571,13 @@ function Checkout() {
                 disabled={!canPlace}
                 className="mt-6 flex h-12 w-full items-center justify-center rounded-md bg-[#b13600] px-4 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:bg-gray-300"
               >
-                {placing ? "Placing order…" : "Place Order Now"}
+                {placing
+                  ? ONLINE_METHODS.includes(paymentMethod)
+                    ? "Opening payment…"
+                    : "Placing order…"
+                  : ONLINE_METHODS.includes(paymentMethod)
+                    ? "Pay Now"
+                    : "Place Order Now"}
               </button>
 
               {placeHint && (
