@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 import { logoutUser, logout } from "../features/user/authSlice";
 import { getWishlistIds } from "../features/user/wishlistSlice";
+import { getCart, selectCartCount } from "../features/user/cartSlice";
 import Modal from "./Modals";
 
 function Navbar() {
@@ -13,6 +14,8 @@ function Navbar() {
   const user = useSelector((state) => state.auth.user);
   const wishlistCount = useSelector((state) => state.wishlist.wishlistCount);
   const wishlistIdsStatus = useSelector((state) => state.wishlist.idsStatus);
+  const cartCount = useSelector(selectCartCount);
+  const cartStatus = useSelector((state) => state.cart.status);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -30,6 +33,11 @@ function Navbar() {
   useEffect(() => {
     if (user && wishlistIdsStatus === "idle") dispatch(getWishlistIds());
   }, [dispatch, user, wishlistIdsStatus]);
+
+  // Load the cart so the badge shows the item count on every page (once per login)
+  useEffect(() => {
+    if (user && cartStatus === "idle") dispatch(getCart());
+  }, [dispatch, user, cartStatus]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -169,6 +177,12 @@ function Navbar() {
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
               </svg>
+
+              {user && cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4511e] px-1 text-[10px] font-semibold leading-none text-white">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </Link>
 
             {/* USER / AUTH */}
@@ -314,7 +328,7 @@ function Navbar() {
               className={navLinkClass}
               onClick={() => setMobileOpen(false)}
             >
-              Cart
+              Cart{user && cartCount > 0 ? ` (${cartCount})` : ""}
             </Link>
 
             {/* Mobile authenticated links */}

@@ -109,6 +109,16 @@ function Products() {
     useState(null);
 
 
+  /*
+    The product the admin just clicked
+    the switch on. While this is set,
+    the confirmation modal is open.
+  */
+
+  const [statusConfirmTarget, setStatusConfirmTarget] =
+    useState(null);
+
+
   // ===================================================
   // FETCH PRODUCTS
   // ===================================================
@@ -291,8 +301,51 @@ function Products() {
   // TOGGLE STATUS
   // ===================================================
 
+  // STEP 1: the switch was clicked.
+  // Do NOT change anything yet, just ask the admin to confirm.
+
   const handleToggleStatus =
-    async (product) => {
+    (product) => {
+
+      if (
+        statusUpdateStatus ===
+        "loading"
+      ) {
+        return;
+      }
+
+      setStatusConfirmTarget(
+        product
+      );
+
+    };
+
+
+  const handleCloseStatusModal =
+    () => {
+
+      if (
+        statusUpdateStatus ===
+        "loading"
+      ) {
+        return;
+      }
+
+      setStatusConfirmTarget(
+        null
+      );
+
+    };
+
+
+  // STEP 2: the admin pressed Confirm in the modal.
+  // Now really activate / deactivate the product.
+
+  const confirmToggleStatus =
+    async () => {
+
+      const product =
+        statusConfirmTarget;
 
       /*
         Prevent double clicking while
@@ -300,6 +353,7 @@ function Products() {
       */
 
       if (
+        !product ||
         statusUpdateStatus ===
         "loading"
       ) {
@@ -370,6 +424,10 @@ function Products() {
       } finally {
 
         setStatusTargetId(
+          null
+        );
+
+        setStatusConfirmTarget(
           null
         );
 
@@ -934,6 +992,58 @@ function Products() {
 
         onConfirm={
           confirmDelete
+        }
+      />
+
+
+      {/* ================================================= */}
+      {/* ACTIVATE / DEACTIVATE MODAL */}
+      {/* ================================================= */}
+
+      <Modal
+        open={
+          !!statusConfirmTarget
+        }
+
+        title={
+          statusConfirmTarget?.isActive
+            ? "Deactivate product?"
+            : "Activate product?"
+        }
+
+        message={
+          statusConfirmTarget
+            ? statusConfirmTarget.isActive
+              ? `Are you sure you want to deactivate "${statusConfirmTarget.productName}"? It will be hidden from the store and customers will not be able to buy it. You can activate it again at any time.`
+              : `Are you sure you want to activate "${statusConfirmTarget.productName}"? It will become visible in the store and customers will be able to buy it.`
+            : ""
+        }
+
+        confirmText={
+          statusConfirmTarget?.isActive
+            ? "Deactivate"
+            : "Activate"
+        }
+
+        cancelText="Cancel"
+
+        variant={
+          statusConfirmTarget?.isActive
+            ? "danger"
+            : "success"
+        }
+
+        loading={
+          statusUpdateStatus ===
+          "loading"
+        }
+
+        onClose={
+          handleCloseStatusModal
+        }
+
+        onConfirm={
+          confirmToggleStatus
         }
       />
 

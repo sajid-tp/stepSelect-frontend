@@ -4,18 +4,27 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { verifyOtp, resendOtp, verifyResetOtp } from '../features/user/authSlice';
 import OtpVerificationCard from '../components/OtpCard';
+import { resolveOtpSession, saveOtpSession, clearOtpSession } from '../utils/otpSession';
 
 function VerifyOtp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { email, type = 'signup',expiresAt : initialExpiresAt } = location.state || {};
+  // Read once on mount. Falls back to sessionStorage, so it survives a refresh.
+  const [session] = useState(() => resolveOtpSession(location.state));
+  const { email, type = 'signup' } = session || {};
 
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [expiresAt, setExpiresAt] = useState(initialExpiresAt || null); 
+  const [expiresAt, setExpiresAt] = useState(session?.expiresAt || null);
+
+  // Every time expiresAt changes (first load or after Resend) store it,
+  // so a refresh picks up the latest value instead of the one from navigation.
+  useEffect(() => {
+    if (email && expiresAt) saveOtpSession({ email, type, expiresAt });
+  }, [email, type, expiresAt]);
 
   const handleSubmit = async (code) => {
     if (!email) {
@@ -32,9 +41,11 @@ function VerifyOtp() {
     try {
       if (type === 'reset') {
         await dispatch(verifyResetOtp({ email, otp: code })).unwrap();
+        clearOtpSession();
         navigate('/update-password', { state: { email } });
       } else {
         await dispatch(verifyOtp({ email, otp: code })).unwrap();
+        clearOtpSession();
         navigate('/');
       }
     } catch (err) {
@@ -45,7 +56,6 @@ function VerifyOtp() {
   };
 
   const handleResend = async () => {
-
     if (!email) {
       setError('Missing email — please restart signup or password reset.');
       return;
@@ -55,8 +65,7 @@ function VerifyOtp() {
     setIsResending(true);
     try {
       const result = await dispatch(resendOtp({ email, type })).unwrap();
-      console.log('The result of expires at is :'.result);
-      setExpiresAt(result.expiresAt);
+      setExpiresAt(result.expiresAt); // new expiry -> card restarts both countdowns by itself
     } catch (err) {
       setError(err || 'Could not resend code. Please try again.');
     } finally {

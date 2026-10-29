@@ -95,6 +95,10 @@ function Brands() {
   const [selectedBrand, setSelectedBrand] =
     useState(null);
 
+  // The brand waiting for the admin to confirm activate / deactivate
+  const [statusConfirmTarget, setStatusConfirmTarget] =
+    useState(null);
+
 
   // ===================================================
   // FETCH BRANDS
@@ -213,8 +217,44 @@ function Brands() {
   // TOGGLE STATUS
   // ===================================================
 
+  // STEP 1: the button was clicked -> only open the confirmation modal
   const handleToggleStatus =
-    async (brand) => {
+    (brand) => {
+
+      setStatusConfirmTarget(
+        brand
+      );
+
+    };
+
+
+  const handleCloseStatusModal =
+    () => {
+
+      if (
+        togglingBrandId !== null
+      ) {
+        return;
+      }
+
+      setStatusConfirmTarget(
+        null
+      );
+
+    };
+
+
+  // STEP 2: the admin confirmed -> really change the status
+  const handleConfirmToggleStatus =
+    async () => {
+
+      const brand =
+        statusConfirmTarget;
+
+      if (!brand) {
+        return;
+      }
+
 
       try {
 
@@ -237,6 +277,10 @@ function Brands() {
       } finally {
 
         setTogglingBrandId(
+          null
+        );
+
+        setStatusConfirmTarget(
           null
         );
 
@@ -1091,6 +1135,57 @@ function Brands() {
           }
 
         }}
+      />
+
+
+      {/* ================================================= */}
+      {/* ACTIVATE / DEACTIVATE MODAL */}
+      {/* ================================================= */}
+
+      <Modal
+        open={
+          !!statusConfirmTarget
+        }
+
+        title={
+          statusConfirmTarget?.isActive
+            ? "Deactivate brand?"
+            : "Activate brand?"
+        }
+
+        message={
+          statusConfirmTarget
+            ? statusConfirmTarget.isActive
+              ? `Are you sure you want to deactivate "${statusConfirmTarget.brandName}"? The brand and its products will be hidden from customers. You can activate it again at any time.`
+              : `Are you sure you want to activate "${statusConfirmTarget.brandName}"? The brand and its products will become visible to customers again.`
+            : ""
+        }
+
+        confirmText={
+          statusConfirmTarget?.isActive
+            ? "Deactivate"
+            : "Activate"
+        }
+
+        cancelText="Cancel"
+
+        variant={
+          statusConfirmTarget?.isActive
+            ? "danger"
+            : "success"
+        }
+
+        loading={
+          togglingBrandId !== null
+        }
+
+        onClose={
+          handleCloseStatusModal
+        }
+
+        onConfirm={
+          handleConfirmToggleStatus
+        }
       />
 
 

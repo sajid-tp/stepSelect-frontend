@@ -121,25 +121,15 @@ export const getProductById = createAsyncThunk(
 );
 export const getRelatedProducts = createAsyncThunk(
   "userProducts/getRelatedProducts",
-  async ({ productId, limit = 12 }, { rejectWithValue }) => {
+  async ({ productId, limit = 4 }, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.get("/products", {
-        params: {
-          search: "",
-          category: "",
-          brand: "",
-          gender: "",
-          minPrice: "",
-          maxPrice: "",
-          sort: "",
-          page: 1,
-          limit: 12,
-        },
+      // The server returns products from the SAME category as this product
+      // (never the product itself; only active brands and in-stock items).
+      const res = await axiosInstance.get(`/products/${productId}/related`, {
+        params: { limit },
       });
 
-      return (res.data.data?.products || [])
-        .filter((product) => String(product.id) !== String(productId))
-        .slice(0, limit);
+      return res.data.data?.products || [];
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error?.message || "Failed to fetch products"

@@ -236,8 +236,8 @@ function AdminEntityCard({
           {isToggling
             ? "Updating..."
             : item.isActive
-              ? "Block"
-              : "Unblock"}
+              ? "Deactivate"
+              : "Activate"}
         </button>
 
 

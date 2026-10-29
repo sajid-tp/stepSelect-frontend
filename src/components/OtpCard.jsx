@@ -15,51 +15,33 @@ function OtpVerificationCard({
   onResend,
   submitLabel = 'Verify & continue',
   resendCooldown = RESEND_COOLDOWN_SECONDS,
-  expiresAt, // optional ISO string or Date from the backend (most accurate)
-  expiryDuration = OTP_EXPIRY_SECONDS, // total lifetime of the code, in seconds
+  expiresAt, // ISO string from the backend: the single source of truth
+  expiryDuration = OTP_EXPIRY_SECONDS,
 }) {
   const inputsRef = useRef([]);
-  const [secondsLeft, setSecondsLeft] = useState(resendCooldown);
 
-  // If the backend does not send `expiresAt`, count down locally from the full duration
-  const [fallbackEnd, setFallbackEnd] = useState(
-    () => Date.now() + expiryDuration * 1000
-  );
-  const endTime = expiresAt ? new Date(expiresAt).getTime() : fallbackEnd;
-
-  const getRemaining = () =>
-    Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-
-  const [expirySecondsLeft, setExpirySecondsLeft] = useState(getRemaining);
-
-  const isCoolingDown = secondsLeft > 0;
-
-  // Resend cooldown
+  // ONE ticker. Everything else is calculated from `expiresAt`, so nothing
+  // lives in component state that a refresh could reset.
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!isCoolingDown) return;
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => (s <= 1 ? 0 : s - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isCoolingDown]);
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  // Expiry countdown (restarts whenever the end time changes)
-  useEffect(() => {
-    const tick = () => {
-      setExpirySecondsLeft(
-        Math.max(0, Math.ceil((endTime - Date.now()) / 1000))
-      );
-    };
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, [endTime]);
+  const endTime = expiresAt ? new Date(expiresAt).getTime() : 0;
+  const sentAt = endTime - expiryDuration * 1000; // when this code was sent
+  const secondsUntil = (t) => Math.max(0, Math.ceil((t - now) / 1000));
+
+  const expirySecondsLeft = secondsUntil(endTime);
+  const cooldownSecondsLeft = secondsUntil(sentAt + resendCooldown * 1000);
+
+  const isExpired = expirySecondsLeft === 0;
+  const canResend = cooldownSecondsLeft === 0 && !isResending;
 
   const focusNext = (i) => inputsRef.current[i + 1]?.focus();
   const focusPrev = (i) => inputsRef.current[i - 1]?.focus();
 
   const handleChange = (e, i) => {
-    // Digits only
     e.target.value = e.target.value.replace(/\D/g, '');
     if (e.target.value && i < inputsRef.current.length - 1) focusNext(i);
   };
@@ -68,7 +50,6 @@ function OtpVerificationCard({
     if (e.key === 'Backspace' && !e.target.value && i > 0) focusPrev(i);
   };
 
-  // Pasting a full code fills all six boxes
   const handlePaste = (e) => {
     e.preventDefault();
     const digits = e.clipboardData
@@ -93,31 +74,14 @@ function OtpVerificationCard({
 
   const handleResendClick = async () => {
     inputsRef.current.forEach((input) => { if (input) input.value = ''; });
+
+    // If this succeeds the parent passes a new `expiresAt`, which restarts the
+    // countdown and the resend lock automatically. If it fails, nothing changes.
     await onResend();
-    setSecondsLeft(resendCooldown);
 
-    // New code sent -> restart the full expiry time (used when no `expiresAt` prop is given)
-    setFallbackEnd(Date.now() + expiryDuration * 1000);
-
-    // Focus after the re-render, because the boxes are disabled while the code is expired
+    // Focus after the re-render, because the boxes are disabled while expired
     setTimeout(() => inputsRef.current[0]?.focus(), 0);
   };
-
-  const canResend = secondsLeft === 0 && !isResending;
-  const isExpired = expirySecondsLeft === 0;
-
-  const formatDuration = (s) => {
-    const m = Math.floor(s / 60);
-    const rem = s % 60;
-    if (m && !rem) return `${m} minute${m > 1 ? 's' : ''}`;
-    if (!m) return `${rem} seconds`;
-    return `${m} min ${rem} sec`;
-  };
-
-  const expiryClock = new Date(endTime).toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
 
   const formatTime = (s) => {
     const m = Math.floor(s / 60);
@@ -139,38 +103,23 @@ function OtpVerificationCard({
       </h1>
       <p className="mb-2 text-sm text-muted">{description}</p>
 
-      {/* Full expiry time + live countdown (always shown) */}
+      {/* The only visible timer */}
       <div className="mb-4">
-        {/* <p className="text-xs text-muted">
-          This code is valid for {formatDuration(expiryDuration)} (until {expiryClock}).
-        </p> */}
-
         {isExpired ? (
           <p className="mt-1 text-sm font-semibold text-[#f4511e]">
             Code expired — please resend.
           </p>
         ) : (
-          <>
-            <p className="mt-1 text-sm text-muted">
-              Time left:{' '}
-              <span
-                className={`font-semibold tabular-nums ${
-                  expirySecondsLeft <= 30 ? 'text-[#f4511e]' : 'text-ink'
-                }`}
-              >
-                {formatTime(expirySecondsLeft)}
-              </span>
-            </p>
-
-            {/* <div className="mx-auto mt-2 h-1 w-40 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full bg-[#f4511e] transition-[width] duration-1000 ease-linear"
-                style={{
-                  width: `${Math.min(100, (expirySecondsLeft / expiryDuration) * 100)}%`,
-                }}
-              />
-            </div> */}
-          </>
+          <p className="mt-1 text-sm text-muted">
+            Code expires in{' '}
+            <span
+              className={`font-semibold tabular-nums ${
+                expirySecondsLeft <= 30 ? 'text-[#f4511e]' : 'text-ink'
+              }`}
+            >
+              {formatTime(expirySecondsLeft)}
+            </span>
+          </p>
         )}
       </div>
 
@@ -204,22 +153,17 @@ function OtpVerificationCard({
         </button>
       </form>
 
+      {/* Resend: locked for the first `resendCooldown` seconds, no second countdown shown */}
       <p className="mt-6 text-sm text-muted">
-        {canResend ? (
-          <>
-            Didn&apos;t receive a code?{' '}
-            <button
-              type="button"
-              onClick={handleResendClick}
-              disabled={isResending}
-              className="font-semibold text-ink underline disabled:opacity-60"
-            >
-              {isResending ? 'Sending…' : 'Resend'}
-            </button>
-          </>
-        ) : (
-          <>Resend code in <span className="font-semibold text-ink">{formatTime(secondsLeft)}</span></>
-        )}
+        Didn&apos;t receive a code?{' '}
+        <button
+          type="button"
+          onClick={handleResendClick}
+          disabled={!canResend}
+          className="font-semibold text-ink underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-40"
+        >
+          {isResending ? 'Sending…' : 'Resend'}
+        </button>
       </p>
     </div>
   );

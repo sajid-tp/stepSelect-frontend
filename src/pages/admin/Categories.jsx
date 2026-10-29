@@ -70,6 +70,10 @@ function Categories() {
   const [selectedCategory, setSelectedCategory] =
     useState(null);
 
+  // The category waiting for the admin to confirm activate / deactivate
+  const [statusConfirmTarget, setStatusConfirmTarget] =
+    useState(null);
+
 
   const {
     categories = [],
@@ -152,8 +156,44 @@ function Categories() {
 
     };
 
+  // STEP 1: the button was clicked -> only open the confirmation modal
   const handleToggleStatus =
-    async (category) => {
+    (category) => {
+
+      setStatusConfirmTarget(
+        category
+      );
+
+    };
+
+
+  const handleCloseStatusModal =
+    () => {
+
+      if (
+        togglingCategoryId !== null
+      ) {
+        return;
+      }
+
+      setStatusConfirmTarget(
+        null
+      );
+
+    };
+
+
+  // STEP 2: the admin confirmed -> really change the status
+  const handleConfirmToggleStatus =
+    async () => {
+
+      const category =
+        statusConfirmTarget;
+
+      if (!category) {
+        return;
+      }
+
 
       try {
 
@@ -177,6 +217,10 @@ function Categories() {
       } finally {
 
         setTogglingCategoryId(
+          null
+        );
+
+        setStatusConfirmTarget(
           null
         );
 
@@ -885,6 +929,55 @@ function Categories() {
 
         onConfirm={
           handleConfirmDelete
+        }
+      />
+
+
+      {/* ACTIVATE / DEACTIVATE MODAL */}
+
+      <Modal
+        open={
+          !!statusConfirmTarget
+        }
+
+        title={
+          statusConfirmTarget?.isActive
+            ? "Deactivate category?"
+            : "Activate category?"
+        }
+
+        message={
+          statusConfirmTarget
+            ? statusConfirmTarget.isActive
+              ? `Are you sure you want to deactivate "${statusConfirmTarget.categoryName}"? The category and the products in it will be hidden from customers. You can activate it again at any time.`
+              : `Are you sure you want to activate "${statusConfirmTarget.categoryName}"? The category and its products will become visible to customers again.`
+            : ""
+        }
+
+        confirmText={
+          statusConfirmTarget?.isActive
+            ? "Deactivate"
+            : "Activate"
+        }
+
+        cancelText="Cancel"
+
+        variant={
+          statusConfirmTarget?.isActive
+            ? "danger"
+            : "success"
+        }
+
+        loading={
+          togglingCategoryId !== null
+        }
+
+        onClose={
+          handleCloseStatusModal
+        }
+
+        onConfirm={
+          handleConfirmToggleStatus
         }
       />
 

@@ -64,13 +64,14 @@ function ForgotPassword() {
     setServerError('');
     setIsSubmitting(true);
 
-    try {
-      await dispatch(forgotPassword({ email: form.email })).unwrap();
+       try {
+      const res = await dispatch(forgotPassword({ email: form.email })).unwrap();
 
       navigate('/verify-otp', {
         state: {
           email: form.email,
           type: 'reset',
+          expiresAt: res.expiresAt,
         },
       });
     } catch (err) {
