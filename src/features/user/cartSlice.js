@@ -68,7 +68,8 @@ export const quickAddToCart = createAsyncThunk(
       if (!pick) return rejectWithValue("This product is out of stock.");
 
       const res = await axiosInstance.post("/cart", { ...pick, quantity: 1 });
-      return { message: res.data.message, cart: res.data.data };
+      // `added` lets the wishlist slice drop that line (the server removes it from the wishlist too)
+      return { message: res.data.message, cart: res.data.data, added: pick };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to add item to cart"));
     }

@@ -96,6 +96,8 @@ function Wishlist() {
       );
 
       if (!alreadyInCart) {
+        // The server takes this line off the wishlist when it goes into the cart,
+        // and the wishlist slice drops it too (so the heart in the shop turns empty).
         await dispatch(
           addToCart({
             variantId: item.variantId,
@@ -103,14 +105,15 @@ function Wishlist() {
             quantity: 1,
           })
         ).unwrap();
+      } else {
+        // Already in the cart: nothing was added, so remove it from the wishlist ourselves
+        await dispatch(
+          removeFromWishlist({
+            variantId: item.variantId,
+            size: item.size,
+          })
+        ).unwrap();
       }
-
-      await dispatch(
-        removeFromWishlist({
-          variantId: item.variantId,
-          size: item.size,
-        })
-      ).unwrap();
 
       setNotice({
         type: "success",

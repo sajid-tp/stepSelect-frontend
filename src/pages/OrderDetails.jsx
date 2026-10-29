@@ -234,7 +234,7 @@ function OrderDetails() {
         return {
           title: "Cancel this order?",
           description:
-            "Every item in this order will be cancelled and the stock goes back to the shop.",
+            "Every item in this order will be cancelled and the stock goes back to the shop. If you already paid, the money is added to your wallet right away.",
           confirmText: "Cancel order",
           variant: "danger",
           reasons: cancelReasons,
@@ -243,7 +243,7 @@ function OrderDetails() {
       case "cancelItem":
         return {
           title: "Cancel this item?",
-          description: modal.item.name,
+          description: `${modal.item.name}. If you already paid, the money is added to your wallet right away.`,
           confirmText: "Cancel item",
           variant: "danger",
           reasons: cancelReasons,
@@ -255,7 +255,7 @@ function OrderDetails() {
         return {
           title: "Return this order?",
           description:
-            "Every delivered item in this order will be sent back. We'll review your request.",
+            "Every delivered item in this order will be sent back. We'll review your request, and once it is approved the refund is added to your wallet.",
           confirmText: "Request return",
           variant: "primary",
           reasons: returnReasons,
@@ -266,7 +266,7 @@ function OrderDetails() {
       case "returnItem":
         return {
           title: "Return this item?",
-          description: modal.item.name,
+          description: `${modal.item.name}. Once the return is approved, the refund is added to your wallet.`,
           confirmText: "Request return",
           variant: "primary",
           reasons: returnReasons,
@@ -426,6 +426,14 @@ function OrderDetails() {
                 <p className={`mt-1 text-xs font-medium ${pay.cls}`}>
                   {pay.text}
                 </p>
+                {order.payment?.refundedAmount > 0 && (
+                  <p className="mt-1 text-xs font-medium text-gray-600">
+                    {formatMoney(order.payment.refundedAmount)} refunded to your{" "}
+                    <Link to="/profile/wallet" className="font-semibold text-[#b13600] hover:underline">
+                      wallet
+                    </Link>
+                  </p>
+                )}
               </div>
 
               {/* summary */}

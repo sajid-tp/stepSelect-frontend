@@ -77,9 +77,6 @@ export default function AccountSidebar() {
         : 'text-gray-700 hover:bg-gray-100'
     }`;
 
-  const staticItemClass =
-    'flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 cursor-not-allowed opacity-60 whitespace-nowrap shrink-0';
-
   return (
     <>
       <aside className="w-full md:w-64 shrink-0 rounded-2xl bg-[#fafafa] border border-line/60 p-4 md:p-6">
@@ -159,9 +156,9 @@ export default function AccountSidebar() {
           </NavLink>
 
           {/* My Wallet */}
-          <button
-            type="button"
-            className={staticItemClass}
+          <NavLink
+            to="/profile/wallet"
+            className={navItemClass}
           >
             <svg
               width="16"
@@ -176,7 +173,7 @@ export default function AccountSidebar() {
             </svg>
 
             My Wallet
-          </button>
+          </NavLink>
 
           {/* Wishlist */}
           <NavLink

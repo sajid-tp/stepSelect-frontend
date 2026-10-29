@@ -10,6 +10,8 @@ import cartReducer from "../features/user/cartSlice";
 import checkoutReducer from "../features/user/checkoutSlice"
 import wishlistReducer from "../features/user/wishlistSlice";
 import ordersReducer from "../features/user/orderSlice";
+import paymentReducer from "../features/user/paymentSlice";
+import walletReducer from "../features/user/walletSlice";
 
 import adminCategoryReducer from "../features/admin/categorySlice";
 import adminBrandsReducer from "../features/admin/brandSlice";
@@ -29,6 +31,8 @@ export const store = configureStore({
     wishlist: wishlistReducer,
     checkout : checkoutReducer,
     orders: ordersReducer,
+    payment: paymentReducer,
+    wallet: walletReducer,
 
     adminAuth: adminAuthReducer,
     adminUsers: adminUserReducer,

@@ -12,6 +12,7 @@ import EditProfile from './pages/EditProfile';
 import ChangeEmail from './pages/ChangeEmail';
 import AddressForm from './pages/AddressForm';
 import Addresses from './pages/Addresses';
+import Wallet from './pages/Wallet';
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import AdminDashboard from './pages/admin/adminDashboard';
@@ -33,6 +34,9 @@ import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailedPage from './pages/PaymentFailedPage';
+import DemoRazorpayHost from './components/DemoRazorpayHost';
 import Products
   from "./pages/admin/Products";
 
@@ -46,6 +50,7 @@ function App() {
   return (
     <BrowserRouter>
     <BlockedModal/>
+    <DemoRazorpayHost />
       <Routes>
         {/* User routes */}
         <Route path="/" element={<Home />} />
@@ -60,6 +65,7 @@ function App() {
         <Route path="/profile/edit" element={<EditProfile />} />
         <Route path="/profile/change-email" element={<ChangeEmail/>} />
         <Route path="/profile/addresses" element={<Addresses />} />
+        <Route path="/profile/wallet" element={<Wallet />} />
         <Route path="/profile/addresses/new" element={<AddressForm />} />
         <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
         <Route path="/shop" element={<Shop />} />
@@ -69,6 +75,8 @@ function App() {
   path="/order-success/:orderNumber"
   element={<OrderSuccess />}
 />
+        <Route path="/payment-success/:orderNumber" element={<PaymentSuccessPage />} />
+        <Route path="/payment-failed/:orderNumber" element={<PaymentFailedPage />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/:orderNumber" element={<OrderDetails />} />
         <Route path="/wishlist" element={<Wishlist />} />

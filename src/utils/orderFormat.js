@@ -115,6 +115,7 @@ export const formatDateTime = (value) => {
 export const paymentLabel = (method) => {
   if (method === "COD") return "Cash on Delivery";
   if (method === "RAZORPAY") return "Razorpay Online";
+  if (method === "WALLET") return "My Wallet";
   return method || "-";
 };
 
