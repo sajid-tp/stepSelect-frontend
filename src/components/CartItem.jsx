@@ -30,6 +30,8 @@ const getNotice = (item, maxPerItem) => {
 function CartItem({ item, maxPerItem, disabled, onIncrease, onDecrease, onRemove }) {
   const { productId, name, color, size, price, quantity, lineTotal, image, isAvailable, issue } =
     item;
+  const discountPercent = Number(item.discountPercent) || 0;
+  const unitPrice = discountPercent > 0 && item.finalPrice != null ? item.finalPrice : price;
 
   const isGone = issue === "UNAVAILABLE";
   const canDecrease = quantity > 1 && !disabled;
@@ -104,9 +106,17 @@ function CartItem({ item, maxPerItem, disabled, onIncrease, onDecrease, onRemove
         {/* PRICE + QUANTITY */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3">
           <div>
-            <p className="text-lg font-extrabold text-gray-900 sm:text-xl">
-              {price === null ? "—" : formatMoney(price)}
+            <p className="flex flex-wrap items-baseline gap-x-2 text-lg font-extrabold text-gray-900 sm:text-xl">
+              {price === null ? "—" : formatMoney(unitPrice)}
+              {discountPercent > 0 && price !== null && (
+                <span className="text-xs font-medium text-gray-400 line-through">{formatMoney(price)}</span>
+              )}
             </p>
+            {discountPercent > 0 && item.offer && (
+              <p className="text-[11px] font-semibold text-[#f4511e]">
+                {item.offer.name} · {discountPercent}% off
+              </p>
+            )}
             {quantity > 1 && price !== null && (
               <p className="text-xs text-gray-500">
                 {formatMoney(lineTotal)} for {quantity}

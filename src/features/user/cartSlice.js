@@ -137,7 +137,9 @@ export const clearCart = createAsyncThunk(
 const initialState = {
   cartId: null,
   items: [],
-  totalPrice: 0, // only items that are currently available
+  totalPrice: 0, // only items that are currently available (after product / category offers)
+  totalMrp: 0, // the same items at their normal price
+  totalSavings: 0, // totalMrp - totalPrice
   cartCount: 0, // total units in the cart (navbar badge)
   maxQuantityPerItem: 5,
 
@@ -151,6 +153,8 @@ const applyCart = (state, cart) => {
   state.cartId = cart.id;
   state.items = cart.items || [];
   state.totalPrice = cart.totalPrice || 0;
+  state.totalMrp = cart.totalMrp || cart.totalPrice || 0;
+  state.totalSavings = cart.totalSavings || 0;
   state.cartCount = cart.totalItems || 0;
   state.maxQuantityPerItem = cart.maxQuantityPerItem || 5;
 };

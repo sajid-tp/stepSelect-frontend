@@ -32,6 +32,7 @@ const SOURCE_TITLE = {
   ORDER_PAYMENT: "Paid for an order",
   ORDER_CANCEL_REFUND: "Refund: order cancelled",
   ORDER_RETURN_REFUND: "Refund: return approved",
+  REFERRAL_REWARD: "Referral reward",
 };
 
 function TransactionRow({ tx }) {

@@ -7,7 +7,7 @@ import { formatMoney } from "../components/CartItem";
 /*
   Shown after POST /checkout/place-order succeeds.
   Checkout.jsx passes the order summary through router state
-  ({ order: { orderNumber, totalAmount, couponCode, couponDiscount, paymentMethod } }),
+  ({ order: { orderNumber, totalAmount, couponCode, couponDiscount, referralDiscount, paymentMethod } }),
   so a refresh of this page still works (history state survives) and a direct
   visit just shows the order number from the URL.
 */
@@ -51,6 +51,13 @@ function OrderSuccess() {
                       : order.paymentMethod}
                   </dd>
                 </div>
+
+                {order.referralDiscount > 0 && (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-gray-500">Referral offer</dt>
+                    <dd className="font-semibold text-green-700">− {formatMoney(order.referralDiscount)}</dd>
+                  </div>
+                )}
 
                 {order.couponCode && order.couponDiscount > 0 && (
                   <div className="flex justify-between gap-4">

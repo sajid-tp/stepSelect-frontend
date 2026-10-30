@@ -25,9 +25,14 @@ export const loginUser = createAsyncThunk(
 
 export const signupUser = createAsyncThunk(
   'auth/signup',
-  async ({ username, email, password }, { rejectWithValue }) => {
+  async ({ username, email, password, referralCode }, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post('/auth/signup', { username, email, password });
+      const res = await axiosInstance.post('/auth/signup', {
+        username,
+        email,
+        password,
+        ...(referralCode ? { referralCode } : {}),
+      });
       return res.data; // { _id, username }
     } catch (err) {
       return rejectWithValue(err.message);
@@ -49,9 +54,12 @@ export const logoutUser = createAsyncThunk(
 
 export const googleSignup = createAsyncThunk(
   'auth/googleSignup',
-  async ({ token }, { rejectWithValue }) => {
+  async ({ token, referralCode }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/auth/google', { token });
+      const response = await axiosInstance.post('/auth/google', {
+        token,
+        ...(referralCode ? { referralCode } : {}),
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Google signup failed');

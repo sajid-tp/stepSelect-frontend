@@ -24,7 +24,7 @@ function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { items, totalPrice, status, error, maxQuantityPerItem } =
+  const { items, totalPrice, totalSavings, status, error, maxQuantityPerItem } =
     useSelector((state) => state.cart);
 
   const [isBusy, setIsBusy] = useState(false);
@@ -310,6 +310,7 @@ function Cart() {
               <OrderSummary
                 itemCount={availableUnits}
                 subtotal={totalPrice}
+                savings={totalSavings}
                 unavailableCount={unavailableCount}
                 canCheckout={canCheckout}
                 onCheckout={() => navigate("/checkout")}

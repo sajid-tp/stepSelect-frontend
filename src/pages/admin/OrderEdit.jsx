@@ -479,6 +479,13 @@ function OrderEdit() {
                       </div>
                     )}
 
+                    {pricing.referralDiscount > 0 && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-600">Referral offer</dt>
+                        <dd className="text-green-600">− {formatMoney(pricing.referralDiscount)}</dd>
+                      </div>
+                    )}
+
                     {pricing.taxTotal > 0 && (
                       <div className="flex justify-between gap-4">
                         <dt className="text-gray-600">Tax</dt>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 import AuthLayout from '../components/AuthLayout';
@@ -13,6 +13,8 @@ import {
 } from '../features/user/authSlice';
 
 import { GoogleLogin } from '@react-oauth/google';
+import { validateReferral } from '../features/user/referralSlice';
+import { REFERRAL_STORAGE_KEY } from './InviteRedirect';
 
 function Signup() {
   const [form, setForm] = useState({
@@ -31,6 +33,57 @@ function Signup() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Referral (optional): a typed code, or the token from an invite link (?ref=...)
+  const [referral, setReferral] = useState('');
+  const [fromLink, setFromLink] = useState(false);
+  const [referralCheck, setReferralCheck] = useState({ state: 'idle', name: '' }); // idle | checking | valid | invalid
+
+  const checkReferral = async (value) => {
+    const ref = value.trim();
+    if (!ref) {
+      setReferralCheck({ state: 'idle', name: '' });
+      return;
+    }
+    setReferralCheck({ state: 'checking', name: '' });
+    try {
+      const result = await validateReferral(ref);
+      setReferralCheck(
+        result.valid ? { state: 'valid', name: result.referrerName } : { state: 'invalid', name: '' }
+      );
+    } catch {
+      setReferralCheck({ state: 'idle', name: '' }); // could not check: the server checks again on submit
+    }
+  };
+
+  useEffect(() => {
+    let ref = searchParams.get('ref') || '';
+    if (!ref) {
+      try {
+        ref = sessionStorage.getItem(REFERRAL_STORAGE_KEY) || '';
+      } catch {
+        ref = '';
+      }
+    }
+    if (ref) {
+      setReferral(ref);
+      setFromLink(true);
+      checkReferral(ref);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const clearReferral = () => {
+    setReferral('');
+    setFromLink(false);
+    setReferralCheck({ state: 'idle', name: '' });
+    try {
+      sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Single source of truth now — no local isSubmitting/submitError
   const authStatus = useSelector((state) => state.auth.status);
@@ -90,11 +143,13 @@ password: !form.password
     });
 
     if (!isValid) return;
+    if (referralCheck.state === 'invalid') return;
 
     dispatch(clearAuthError());
 
     try {
-      await dispatch(signupUser(form)).unwrap();
+      await dispatch(signupUser({ ...form, referralCode: referral.trim() })).unwrap();
+      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* ignore */ }
      const otpRes = await dispatch(otpSignup({ email: form.email })).unwrap();
 
       navigate('/verify-otp', {
@@ -108,7 +163,7 @@ password: !form.password
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const token = credentialResponse.credential;
-      await dispatch(googleSignup({ token })).unwrap();
+      await dispatch(googleSignup({ token, referralCode: referral.trim() })).unwrap();
       navigate('/');
     } catch (err) {
       console.log('Google signup failed:', err);
@@ -185,6 +240,49 @@ password: !form.password
           onBlur={handleBlur}
           error={touched.confirmPassword ? errors.confirmPassword : ''}
         />
+
+        {/* Referral (optional) */}
+        <div className="mb-5">
+          <label htmlFor="referral" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
+            Referral code <span className="font-normal normal-case text-gray-400">(optional)</span>
+          </label>
+
+          {fromLink ? (
+            <div className="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <span>
+                {referralCheck.state === 'valid'
+                  ? `Invited by ${referralCheck.name}`
+                  : referralCheck.state === 'invalid'
+                  ? 'This invite link is not valid'
+                  : 'Invite link applied'}
+              </span>
+              <button type="button" onClick={clearReferral} className="text-xs font-semibold underline">
+                Remove
+              </button>
+            </div>
+          ) : (
+            <input
+              id="referral"
+              name="referral"
+              value={referral}
+              onChange={(e) => {
+                setReferral(e.target.value.toUpperCase());
+                setReferralCheck({ state: 'idle', name: '' });
+              }}
+              onBlur={(e) => checkReferral(e.target.value)}
+              placeholder="e.g. SAJID-7K2Q"
+              maxLength={40}
+              className="w-full rounded-md border border-line px-4 py-3 text-sm outline-none focus:border-ink"
+            />
+          )}
+
+          {!fromLink && referralCheck.state === 'valid' && (
+            <small className="text-emerald-700">Invited by {referralCheck.name}. Your first-order offer is ready.</small>
+          )}
+          {referralCheck.state === 'invalid' && !fromLink && (
+            <small className="text-red-500">This referral code is not valid.</small>
+          )}
+        </div>
 
         <button
           type="submit"

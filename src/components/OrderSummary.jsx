@@ -3,6 +3,7 @@ import { formatMoney } from "./CartItem";
 function OrderSummary({
   itemCount,
   subtotal,
+  savings = 0,
   unavailableCount,
   canCheckout,
   onCheckout,
@@ -16,8 +17,15 @@ function OrderSummary({
       <dl className="mt-6 space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <dt className="text-gray-600">Subtotal</dt>
-          <dd className="font-semibold text-gray-900">{formatMoney(subtotal)}</dd>
+          <dd className="font-semibold text-gray-900">{formatMoney(subtotal + savings)}</dd>
         </div>
+
+        {savings > 0 && (
+          <div className="flex items-center justify-between">
+            <dt className="text-gray-600">Offer savings</dt>
+            <dd className="font-semibold text-green-700">− {formatMoney(savings)}</dd>
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <dt className="text-gray-600">Estimated Shipping</dt>

@@ -44,6 +44,7 @@ function PaymentSuccess({ payment }) {
     paidAt,
     couponCode,
     couponDiscount,
+    referralDiscount,
   } = payment;
 
   return (
@@ -82,6 +83,13 @@ function PaymentSuccess({ payment }) {
           <div className="flex justify-between gap-4">
             <dt className="text-gray-500">Paid on</dt>
             <dd className="text-right font-semibold text-gray-900">{formatDateTime(paidAt)}</dd>
+          </div>
+        )}
+
+        {referralDiscount > 0 && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-gray-500">Referral offer</dt>
+            <dd className="font-semibold text-green-700">− {formatMoney(referralDiscount)}</dd>
           </div>
         )}
 

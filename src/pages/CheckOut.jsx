@@ -496,6 +496,11 @@ function Checkout() {
                           {ISSUE_TEXT[item.issue] || "Unavailable"}
                         </p>
                       )}
+                      {!item.issue && item.offerName && item.discountPercent > 0 && (
+                        <p className="mt-0.5 text-[10px] font-semibold text-[#f4511e]">
+                          {item.offerName} · {item.discountPercent}% off
+                        </p>
+                      )}
                     </div>
 
                     <span className="shrink-0 text-[11px] font-bold text-gray-900">
@@ -551,6 +556,15 @@ function Checkout() {
                   </div>
                 )}
 
+                {pricing.referralDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <dt>Referral offer</dt>
+                    <dd className="font-semibold text-green-700">
+                      − {formatMoney(pricing.referralDiscount)}
+                    </dd>
+                  </div>
+                )}
+
                 {pricing.taxTotal > 0 && (
                   <div className="flex justify-between">
                     <dt>Tax ({pricing.taxPercent}%)</dt>
@@ -571,6 +585,12 @@ function Checkout() {
                   </dd>
                 </div>
               </dl>
+
+              {data?.referral?.hint && (
+                <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-medium text-emerald-800">
+                  {data.referral.hint}
+                </p>
+              )}
 
               <div className="mt-4 flex items-baseline justify-between border-t border-gray-100 pt-5">
                 <span className="text-lg font-extrabold uppercase text-[#141414]">

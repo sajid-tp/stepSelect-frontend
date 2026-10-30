@@ -12,6 +12,7 @@ import wishlistReducer from "../features/user/wishlistSlice";
 import ordersReducer from "../features/user/orderSlice";
 import paymentReducer from "../features/user/paymentSlice";
 import walletReducer from "../features/user/walletSlice";
+import referralReducer from "../features/user/referralSlice";
 
 import adminCategoryReducer from "../features/admin/categorySlice";
 import adminBrandsReducer from "../features/admin/brandSlice";
@@ -20,6 +21,7 @@ import adminVariantReducer from "../features/admin/variantSlice";
 import adminCouponReducer from "../features/admin/couponSlice";
 import adminOrderReducer from "../features/admin/orderSlice";
 import adminInventoryReducer from "../features/admin/inventorySlice";
+import adminOfferReducer from "../features/admin/offerSlice";
 
 export const store = configureStore({
   reducer: {
@@ -33,6 +35,7 @@ export const store = configureStore({
     orders: ordersReducer,
     payment: paymentReducer,
     wallet: walletReducer,
+    referral: referralReducer,
 
     adminAuth: adminAuthReducer,
     adminUsers: adminUserReducer,
@@ -43,5 +46,6 @@ export const store = configureStore({
     adminCoupons: adminCouponReducer,
     adminOrders: adminOrderReducer,
     adminInventory: adminInventoryReducer,
+    adminOffers: adminOfferReducer,
   },
 });

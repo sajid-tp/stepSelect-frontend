@@ -26,6 +26,8 @@ import Shop from "./pages/Shop";
 import GuestRoute from './components/GuestRoute';
 import ProductDetailsPage from "./pages/ProductDetails"
 import Coupons from "./pages/admin/Coupons";
+import Offers from "./pages/admin/Offers";
+import InviteRedirect from "./pages/InviteRedirect";
 import CouponForm from "./pages/admin/CouponForm";
 import AdminOrders from "./pages/admin/Orders";
 import AdminOrderEdit from "./pages/admin/OrderEdit";
@@ -58,6 +60,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
          </Route>
+        <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/update-password" element={<UpdatePassword />} />
@@ -127,6 +130,7 @@ function App() {
 
 />
 
+<Route path="/admin/offers" element={<Offers />} />
 <Route path="/admin/coupons" element={<Coupons />} />
 <Route path="/admin/coupons/new" element={<CouponForm />} />
 <Route path="/admin/coupons/edit/:couponId" element={<CouponForm />} />

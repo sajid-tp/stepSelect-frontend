@@ -7,6 +7,7 @@ import { getProductById } from "../features/user/productSlice";
 import { addToCart } from "../features/user/cartSlice";
 import ImageViewer from "../components/ImageViewer";
 import RelatedProducts from "../components/RelatedProducts";
+import ReferralOfferNote from "../components/ReferralOfferNote";
 
 import {  getCart } from "../features/user/cartSlice";
 import {
@@ -517,6 +518,36 @@ const isInCart = Boolean(
 
             </div>
 
+
+            {/* Product / category offer */}
+
+            {activeVariant?.offer && discount > 0 && (
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
+                <i className="fa-solid fa-tag mt-0.5 text-[#f4511e]" aria-hidden="true" />
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold text-[#b13600]">{activeVariant.offer.name}</p>
+                  <p className="mt-0.5 text-gray-700">
+                    {discount}% off{" "}
+                    {activeVariant.offer.source === "category"
+                      ? `all ${productDetails.category?.categoryName || "shoes in this category"}`
+                      : "this shoe"}
+                    . You save {formatPrice(price - finalPrice)}
+                    {activeVariant.offer.expiryDate
+                      ? ` · ends ${new Date(activeVariant.offer.expiryDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}`
+                      : ""}
+                    .
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Referral offer */}
+
+            <ReferralOfferNote />
 
             {/* Description */}
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import AccountSidebar from '../components/AccountSideBar';
+import ReferralCard from '../components/ReferralCard';
 import { fetchUserProfile } from '../features/user/accountSlice';
 
 function AccountOverview() {
@@ -138,6 +139,9 @@ function AccountOverview() {
                 </div>
               )}
             </div>
+
+            {/* Referral: code, invite link and earnings */}
+            <ReferralCard />
           </section>
 
         </div>
