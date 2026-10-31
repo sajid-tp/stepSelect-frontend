@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import AdminSidebar from "../../components/AdminSideBar";
+import AdminPageHeader from "../../components/AdminPageHeader";
 import Pagination from "../../components/Pagination";
 import Modal from "../../components/Modals";
 import OfferFormModal from "../../components/OfferFormModal";
@@ -277,28 +278,15 @@ function Offers() {
 
       <main className="ml-[214px] min-h-screen">
         {/* HEADER */}
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-12 py-7">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Incentives</p>
-            <h1 className="mt-1 text-3xl font-extrabold leading-tight tracking-tight text-[#071a33]">
-              Offers <span className="text-[#ff5722]">Management</span>
-            </h1>
-          </div>
-
-          {isOfferTab && (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-              className="inline-flex items-center gap-2 rounded-md bg-[#ff5722] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#f4511e] hover:shadow-md"
-            >
-              <span className="text-base leading-none">+</span>
-              Create new offer
-            </button>
-          )}
-        </header>
+        <AdminPageHeader
+          eyebrow="Incentives"
+          title="Offer"
+          actionLabel={isOfferTab ? "Create New Offer" : undefined}
+          onAction={() => {
+            setEditing(null);
+            setFormOpen(true);
+          }}
+        />
 
         <section className="px-12 py-8">
           {/* TABS */}

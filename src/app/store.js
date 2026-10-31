@@ -24,6 +24,7 @@ import adminInventoryReducer from "../features/admin/inventorySlice";
 import adminOfferReducer from "../features/admin/offerSlice";
 import adminSalesReportReducer from "../features/admin/salesReportSlice";
 import adminDashboardReducer from "../features/admin/dashboardSlice";
+import adminBannerReducer from "../features/admin/bannerSlice";
 
 export const store = configureStore({
   reducer: {
@@ -51,5 +52,6 @@ export const store = configureStore({
     adminOffers: adminOfferReducer,
     adminSalesReport: adminSalesReportReducer,
     adminDashboard: adminDashboardReducer,
+    adminBanners: adminBannerReducer,
   },
 });

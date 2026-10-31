@@ -14,6 +14,7 @@ import {
 
 import AdminSidebar
   from "../../components/AdminSideBar";
+import AdminPageHeader from "../../components/AdminPageHeader";
 
 import Pagination
   from "../../components/Pagination";
@@ -477,87 +478,12 @@ function Products() {
         {/* HEADER */}
         {/* ================================================= */}
 
-        <header
-          className="
-            border-b
-            border-gray-200
-            bg-white
-            px-12
-            py-7
-          "
-        >
-
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-            "
-          >
-
-            <div>
-
-              <p
-                className="
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-[0.16em]
-                  text-gray-400
-                "
-              >
-                Catalog
-              </p>
-
-
-              <h1
-                className="
-                  mt-1
-                  text-4xl
-                  font-bold
-                  text-gray-900
-                "
-              >
-
-                Product{" "}
-
-                <span
-                  className="
-                    text-[#ff5722]
-                  "
-                >
-                  Management
-                </span>
-
-              </h1>
-
-            </div>
-
-
-            <button
-              type="button"
-              onClick={
-                handleAddProduct
-              }
-              className="
-                rounded-lg
-                bg-[#ff5722]
-                px-6
-                py-3
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition
-                hover:bg-[#f4511e]
-              "
-            >
-              + Add New Product
-            </button>
-
-          </div>
-
-        </header>
+        <AdminPageHeader
+          eyebrow="Catalog"
+          title="Product"
+          actionLabel="Add New Product"
+          onAction={handleAddProduct}
+        />
 
 
         {/* ================================================= */}

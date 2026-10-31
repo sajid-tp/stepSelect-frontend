@@ -11,6 +11,7 @@ import {
 
 import AdminSidebar
   from "../../components/AdminSideBar";
+import AdminPageHeader from "../../components/AdminPageHeader";
 
 import AdminEntityCard
   from "../../components/AdminEntityCard";
@@ -368,98 +369,12 @@ function Categories() {
         "
       >
 
-        <header
-          className="
-            flex
-            items-center
-            justify-between
-            border-b
-            border-gray-200
-            bg-white
-            px-12
-            py-7
-          "
-        >
-
-          <div>
-
-            <p
-              className="
-                text-xs
-                font-semibold
-                uppercase
-                tracking-[0.16em]
-                text-gray-400
-              "
-            >
-              Taxonomy
-            </p>
-
-
-            <h1
-              className="
-                mt-1
-                text-4xl
-                font-bold
-                leading-none
-                text-gray-900
-              "
-            >
-
-              Category{" "}
-
-              <span
-                className="
-                  text-[#ff5722]
-                "
-              >
-                Management
-              </span>
-
-            </h1>
-
-          </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                "/admin/categories/new"
-              )
-            }
-            className="
-              flex
-              items-center
-              gap-2
-              rounded-full
-              bg-[#ff5722]
-              px-6
-              py-3
-              text-sm
-              font-bold
-              uppercase
-              tracking-wide
-              text-white
-              shadow-md
-              transition
-              hover:bg-[#f4511e]
-            "
-          >
-
-            <span
-              className="
-                text-xl
-                leading-none
-              "
-            >
-              +
-            </span>
-
-            Add New Category
-
-          </button>
-
-        </header>
+        <AdminPageHeader
+          eyebrow="Taxonomy"
+          title="Category"
+          actionLabel="Add New Category"
+          onAction={() => navigate("/admin/categories/new")}
+        />
 
         <section
           className="

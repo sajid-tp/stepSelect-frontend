@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import AdminSidebar from "../../components/AdminSideBar";
+import AdminPageHeader from "../../components/AdminPageHeader";
 import Pagination from "../../components/Pagination";
 import Modal from "../../components/Modals";
 import useDebounce from "../../hooks/useDebounce";
@@ -363,25 +364,12 @@ function Coupons() {
 
       <main className="ml-[214px] min-h-screen">
         {/* HEADER */}
-        <header className="flex items-center justify-between border-b border-gray-200 bg-white px-12 py-7">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
-              Incentives
-            </p>
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-[#071a33]">
-              Coupons
-            </h1>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/admin/coupons/new")}
-            className="inline-flex items-center gap-2 rounded-md bg-[#ff5722] px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#f4511e] hover:shadow-md"
-          >
-            <span className="text-base leading-none">+</span>
-            Add Coupon
-          </button>
-        </header>
+        <AdminPageHeader
+          eyebrow="Incentives"
+          title="Coupon"
+          actionLabel="Add New Coupon"
+          onAction={() => navigate("/admin/coupons/new")}
+        />
 
         <section className="px-12 py-8">
           {/* SEARCH + SORT */}

@@ -11,6 +11,7 @@ import {
 
 import AdminSidebar
   from "../../components/AdminSideBar";
+import AdminPageHeader from "../../components/AdminPageHeader";
 
 import AdminEntityCard
   from "../../components/AdminEntityCard";
@@ -420,109 +421,12 @@ function Brands() {
         {/* HEADER */}
         {/* ================================================= */}
 
-        <header
-          className="
-            border-b
-            border-gray-200
-            bg-white
-            px-12
-            py-8
-          "
-        >
-
-          <div
-            className="
-              flex
-              items-center
-              justify-between
-            "
-          >
-
-            <div>
-
-              <p
-                className="
-                  text-xs
-                  font-medium
-                  uppercase
-                  tracking-[0.18em]
-                  text-gray-400
-                "
-              >
-                COLLECTION
-              </p>
-
-
-              <h1
-                className="
-                  mt-1
-                  text-4xl
-                  font-bold
-                  tracking-tight
-                  text-[#071a33]
-                "
-              >
-
-                Brand{" "}
-
-                <span
-                  className="
-                    text-[#ff5722]
-                  "
-                >
-                  Management
-                </span>
-
-              </h1>
-
-            </div>
-
-
-            {/* ADD NEW BRAND */}
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  "/admin/brands/new"
-                )
-              }
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                bg-[#ff5722]
-                px-7
-                py-3.5
-                text-sm
-                font-bold
-                uppercase
-                tracking-wide
-                text-white
-                shadow-sm
-                transition
-                hover:bg-[#f4511e]
-                hover:shadow-md
-              "
-            >
-
-              <span
-                className="
-                  text-lg
-                  leading-none
-                "
-              >
-                +
-              </span>
-
-              Add New Brand
-
-            </button>
-
-          </div>
-
-        </header>
+        <AdminPageHeader
+          eyebrow="Collection"
+          title="Brand"
+          actionLabel="Add New Brand"
+          onAction={() => navigate("/admin/brands/new")}
+        />
 
 
         {/* ================================================= */}

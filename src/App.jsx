@@ -33,6 +33,7 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminOrderEdit from "./pages/admin/OrderEdit";
 import AdminInventory from "./pages/admin/Inventory";
 import SalesReport from "./pages/admin/SalesReport";
+import Banners from "./pages/admin/Banners";
 import Checkout from './pages/checkOut';
 import OrderSuccess from './pages/orderSuccess';
 import Orders from './pages/Orders';
@@ -140,6 +141,7 @@ function App() {
 <Route path="/admin/orders/:orderId" element={<AdminOrderEdit />} />
 <Route path="/admin/inventory" element={<AdminInventory />} />
 <Route path="/admin/sales-report" element={<SalesReport />} />
+<Route path="/admin/banners" element={<Banners />} />
 
 <Route
   path="/admin/products"
