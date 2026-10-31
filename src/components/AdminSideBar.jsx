@@ -178,6 +178,24 @@ const menuItems = [
   },
 
   {
+    name: "Offers",
+    path: "/admin/offers",
+    icon: (
+      <svg
+        width="17"
+        height="17"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path d="M20 12 12 20l-8-8V4h8l8 8Z" />
+        <circle cx="8" cy="8" r="1" />
+      </svg>
+    ),
+  },
+
+  {
     name: "Sales Report",
     path: "/admin/sales-report",
     icon: (
@@ -192,24 +210,6 @@ const menuItems = [
         <path d="M4 19V5" />
         <path d="M4 19h17" />
         <path d="m7 15 4-4 3 2 5-6" />
-      </svg>
-    ),
-  },
-
-  {
-    name: "Offers",
-    path: "/admin/offers",
-    icon: (
-      <svg
-        width="17"
-        height="17"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      >
-        <path d="M20 12 12 20l-8-8V4h8l8 8Z" />
-        <circle cx="8" cy="8" r="1" />
       </svg>
     ),
   },
