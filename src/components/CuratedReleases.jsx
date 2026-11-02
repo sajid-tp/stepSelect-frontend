@@ -7,7 +7,8 @@ const COUNT = 6;
 
 const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
-// The newest products from the shop (real names, prices and pictures from the database)
+// The newest products from the shop (real names, prices and pictures from the database),
+// ordered by createdAt, newest first (sort: 'newest' = { createdAt: -1 } on the server)
 function CuratedReleases() {
   const [products, setProducts] = useState(null); // null = loading
   const [failed, setFailed] = useState(false);
@@ -38,7 +39,7 @@ function CuratedReleases() {
       <div className="w-full px-4 sm:px-6 lg:px-10">
         <div className="mb-5 flex items-baseline justify-between sm:mb-6">
           <h2 className="text-lg sm:text-xl">Curated releases</h2>
-          <a href="/shop" className="text-[12.5px] font-semibold underline sm:text-[13px]">View all</a>
+          <Link to="/shop" className="text-[12.5px] font-semibold underline sm:text-[13px]">View all</Link>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6 lg:gap-5">

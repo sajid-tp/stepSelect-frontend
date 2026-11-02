@@ -1,9 +1,11 @@
+import { Link } from 'react-router-dom';
 import StaticImage from './StaticImage';
 
 // Pictures are fixed files in /public/images/home (see the README in that folder)
+// `gender` is the value the Shop page filter understands: /shop?gender=men opens Shop with "Men" ticked
 const categories = [
-  { label: 'Men', sub: 'Shop the collection', img: '/images/home/men.jpg' },
-  { label: 'Women', sub: 'Shop the collection', img: '/images/home/women.jpg' }
+  { label: 'Men', gender: 'men', sub: 'Shop the collection', img: '/images/home/men.jpg' },
+  { label: 'Women', gender: 'women', sub: 'Shop the collection', img: '/images/home/women.jpg' }
 ];
 
 function CategoryBanner() {
@@ -11,8 +13,8 @@ function CategoryBanner() {
     <section className="py-6 pb-10 sm:pb-14">
       <div className="w-full grid grid-cols-1 gap-4 px-4 sm:gap-5 sm:grid-cols-2 sm:px-6 lg:px-10">
         {categories.map((cat) => (
-          <a
-            href={`/shop?category=${cat.label.toLowerCase()}`}
+          <Link
+            to={`/shop?gender=${cat.gender}`}
             className="group relative block overflow-hidden rounded-lg"
             key={cat.label}
           >
@@ -29,7 +31,7 @@ function CategoryBanner() {
               <span className="text-[18px] font-bold sm:text-[20px] lg:text-[22px]">{cat.label}</span>
               <span className="text-[11.5px] opacity-85 sm:text-[12.5px]">{cat.sub}</span>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

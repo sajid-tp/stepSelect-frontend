@@ -2,16 +2,10 @@ import { Link } from "react-router-dom";
 
 import OrderStatusBadge from "./OrderStatusBadge";
 import { formatMoney } from "./CartItem";
-import {
-  REVIEWABLE_ITEM_STATUSES,
-  TRACKABLE_ITEM_STATUSES,
-} from "../utils/orderFormat";
+import { TRACKABLE_ITEM_STATUSES } from "../utils/orderFormat";
 
 const primaryBtn =
   "rounded bg-[#b13600] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:opacity-50";
-
-const darkBtn =
-  "rounded bg-gray-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50";
 
 /*
   One product line on the Order Details page.
@@ -19,8 +13,8 @@ const darkBtn =
 
     pending                       -> Cancel
     shipped / out for delivery    -> Track Item
-    delivered                     -> Track Item, Return, Rate & Review
-    return requested              -> Track Item, Rate & Review
+    delivered                     -> Track Item, Return
+    return requested              -> Track Item
     cancelled / returned          -> no buttons
 */
 function OrderItemRow({
@@ -30,7 +24,6 @@ function OrderItemRow({
   onTrack,
   onCancel,
   onReturn,
-  onReview,
 }) {
   const remaining = item.remainingQuantity ?? item.quantity;
   const cancelledQty = item.cancelledQuantity || 0;
@@ -41,7 +34,6 @@ function OrderItemRow({
     : item.remainingTotal ?? item.itemTotal;
 
   const canTrack = TRACKABLE_ITEM_STATUSES.includes(item.status);
-  const canReview = REVIEWABLE_ITEM_STATUSES.includes(item.status);
 
   const variantText = [item.color, item.size ? `Size ${item.size}` : null]
     .filter(Boolean)
@@ -139,18 +131,6 @@ function OrderItemRow({
                 className={primaryBtn}
               >
                 Return item
-              </button>
-            )}
-
-            {canReview && (
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={onReview}
-                className={darkBtn}
-              >
-                <i className="fa-solid fa-star mr-1 text-yellow-400" />
-                Rate &amp; review
               </button>
             )}
           </div>

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 import Pagination from "../components/Pagination";
@@ -15,9 +15,16 @@ import {
 } from "../features/user/productSlice";
 import { getCart, quickAddToCart } from "../features/user/cartSlice";
 
+const GENDER_VALUES = ["men", "women", "unisex"];
+
 function Shop() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Links from the Home page: /shop?gender=men   /shop?category=sneakers
+  const [searchParams] = useSearchParams();
+  const urlGender = (searchParams.get("gender") || "").trim().toLowerCase();
+  const urlCategory = (searchParams.get("category") || "").trim();
 
   // ---------- redux ----------
   const {
@@ -42,7 +49,12 @@ function Shop() {
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedGender, setSelectedGender] = useState(
+    GENDER_VALUES.includes(urlGender) ? urlGender : ""
+  );
+  // A category in the link is a NAME (sneakers); the filter works with ids, so products wait
+  // until the category list has loaded and the name is turned into the matching id
+  const [categoryResolved, setCategoryResolved] = useState(!urlCategory);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
@@ -53,6 +65,55 @@ function Shop() {
     if (categoryStatus === "idle") dispatch(getCategories());
     if (brandStatus === "idle") dispatch(getBrands());
   }, [dispatch, categoryStatus, brandStatus]);
+
+  // Coming from a link on Home (which is scrolled down), the router keeps the old scroll position:
+  // start at the top of Shop instead, also when the link changes while Shop is already open
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [urlGender, urlCategory]);
+
+  // ---------- link from Home: pre-select the gender / category ----------
+  // Runs again when the link changes while Shop is already open (e.g. Men -> Women).
+  const firstUrlRun = useRef(true);
+  useEffect(() => {
+    if (firstUrlRun.current) {
+      firstUrlRun.current = false;
+      return;
+    }
+    setSelectedGender(GENDER_VALUES.includes(urlGender) ? urlGender : "");
+    if (urlCategory) {
+      setCategoryResolved(false);
+    } else {
+      setSelectedCategories([]);
+    }
+    setPage(1);
+  }, [urlGender, urlCategory]);
+
+  useEffect(() => {
+    if (categoryResolved) return;
+    if (categoryStatus === "failed") {
+      setCategoryResolved(true); // no list to match against: show everything
+      return;
+    }
+    if (categoryStatus !== "succeeded") return;
+
+    const wanted = urlCategory
+      .split(",")
+      .map((value) => value.trim().toLowerCase().replace(/-/g, " "))
+      .filter(Boolean);
+
+    const ids = categories
+      .filter(
+        (category) =>
+          wanted.includes(String(category.categoryName || "").trim().toLowerCase()) ||
+          wanted.includes(String(category.id).toLowerCase())
+      )
+      .map((category) => category.id);
+
+    setSelectedCategories(ids);
+    setPage(1);
+    setCategoryResolved(true);
+  }, [categoryResolved, categoryStatus, categories, urlCategory]);
 
   // ---------- cart (to know which cards say "Added to Cart") ----------
   // Shop is public: only load the cart for a logged-in user,
@@ -93,8 +154,9 @@ function Shop() {
   ]);
 
   useEffect(() => {
+    if (!categoryResolved) return; // wait for the category from the link, so the first list is already filtered
     loadProducts();
-  }, [loadProducts]);
+  }, [loadProducts, categoryResolved]);
 
   // ---------- handlers ----------
   const handleSearchChange = (e) => {

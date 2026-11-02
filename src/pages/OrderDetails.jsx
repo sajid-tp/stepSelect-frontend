@@ -11,7 +11,6 @@ import PaymentRetryPanel from "../components/PaymentRetryPanel";
 import useOnlinePayment from "../hooks/useOnlinePayment";
 import { abandonPayment } from "../features/user/paymentSlice";
 import TrackItemModal from "../components/TrackItemModal";
-import ReviewModal from "../components/ReviewModal";
 import { formatMoney } from "../components/CartItem";
 
 import {
@@ -23,7 +22,6 @@ import {
   fetchReasons,
   returnOrder,
   returnOrderItem,
-  submitReview,
 } from "../features/user/orderSlice";
 
 import {
@@ -45,7 +43,7 @@ const sectionLabel =
 
     Pending                       item: Cancel item        bottom: Cancel order
     Shipped / Out for delivery    item: Track item         (cancelling is closed by the server)
-    Delivered                     item: Track, Return, Rate & review
+    Delivered                     item: Track, Return
                                   bottom: Return order, Download invoice
     Cancelled                     no buttons
 */
@@ -67,7 +65,7 @@ function OrderDetails() {
       ? current
       : null;
 
-  // modal = { type: "cancelOrder" | "cancelItem" | "returnOrder" | "returnItem" | "track" | "review", item? }
+  // modal = { type: "cancelOrder" | "cancelItem" | "returnOrder" | "returnItem" | "track", item? }
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -161,32 +159,6 @@ function OrderDetails() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (message) {
       setModalError(errorText(message, "Something went wrong. Please try again."));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  /* ---------- review ---------- */
-  const handleReview = async ({ rating, comment }) => {
-    if (!order || !modal?.item) return;
-
-    setBusy(true);
-    setModalError("");
-
-    try {
-      const result = await dispatch(
-        submitReview({
-          productId: modal.item.productId,
-          orderId: order.id,
-          rating,
-          comment,
-        })
-      ).unwrap();
-
-      setModal(null);
-      setNotice({ type: "success", text: result.message });
-    } catch (message) {
-      setModalError(errorText(message, "We couldn't submit your review."));
     } finally {
       setBusy(false);
     }
@@ -573,7 +545,6 @@ function OrderDetails() {
                     onTrack={() => openModal("track", item)}
                     onCancel={() => openModal("cancelItem", item)}
                     onReturn={() => openModal("returnItem", item)}
-                    onReview={() => openModal("review", item)}
                   />
                 ))}
               </div>
@@ -645,16 +616,6 @@ function OrderDetails() {
 
       {modal?.type === "track" && order && (
         <TrackItemModal item={modal.item} order={order} onClose={closeModal} />
-      )}
-
-      {modal?.type === "review" && (
-        <ReviewModal
-          item={modal.item}
-          busy={busy}
-          error={modalError}
-          onSubmit={handleReview}
-          onClose={closeModal}
-        />
       )}
     </div>
   );
