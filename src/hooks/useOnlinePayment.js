@@ -68,6 +68,19 @@ export default function useOnlinePayment() {
       await new Promise((resolve) => {
         let finished = false;
         let lastFailure = "";
+        // The one in-flight "this attempt failed" report. The popup often closes by itself right after
+        // payment.failed, so BOTH paths below must wait for this same report before the failure modal opens
+        let failureReport = null;
+        const reportOnce = (reason, paymentId) => {
+          if (!failureReport) {
+            failureReport = dispatch(reportPaymentFailure({ orderNumber, reason, paymentId }))
+              .unwrap()
+              .catch(() => {
+                /* the failure screen loads the real status anyway */
+              });
+          }
+          return failureReport;
+        };
 
         const razorpay = new RazorpayCheckout({
           key: session.key,
@@ -112,12 +125,12 @@ export default function useOnlinePayment() {
 
           // Closed without paying
           modal: {
-            ondismiss: () => {
+            ondismiss: async () => {
               if (finished) return;
               finished = true;
-              if (!lastFailure) {
-                dispatch(reportPaymentFailure({ orderNumber, reason: "Payment window closed" }));
-              }
+              // WAIT for the server to count this attempt as failed: the page reloads the order as soon as
+              // this promise resolves, and it must not read the old "payment in progress" state
+              await reportOnce("Payment window closed");
               goToFailed(orderNumber, lastFailure || "You closed the payment window before paying.");
               resolve();
             },
@@ -129,17 +142,7 @@ export default function useOnlinePayment() {
         // the customer sees the failure modal (Retry button, attempts left, cool-down).
         razorpay.on("payment.failed", async (response) => {
           lastFailure = response?.error?.description || "Your payment could not be completed.";
-          try {
-            await dispatch(
-              reportPaymentFailure({
-                orderNumber,
-                reason: lastFailure,
-                paymentId: response?.error?.metadata?.payment_id,
-              })
-            ).unwrap();
-          } catch {
-            /* the failed page loads the real status anyway */
-          }
+          await reportOnce(lastFailure, response?.error?.metadata?.payment_id);
 
           if (finished) return; // the customer already closed the popup
           finished = true;

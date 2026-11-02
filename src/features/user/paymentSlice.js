@@ -135,8 +135,9 @@ const paymentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPaymentStatus.pending, (state) => {
-        state.status = "loading";
+      .addCase(fetchPaymentStatus.pending, (state, action) => {
+        // Re-checking the order that is already on screen must not flash the loading skeleton
+        if (!state.result || state.result.orderNumber !== action.meta.arg) state.status = "loading";
         state.error = null;
       })
       .addCase(fetchPaymentStatus.fulfilled, (state, action) => {

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { formatMoney } from "./CartItem";
@@ -59,11 +60,20 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onCancelPaym
     attemptsLeft = 0,
     nextAttemptIsFinal,
     attemptInProgress,
+    cooldownOutlastsHold = false,
     holdMinutes = 30,
   } = payment;
 
   const isClosed = closedReason !== null && closedReason !== undefined;
   const inCooldown = !isClosed && cooldownSecondsLeft > 0;
+
+  // While the server still shows an attempt as running, keep asking so the screen settles by itself
+  const waitingOnAttempt = Boolean(attemptInProgress) && !isClosed;
+  useEffect(() => {
+    if (!waitingOnAttempt || !onRefresh) return undefined;
+    const timer = setInterval(onRefresh, 5000);
+    return () => clearInterval(timer);
+  }, [waitingOnAttempt, onRefresh]);
 
   const message = isClosed
     ? closedReason === "exhausted"
@@ -141,6 +151,11 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onCancelPaym
             <p className="mt-1">
               Final attempt opens in{" "}
               <PaymentCountdown seconds={cooldownSecondsLeft} onDone={onRefresh} warnBelow={0} />
+            </p>
+          )}
+          {cooldownOutlastsHold && (
+            <p className="mt-1 font-semibold text-red-700">
+              Heads up: this order will expire before the final attempt opens.
             </p>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import PaymentCountdown, { clock } from "./PaymentCountdown";
 import PaymentAttemptDots from "./PaymentAttemptDots";
 
@@ -10,6 +11,16 @@ import PaymentAttemptDots from "./PaymentAttemptDots";
 */
 function PaymentRetryPanel({ order, retrying, error, onRetry, onCancelPayment, onRefresh }) {
   const flow = order?.paymentFlow;
+
+  // An attempt nobody finished is settled by the server after a few minutes: keep asking while one is
+  // running, so the Retry button unlocks by itself (no page reload needed)
+  const waitingOnAttempt = Boolean(flow?.attemptInProgress) && (flow?.closedReason ?? null) === null;
+  useEffect(() => {
+    if (!waitingOnAttempt || !onRefresh) return undefined;
+    const timer = setInterval(onRefresh, 10000);
+    return () => clearInterval(timer);
+  }, [waitingOnAttempt, onRefresh]);
+
   if (!flow) return null;
 
   const {
@@ -21,6 +32,7 @@ function PaymentRetryPanel({ order, retrying, error, onRetry, onCancelPayment, o
     maxAttempts,
     nextAttemptIsFinal,
     attemptInProgress,
+    cooldownOutlastsHold = false,
     cooldownSecondsLeft = 0,
     secondsLeft,
     holdMinutes = 30,
@@ -80,6 +92,12 @@ function PaymentRetryPanel({ order, retrying, error, onRetry, onCancelPayment, o
             )}
             {attemptInProgress && " - a payment is in progress"}
           </p>
+
+          {cooldownOutlastsHold && (
+            <p className="mt-1 text-xs font-semibold text-red-700">
+              Heads up: this order will expire before the final attempt opens.
+            </p>
+          )}
 
           <div className="mt-2 inline-block">
             <PaymentAttemptDots failed={failedAttempts} used={attemptsUsed} max={maxAttempts} />
