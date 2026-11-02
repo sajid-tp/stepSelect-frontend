@@ -6,15 +6,18 @@ import axiosInstance from "../../api/axiosInstance";
 | Backend endpoints used by the admin order pages
 |--------------------------------------------------------------------------
 | GET   /admin/orders?search&status&sort&from&to&page&limit
-|         -> data { orders[], pagination }
+|         -> data { orders[] (each with returnRequestCount), pagination, pendingReturnOrders }
+|         status can also be "return_requested" = the Returns tab
 | GET   /admin/orders/:orderId
-|         -> data order (+ user, allowedStatuses[])
-| PATCH /admin/orders/:orderId        body { status }
+|         -> data order (+ user; every item has its own allowedStatuses[])
+| PATCH /admin/orders/:orderId/items/:itemId/status   body { status }
 |         -> data order (same shape as GET one)
 |
+| Every PRODUCT (item) of an order has its own delivery status. The order's
+| status is worked out by the server from its items, so it is never edited.
 | The server decides which status changes are allowed (forward only,
-| cancel only before delivery) and sends them in `allowedStatuses`,
-| so this slice and the pages never repeat those rules.
+| cancel only before delivery) and sends them in each item's
+| `allowedStatuses`, so this slice and the pages never repeat those rules.
 */
 
 const getErrorMessage = (error, fallback) =>
@@ -74,7 +77,27 @@ export const getAdminOrder = createAsyncThunk(
 );
 
 // =====================================================
-// CHANGE STATUS (the only thing the admin can edit)
+// CHANGE THE DELIVERY STATUS OF ONE PRODUCT (item) OF AN ORDER
+// =====================================================
+export const updateAdminItemStatus = createAsyncThunk(
+  "adminOrders/updateAdminItemStatus",
+  async ({ orderId, itemId, status }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/admin/orders/${orderId}/items/${itemId}/status`,
+        { status }
+      );
+      return { message: response.data.message, order: response.data.data };
+    } catch (error) {
+      return rejectWithValue(
+        getErrorMessage(error, "Failed to update the item status.")
+      );
+    }
+  }
+);
+
+// =====================================================
+// CHANGE STATUS OF EVERY OPEN ITEM AT ONCE (not used by the pages any more)
 // =====================================================
 export const updateAdminOrderStatus = createAsyncThunk(
   "adminOrders/updateAdminOrderStatus",
@@ -118,12 +141,25 @@ export const handleAdminReturn = createAsyncThunk(
 const initialState = {
   orders: [],
   pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 1 },
+  pendingReturnOrders: 0, // orders with a return waiting for the admin (badge on the Returns tab)
   status: "idle", // idle | loading | succeeded | failed
   error: null,
 
   current: null,
   currentStatus: "idle",
   currentError: null,
+};
+
+// An item (or the whole order) changed: show the new order and keep the list row in step
+const applyUpdatedOrder = (state, action) => {
+  const updated = action.payload.order;
+  state.current = updated;
+  state.currentStatus = "succeeded";
+  state.orders = state.orders.map((o) =>
+    o.id === updated.id
+      ? { ...o, status: updated.status, paymentStatus: updated.paymentStatus }
+      : o
+  );
 };
 
 const adminOrderSlice = createSlice({
@@ -149,6 +185,7 @@ const adminOrderSlice = createSlice({
         state.status = "succeeded";
         state.orders = action.payload.orders || [];
         state.pagination = action.payload.pagination || initialState.pagination;
+        state.pendingReturnOrders = action.payload.pendingReturnOrders || 0;
       })
       .addCase(getAdminOrders.rejected, (state, action) => {
         state.status = "failed";
@@ -170,16 +207,8 @@ const adminOrderSlice = createSlice({
       })
 
       // ----- status changed: show the new order, keep the list row in step -----
-      .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
-        const updated = action.payload.order;
-        state.current = updated;
-        state.currentStatus = "succeeded";
-        state.orders = state.orders.map((o) =>
-          o.id === updated.id
-            ? { ...o, status: updated.status, paymentStatus: updated.paymentStatus }
-            : o
-        );
-      })
+      .addCase(updateAdminItemStatus.fulfilled, applyUpdatedOrder)
+      .addCase(updateAdminOrderStatus.fulfilled, applyUpdatedOrder)
 
       // ----- return approved / rejected: show the refreshed order -----
       .addCase(handleAdminReturn.fulfilled, (state, action) => {

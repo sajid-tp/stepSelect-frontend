@@ -71,7 +71,7 @@ export default function AccountSidebar() {
   };
 
   const navItemClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
       isActive
         ? 'bg-[#f4511e] text-white'
         : 'text-gray-700 hover:bg-gray-100'
@@ -79,27 +79,27 @@ export default function AccountSidebar() {
 
   return (
     <>
-      <aside className="w-full md:w-64 shrink-0 rounded-2xl bg-[#fafafa] border border-line/60 p-4 md:p-6">
+      <aside className="w-full lg:w-64 shrink-0 rounded-2xl bg-[#fafafa] border border-line/60 p-4 lg:p-6">
 
         {/* User Info Header */}
-        <div className="flex flex-row md:flex-col items-center md:text-center gap-4 md:gap-0 pb-4 md:pb-6 border-b border-line">
+        <div className="flex flex-row lg:flex-col items-center lg:text-center gap-4 lg:gap-0 pb-4 lg:pb-6 border-b border-line">
           <div className="relative shrink-0">
             {hasValidImage ? (
               <img
                 src={profile.profileImage}
                 alt={name}
                 onError={() => setImgError(true)}
-                className="h-12 w-12 md:h-16 md:w-16 rounded-full object-cover border border-line shadow-sm"
+                className="h-12 w-12 lg:h-16 lg:w-16 rounded-full object-cover border border-line shadow-sm"
               />
             ) : (
-              <div className="h-12 w-12 md:h-16 md:w-16 rounded-full bg-[#f4511e] flex items-center justify-center text-white text-sm md:text-base font-bold shadow-sm">
+              <div className="h-12 w-12 lg:h-16 lg:w-16 rounded-full bg-[#f4511e] flex items-center justify-center text-white text-sm lg:text-base font-bold shadow-sm">
                 {initials}
               </div>
             )}
           </div>
 
-          <div className="min-w-0 text-left md:text-center">
-            <h3 className="md:mt-3 text-sm font-bold text-ink truncate">
+          <div className="min-w-0 text-left lg:text-center">
+            <h3 className="lg:mt-3 text-sm font-bold text-ink truncate">
               {name}
             </h3>
 
@@ -110,7 +110,7 @@ export default function AccountSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-4 md:mt-6 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-1 px-1 md:mx-0 md:px-0">
+        <nav className="mt-4 lg:mt-6 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0">
 
           {/* Overview */}
           <NavLink
@@ -240,7 +240,7 @@ export default function AccountSidebar() {
             type="button"
             onClick={handleLogoutClick}
             disabled={loggingOut}
-            className="flex md:hidden items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-red-500 hover:text-red-700 whitespace-nowrap shrink-0 disabled:opacity-50"
+            className="flex lg:hidden items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-red-500 hover:text-red-700 whitespace-nowrap shrink-0 disabled:opacity-50"
           >
             <svg
               width="16"
@@ -260,7 +260,7 @@ export default function AccountSidebar() {
         </nav>
 
         {/* Logout - Desktop */}
-        <div className="hidden md:block mt-8 pt-4 border-t border-line">
+        <div className="hidden lg:block mt-8 pt-4 border-t border-line">
           <button
             type="button"
             onClick={handleLogoutClick}

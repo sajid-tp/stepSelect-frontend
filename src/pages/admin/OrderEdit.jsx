@@ -18,7 +18,7 @@ import {
   clearAdminOrder,
   getAdminOrder,
   handleAdminReturn,
-  updateAdminOrderStatus,
+  updateAdminItemStatus,
 } from "../../features/admin/orderSlice";
 
 const cardClass = "rounded-xl border border-gray-200 bg-white p-6 shadow-sm";
@@ -35,12 +35,23 @@ const PAYMENT_STATUS_TEXT = {
 /*
   Edit order  (/admin/orders/:orderId)
 
-  The whole order is read-only. The ONLY thing the admin can change is the status:
-  the dropdown lists exactly what the server allows right now (order.allowedStatuses):
+  The order details are read-only. The admin changes the DELIVERY STATUS OF EACH PRODUCT:
+  every item row has its own dropdown that lists exactly what the server allows right now
+  (item.allowedStatuses):
     forward only: Processing -> Shipped -> Out for Delivery -> Delivered
-    or Cancelled any time before delivery.
-  Delivered and Cancelled orders are final, so the dropdown is replaced by a note.
+    or Cancelled any time before that product is delivered.
+  Delivered and Cancelled products are final, so they show no dropdown.
+  The order status on the right is worked out by the server from its products
+  (it shows the product that is furthest behind), so it is never edited by hand.
 */
+
+// item statuses that mean "this product has reached the customer"
+const DELIVERED_LIKE = ["delivered", "return_requested", "returned"];
+
+// when the product was marked delivered (from its own history)
+const deliveredOn = (item) =>
+  [...(item.statusHistory || [])].reverse().find((h) => h.status === "delivered")
+    ?.updatedAt || null;
 function OrderEdit() {
   const { orderId } = useParams();
   const dispatch = useDispatch();
@@ -55,9 +66,9 @@ function OrderEdit() {
       ? current
       : null;
 
-  const [newStatus, setNewStatus] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [drafts, setDrafts] = useState({}); // { [itemId]: chosen status }
+  const [savingItemId, setSavingItemId] = useState(null);
+  const [cancelItem, setCancelItem] = useState(null); // { id, name } waiting for confirmation
   const [toast, setToast] = useState(null); // { type, text }
 
   // return requests
@@ -80,30 +91,39 @@ function OrderEdit() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const allowed = order?.allowedStatuses || [];
-  const isFinal = Boolean(order) && allowed.length === 0;
-
-  /* ---------------- SAVE ---------------- */
-  const save = async () => {
-    if (!order || !newStatus || saving) return;
+  /* ---------------- SAVE (one product) ---------------- */
+  const saveItem = async (itemId, status) => {
+    if (!order || !itemId || !status || savingItemId) return;
 
     try {
-      setSaving(true);
+      setSavingItemId(itemId);
       const result = await dispatch(
-        updateAdminOrderStatus({ orderId: order.id, status: newStatus })
+        updateAdminItemStatus({ orderId: order.id, itemId, status })
       ).unwrap();
 
-      setToast({ type: "success", text: result.message || "Order status updated." });
-      setNewStatus("");
+      setToast({ type: "success", text: result.message || "Item status updated." });
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      });
     } catch (err) {
       setToast({
         type: "error",
         text: typeof err === "string" ? err : "Could not update the status.",
       });
     } finally {
-      setSaving(false);
-      setConfirmCancel(false);
+      setSavingItemId(null);
+      setCancelItem(null);
     }
+  };
+
+  const handleSaveClick = (item) => {
+    const status = drafts[item.id];
+    if (!status) return;
+    // cancelling cannot be undone (stock goes back), so ask first
+    if (status === "cancelled") setCancelItem({ id: item.id, name: item.name });
+    else saveItem(item.id, status);
   };
 
   /* ---------------- RETURN REQUESTS ---------------- */
@@ -135,15 +155,14 @@ function OrderEdit() {
     setRejectReason("");
   };
 
-  const handleSaveClick = () => {
-    // cancelling cannot be undone (stock goes back), so ask first
-    if (newStatus === "cancelled") setConfirmCancel(true);
-    else save();
-  };
-
   const isLoading = !order && currentStatus !== "failed";
   const pricing = order?.pricing || {};
   const addr = order?.shippingAddress;
+
+  // "2 of 3 products delivered" (cancelled products are not counted)
+  const liveItems = (order?.items || []).filter((i) => i.status !== "cancelled");
+  const deliveredCount = liveItems.filter((i) => DELIVERED_LIKE.includes(i.status)).length;
+  const paidOnline = order?.paymentMethod !== "COD" && order?.paymentStatus === "paid";
 
   /* ---------------- RENDER ---------------- */
   return (
@@ -304,7 +323,57 @@ function OrderEdit() {
                                   {item.cancelledQuantity} cancelled
                                 </span>
                               )}
+                              {DELIVERED_LIKE.includes(item.status) && deliveredOn(item) && (
+                                <span className="text-xs text-gray-500">
+                                  Delivered {formatDate(deliveredOn(item))}
+                                </span>
+                              )}
                             </div>
+
+                            {/* delivery status of THIS product */}
+                            {(item.allowedStatuses || []).length > 0 && (
+                              <div className="mt-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <select
+                                    aria-label={`Change status of ${item.name}`}
+                                    value={drafts[item.id] || ""}
+                                    onChange={(e) =>
+                                      setDrafts((prev) => ({ ...prev, [item.id]: e.target.value }))
+                                    }
+                                    disabled={Boolean(savingItemId)}
+                                    className="h-9 min-w-[190px] rounded-lg border border-gray-200 bg-white px-3 text-xs text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10 disabled:opacity-60"
+                                  >
+                                    <option value="">Change status to…</option>
+                                    {item.allowedStatuses.map((s) => (
+                                      <option key={s} value={s}>
+                                        {getAdminStatusLabel(s)}
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveClick(item)}
+                                    disabled={!drafts[item.id] || Boolean(savingItemId)}
+                                    className="h-9 rounded-lg bg-[#ff5722] px-4 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#f4511e] disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    {savingItemId === item.id ? "Saving..." : "Update"}
+                                  </button>
+                                </div>
+
+                                {drafts[item.id] === "delivered" && order.paymentMethod === "COD" && (
+                                  <p className="mt-2 text-xs text-gray-500">
+                                    Cash on delivery: the payment is marked paid once every product of the order is delivered.
+                                  </p>
+                                )}
+                                {drafts[item.id] === "cancelled" && (
+                                  <p className="mt-2 text-xs text-red-500">
+                                    This product will be cancelled and its stock returned
+                                    {paidOnline ? ", and its amount goes to the customer's wallet" : ""}.
+                                  </p>
+                                )}
+                              </div>
+                            )}
 
                             {/* return request: the admin decides here */}
                             {item.status === "return_requested" && (
@@ -377,7 +446,7 @@ function OrderEdit() {
 
               {/* ================= RIGHT: STATUS + SUMMARY ================= */}
               <div className="space-y-6">
-                {/* STATUS (the only editable part) */}
+                {/* ORDER STATUS (follows the products, not edited here) */}
                 <div className={cardClass}>
                   <h2 className={labelClass}>Order status</h2>
 
@@ -385,68 +454,30 @@ function OrderEdit() {
                     <AdminOrderStatusBadge status={order.status} />
                   </div>
 
-                  {order.status === "delivered" && order.deliveredAt && (
+                  {liveItems.length > 0 && (
                     <p className="mt-2 text-xs text-gray-500">
+                      {deliveredCount} of {liveItems.length} product
+                      {liveItems.length > 1 ? "s" : ""} delivered
+                    </p>
+                  )}
+                  {order.status === "delivered" && order.deliveredAt && (
+                    <p className="mt-1 text-xs text-gray-500">
                       Delivered on {formatDate(order.deliveredAt)}
                     </p>
                   )}
                   {order.status === "cancelled" && order.cancelledAt && (
-                    <p className="mt-2 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500">
                       Cancelled on {formatDate(order.cancelledAt)}
                     </p>
                   )}
 
-                  {isFinal ? (
-                    <p className="mt-5 rounded-lg bg-gray-50 px-3 py-3 text-xs leading-5 text-gray-500">
-                      {order.status === "delivered"
-                        ? "This order is delivered, so its status can't be changed any more."
-                        : "This order is cancelled, so its status can't be changed any more."}
-                    </p>
-                  ) : (
-                    <div className="mt-5">
-                      <label
-                        htmlFor="new-status"
-                        className="mb-1 block text-xs font-semibold text-gray-600"
-                      >
-                        Change status to
-                      </label>
-
-                      <select
-                        id="new-status"
-                        value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        disabled={saving}
-                        className="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10 disabled:opacity-60"
-                      >
-                        <option value="">Select new status</option>
-                        {allowed.map((s) => (
-                          <option key={s} value={s}>
-                            {getAdminStatusLabel(s)}
-                          </option>
-                        ))}
-                      </select>
-
-                      {newStatus === "delivered" && (
-                        <p className="mt-2 text-xs text-gray-500">
-                          Marking it delivered also marks the payment as paid.
-                        </p>
-                      )}
-                      {newStatus === "cancelled" && (
-                        <p className="mt-2 text-xs text-red-500">
-                          Every open item will be cancelled and its stock returned.
-                        </p>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={handleSaveClick}
-                        disabled={!newStatus || saving}
-                        className="mt-4 w-full rounded-lg bg-[#ff5722] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-[#f4511e] disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {saving ? "Saving..." : "Save status"}
-                      </button>
-                    </div>
-                  )}
+                  <p className="mt-5 rounded-lg bg-gray-50 px-3 py-3 text-xs leading-5 text-gray-500">
+                    {order.status === "delivered"
+                      ? "Every product is delivered, so this order is complete."
+                      : order.status === "cancelled"
+                      ? "Every product is cancelled, so this order is closed."
+                      : "Update the status of each product in the items list. The order status follows its products automatically and shows the one that is furthest behind."}
+                  </p>
                 </div>
 
                 {/* SUMMARY */}
@@ -529,18 +560,18 @@ function OrderEdit() {
         </section>
       </main>
 
-      {/* CANCEL CONFIRMATION */}
+      {/* CANCEL ONE PRODUCT: CONFIRMATION */}
       <Modal
-        open={confirmCancel}
-        title="Cancel this order?"
-        message="Every item that hasn't been delivered will be cancelled and its stock returned to the shop. This can't be undone."
-        confirmText="Cancel order"
+        open={Boolean(cancelItem)}
+        title="Cancel this product?"
+        message={`${cancelItem?.name || "This product"} will be cancelled and its stock returned to the shop. If the order was paid online, its amount goes to the customer's wallet. This can't be undone.`}
+        confirmText="Cancel product"
         cancelText="Go back"
         variant="danger"
-        loading={saving}
-        onConfirm={save}
+        loading={Boolean(savingItemId)}
+        onConfirm={() => cancelItem && saveItem(cancelItem.id, "cancelled")}
         onClose={() => {
-          if (!saving) setConfirmCancel(false);
+          if (!savingItemId) setCancelItem(null);
         }}
       />
 

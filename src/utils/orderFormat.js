@@ -35,6 +35,15 @@ export const STATUS_META = {
     label: "Return Rejected",
     cls: "border-red-200 bg-red-50 text-red-600",
   },
+  // online payment not finished yet / over (see the payment rules: 30 minute hold, 4 attempts)
+  payment_pending: {
+    label: "Payment Pending",
+    cls: "border-amber-200 bg-amber-50 text-amber-700",
+  },
+  payment_failed: {
+    label: "Payment Failed",
+    cls: "border-red-200 bg-red-50 text-red-600",
+  },
 };
 
 export const getStatusMeta = (status) =>

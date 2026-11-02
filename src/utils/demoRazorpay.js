@@ -2,7 +2,7 @@
 // It has the same shape as the real popup (new X(options), .on(), .open()), so the payment hook
 // treats both the same way. The look-alike window itself is components/DemoRazorpayHost.jsx.
 
-let showWindow = null; // set by DemoRazorpayHost while it is mounted
+let showWindow = null; // set by DemoRazorpayHost while it is mounted (called with the checkout to show, or null to hide)
 
 export const subscribeDemoRazorpay = (fn) => {
   showWindow = fn;
@@ -31,6 +31,11 @@ export class DemoRazorpay {
     showWindow(this);
   }
 
+  // Closed from code (like the real popup's close()): hides the window, does not call ondismiss
+  close() {
+    showWindow?.(null);
+  }
+
   // Customer pressed Pay: same data the real popup hands to `handler`
   succeed() {
     return this.options.handler?.({
@@ -41,8 +46,14 @@ export class DemoRazorpay {
   }
 
   // Customer chose "simulate a failed payment": the window stays open, like the real one
+  // Like the real popup, the event carries the id of the payment that failed (the server counts these)
   fail(description = "Payment failed (simulated in demo mode).") {
-    this.handlers["payment.failed"]?.({ error: { description } });
+    this.handlers["payment.failed"]?.({
+      error: {
+        description,
+        metadata: { order_id: this.options.order_id, payment_id: `pay_demo_${randomHex()}` },
+      },
+    });
   }
 
   // Window closed without paying

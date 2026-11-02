@@ -26,6 +26,8 @@ const TABS = [
   { value: "out_for_delivery", label: "Out for Delivery" },
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
+  // orders that have a product whose return the admin still has to approve / reject
+  { value: "return_requested", label: "Returns" },
 ];
 
 // values must match SORTS in adminOrderServices.getOrders
@@ -48,7 +50,7 @@ function Orders() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { orders, pagination, status, error } = useSelector(
+  const { orders, pagination, pendingReturnOrders, status, error } = useSelector(
     (state) => state.adminOrders
   );
 
@@ -282,6 +284,11 @@ function Orders() {
                 }`}
               >
                 {t.label}
+                {t.value === "return_requested" && pendingReturnOrders > 0 && (
+                  <span className="ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    {pendingReturnOrders}
+                  </span>
+                )}
                 {tab === t.value && (
                   <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#ff5722]" />
                 )}
@@ -370,7 +377,24 @@ function Orders() {
                         </td>
 
                         <td className="px-4 py-5">
-                          <AdminOrderStatusBadge status={order.status} />
+                          <div className="flex flex-wrap items-center gap-2">
+                            <AdminOrderStatusBadge status={order.status} />
+
+                            {/* a product of this order is waiting for the admin's decision */}
+                            {order.returnRequestCount > 0 && (
+                              <>
+                                <AdminOrderStatusBadge
+                                  status="return_requested"
+                                  title="Open the order to approve or reject"
+                                />
+                                {order.returnRequestCount > 1 && (
+                                  <span className="text-xs font-semibold text-orange-600">
+                                    ×{order.returnRequestCount}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </td>
 
                         <td className="px-8 py-5 text-right">
@@ -379,7 +403,7 @@ function Orders() {
                             onClick={() => navigate(`/admin/orders/${order.id}`)}
                             className="text-sm font-semibold text-[#ff5722] transition hover:underline"
                           >
-                            Edit
+                            {order.returnRequestCount > 0 ? "Review" : "Edit"}
                           </button>
                         </td>
                       </tr>

@@ -18,6 +18,7 @@ import {
 import { addAddress, updateAddress } from "../features/user/addressSlice";
 import { getCart } from "../features/user/cartSlice";
 import { getWishlistIds } from "../features/user/wishlistSlice";
+import Modal from "../components/Modals";
 import useOnlinePayment from "../hooks/useOnlinePayment";
 import { payWithWallet } from "../features/user/walletSlice";
 
@@ -88,29 +89,29 @@ function AddressCard({ address, selected, onSelect, onEdit }) {
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-bold text-gray-900">{address.name}</p>
+              <p className="text-sm font-bold text-gray-900">{address.name}</p>
 
               {address.addressType && (
-                <span className="rounded bg-white/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-600">
+                <span className="rounded bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-600">
                   {address.addressType}
                 </span>
               )}
             </div>
 
-            <p className="mt-1.5 text-[11px] leading-[17px] text-gray-600">
+            <p className="mt-1.5 text-[13px] leading-5 text-gray-600">
               {address.detailedAddress}
               <br />
               {[address.city, address.pinCode].filter(Boolean).join(" - ")}
               {address.country ? `, ${address.country}` : ""}
             </p>
 
-            <p className="mt-1 text-[11px] text-gray-600">+91 {address.phoneNumber}</p>
+            <p className="mt-1 text-[13px] text-gray-600">+91 {address.phoneNumber}</p>
           </div>
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-2">
           {address.isDefault && (
-            <span className="rounded-sm bg-[#b13600] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white">
+            <span className="rounded-sm bg-[#b13600] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
               Default
             </span>
           )}
@@ -121,7 +122,7 @@ function AddressCard({ address, selected, onSelect, onEdit }) {
               e.stopPropagation();
               onEdit();
             }}
-            className="text-[10px] font-bold uppercase tracking-wide text-[#b13600] hover:underline"
+            className="text-xs font-bold uppercase tracking-wide text-[#b13600] hover:underline"
           >
             Edit
           </button>
@@ -139,7 +140,7 @@ function PaymentOption({ option, selected, enabled, onSelect }) {
       aria-checked={selected}
       disabled={!enabled}
       onClick={onSelect}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3.5 text-left transition ${
+      className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-4 text-left transition ${
         selected
           ? "border-[#c4572a] bg-[#ffddd0]"
           : "border-gray-200 bg-white"
@@ -153,13 +154,13 @@ function PaymentOption({ option, selected, enabled, onSelect }) {
         >
           {selected && <span className="h-2 w-2 rounded-full bg-[#b13600]" />}
         </span>
-        <span className="text-xs font-bold text-gray-900">{option.label}</span>
+        <span className="text-sm font-bold text-gray-900">{option.label}</span>
       </span>
 
       {selected ? (
         <i className="fa-regular fa-circle-check text-sm text-[#b13600]" />
       ) : (
-        <span className="text-right text-[10px] text-gray-500">{option.note}</span>
+        <span className="text-right text-xs text-gray-500">{option.note}</span>
       )}
     </button>
   );
@@ -183,6 +184,7 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const [placing, setPlacing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false); // "are you sure?" modal
   const [placeError, setPlaceError] = useState("");
 
   const { payNow, goToSuccess } = useOnlinePayment();
@@ -289,13 +291,39 @@ function Checkout() {
   if (hasItemIssue) placeHint = "Some items in your cart are unavailable.";
   else if (!selectedAddressId) placeHint = "Select or add a delivery address.";
 
+  /* ---------- confirmation modal text ---------- */
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
+  const methodLabel =
+    PAYMENT_OPTIONS.find((o) => o.id === paymentMethod)?.label || paymentMethod;
+  const isPayNow = ONLINE_METHODS.includes(paymentMethod);
+
+  const confirmMessage = pricing
+    ? `You are about to ${isPayNow ? "pay for" : "place"} an order of ${items.length} ${
+        items.length === 1 ? "item" : "items"
+      } totalling ${formatMoney(pricing.totalAmount)} using ${methodLabel}.` +
+      (selectedAddress
+        ? ` It will be delivered to ${selectedAddress.name}, ${[
+            selectedAddress.city,
+            selectedAddress.pinCode,
+          ]
+            .filter(Boolean)
+            .join(" - ")}.`
+        : "") +
+      (isPayNow ? " You will be taken to the secure payment window next." : "")
+    : "";
+
+  const handleConfirmPlace = () => {
+    setConfirmOpen(false);
+    handlePlaceOrder();
+  };
+
   /* ---------- render ---------- */
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-[1080px] flex-1 px-4 py-8 sm:px-6 sm:py-12">
-        <h1 className="mb-8 text-3xl font-extrabold uppercase tracking-tight text-[#141414] sm:text-[34px]">
+      <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
+        <h1 className="mb-6 text-3xl font-extrabold uppercase tracking-tight text-[#141414] sm:mb-8 sm:text-4xl">
           Checkout
         </h1>
 
@@ -324,7 +352,7 @@ function Checkout() {
 
         {/* LOADING */}
         {isLoading && (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-8">
             <div className="space-y-6">
               <div className="h-72 animate-pulse rounded-lg border border-gray-200 bg-white" />
               <div className="h-60 animate-pulse rounded-lg border border-gray-200 bg-white" />
@@ -370,11 +398,11 @@ function Checkout() {
 
         {/* CONTENT */}
         {!isLoading && data && items.length > 0 && (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-8">
             {/* ============ LEFT COLUMN ============ */}
             <div className="min-w-0 space-y-6">
               {/* SHIPPING ADDRESS */}
-              <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+              <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-7">
                 <SectionTitle icon="fa-solid fa-location-dot">
                   Shipping Address
                 </SectionTitle>
@@ -399,7 +427,7 @@ function Checkout() {
                     <button
                       type="button"
                       onClick={() => setFormMode({ address: null })}
-                      className="text-[11px] font-bold text-[#b13600] hover:underline"
+                      className="text-[13px] font-bold text-[#b13600] hover:underline"
                     >
                       + Add New Address
                     </button>
@@ -433,7 +461,7 @@ function Checkout() {
               </section>
 
               {/* PAYMENT METHOD */}
-              <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-6">
+              <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-7">
                 <SectionTitle icon="fa-regular fa-credit-card">
                   Payment Method
                 </SectionTitle>
@@ -472,17 +500,17 @@ function Checkout() {
               <SectionTitle>Order Review</SectionTitle>
 
               {/* ITEMS */}
-              <ul className="mt-4 space-y-3.5">
+              <ul className="mt-4 space-y-4">
                 {items.map((item) => (
                   <li
                     key={`${item.variantId}-${item.size}`}
                     className="flex items-start justify-between gap-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-[11px] font-semibold text-gray-800">
+                      <p className="truncate text-sm font-semibold text-gray-800">
                         {item.name}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-gray-500">
+                      <p className="mt-0.5 text-xs text-gray-500">
                         {[
                           item.color,
                           item.size && `Size ${item.size}`,
@@ -492,18 +520,18 @@ function Checkout() {
                           .join(" · ")}
                       </p>
                       {item.issue && (
-                        <p className="mt-0.5 text-[10px] font-semibold text-red-600">
+                        <p className="mt-0.5 text-xs font-semibold text-red-600">
                           {ISSUE_TEXT[item.issue] || "Unavailable"}
                         </p>
                       )}
                       {!item.issue && item.offerName && item.discountPercent > 0 && (
-                        <p className="mt-0.5 text-[10px] font-semibold text-[#f4511e]">
+                        <p className="mt-0.5 text-xs font-semibold text-[#f4511e]">
                           {item.offerName} · {item.discountPercent}% off
                         </p>
                       )}
                     </div>
 
-                    <span className="shrink-0 text-[11px] font-bold text-gray-900">
+                    <span className="shrink-0 text-[13px] font-bold text-gray-900">
                       {formatMoney(item.itemTotal)}
                     </span>
                   </li>
@@ -511,7 +539,7 @@ function Checkout() {
               </ul>
 
               {hasItemIssue && (
-                <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
+                <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
                   Some items can't be ordered.{" "}
                   <Link to="/cart" className="font-bold underline">
                     Update your cart
@@ -530,7 +558,7 @@ function Checkout() {
               </div>
 
               {/* PRICING */}
-              <dl className="mt-5 space-y-2.5 border-t border-gray-100 pt-4 text-[11px] text-gray-600">
+              <dl className="mt-5 space-y-2.5 border-t border-gray-100 pt-4 text-[13px] text-gray-600">
                 <div className="flex justify-between">
                   <dt>Subtotal</dt>
                   <dd className="font-semibold text-gray-900">
@@ -587,7 +615,7 @@ function Checkout() {
               </dl>
 
               {data?.referral?.hint && (
-                <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-medium text-emerald-800">
+                <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[13px] font-medium text-emerald-800">
                   {data.referral.hint}
                 </p>
               )}
@@ -603,9 +631,9 @@ function Checkout() {
 
               <button
                 type="button"
-                onClick={handlePlaceOrder}
+                onClick={() => setConfirmOpen(true)}
                 disabled={!canPlace}
-                className="mt-6 flex h-12 w-full items-center justify-center rounded-md bg-[#b13600] px-4 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="mt-6 flex h-12 w-full items-center justify-center rounded-md bg-[#b13600] px-4 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:bg-gray-300"
               >
                 {placing
                   ? ONLINE_METHODS.includes(paymentMethod)
@@ -621,13 +649,13 @@ function Checkout() {
               </button>
 
               {placeHint && (
-                <p className="mt-3 text-center text-[11px] text-amber-700">
+                <p className="mt-3 text-center text-[13px] text-amber-700">
                   {placeHint}
                 </p>
               )}
 
               {walletTooLow && (
-                <p className="mt-3 text-center text-[11px] text-amber-700">
+                <p className="mt-3 text-center text-[13px] text-amber-700">
                   Your wallet balance ({formatMoney(walletBalance)}) is not enough for this order.{" "}
                   <Link to="/profile/wallet" className="font-bold underline">
                     Add money
@@ -637,7 +665,7 @@ function Checkout() {
 
               <Link
                 to="/cart"
-                className="mt-4 block text-center text-[11px] font-semibold text-gray-500 hover:text-gray-900"
+                className="mt-4 block text-center text-[13px] font-semibold text-gray-500 hover:text-gray-900"
               >
                 ← Back to cart
               </Link>
@@ -647,6 +675,18 @@ function Checkout() {
       </main>
 
       <Footer />
+
+      {/* PLACE ORDER CONFIRMATION */}
+      <Modal
+        open={confirmOpen && canPlace}
+        title="Confirm your order"
+        message={confirmMessage}
+        confirmText={isPayNow ? "Yes, pay now" : paymentMethod === "WALLET" ? "Yes, pay from wallet" : "Yes, place order"}
+        cancelText="Review order"
+        onConfirm={handleConfirmPlace}
+        onClose={() => setConfirmOpen(false)}
+        variant="primary"
+      />
     </div>
   );
 }

@@ -4,20 +4,22 @@ import { formatMoney } from "./CartItem";
 
 /*
   "Add Money" window of the wallet page.
-  Demo: no real payment happens, the server adds the money straight away.
+  The customer types (or picks) an amount; the money is only added after paying through Razorpay.
+  Wallet money cannot be withdrawn afterwards, it can only be spent on orders.
 
   Mount it only while it is open ({open && <AddMoneyModal ... />}), so the amount starts empty each time.
 
   Props
     limits       { MIN_TOP_UP, MAX_TOP_UP } from the server (null until loaded)
+    demo         true while the server runs the built-in demo Razorpay (no real keys)
     busy, error  loading state + message from the server
-    onAdd(amount)  called with a number when the amount looks valid
+    onAdd(amount)  called with a number when the amount looks valid (opens Razorpay)
     onClose
 */
 
 const QUICK_AMOUNTS = [500, 1000, 2000];
 
-function AddMoneyModal({ limits, busy = false, error = "", onAdd, onClose }) {
+function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, onClose }) {
   const [amount, setAmount] = useState("");
   const [localError, setLocalError] = useState("");
 
@@ -81,7 +83,7 @@ function AddMoneyModal({ limits, busy = false, error = "", onAdd, onClose }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-ink">Add Money</h2>
-            <p className="mt-1 text-[11px] text-muted">Top up your wallet instantly</p>
+            <p className="mt-1 text-[11px] text-muted">Pay securely with Razorpay</p>
           </div>
           <button
             type="button"
@@ -97,8 +99,8 @@ function AddMoneyModal({ limits, busy = false, error = "", onAdd, onClose }) {
         <div className="mt-5 border-t border-line pt-5">
           <div className="flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-[10px] font-semibold text-gray-600">
-              <i className="fa-solid fa-flask text-[9px]" />
-              Demo top-up · no real payment
+              <i className={`fa-solid ${demo ? "fa-flask" : "fa-lock"} text-[9px]`} />
+              {demo ? "Razorpay demo · no real payment" : "Payments by Razorpay"}
             </span>
           </div>
 
@@ -152,17 +154,20 @@ function AddMoneyModal({ limits, busy = false, error = "", onAdd, onClose }) {
           >
             {busy ? (
               <>
-                <i className="fa-solid fa-spinner fa-spin" /> Adding…
+                <i className="fa-solid fa-spinner fa-spin" /> Waiting for payment…
               </>
             ) : (
               <>
-                <i className="fa-solid fa-bolt" /> Add to wallet
+                <i className="fa-solid fa-lock" /> Pay with Razorpay
               </>
             )}
           </button>
 
           <p className="mt-4 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            Instant credit · Up to {formatMoney(max).replace(".00", "")} at a time
+            Up to {formatMoney(max).replace(".00", "")} at a time
+          </p>
+          <p className="mt-1 text-center text-[10px] text-gray-400">
+            Wallet money can be used for orders only. It can't be withdrawn.
           </p>
         </div>
       </form>

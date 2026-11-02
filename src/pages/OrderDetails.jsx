@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import Navbar from "../components/Navbar";
@@ -7,6 +7,9 @@ import Footer from "../components/Footer";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import OrderItemRow from "../components/OrderItemRow";
 import OrderActionModal from "../components/OrderActionModal";
+import PaymentRetryPanel from "../components/PaymentRetryPanel";
+import useOnlinePayment from "../hooks/useOnlinePayment";
+import { abandonPayment } from "../features/user/paymentSlice";
 import TrackItemModal from "../components/TrackItemModal";
 import ReviewModal from "../components/ReviewModal";
 import { formatMoney } from "../components/CartItem";
@@ -50,6 +53,8 @@ function OrderDetails() {
   const { orderNumber } = useParams();
   const { state } = useLocation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { retry } = useOnlinePayment();
 
   const { current, currentStatus, currentError, reasons } = useSelector(
     (s) => s.orders
@@ -68,6 +73,8 @@ function OrderDetails() {
   const [modalError, setModalError] = useState("");
   const [notice, setNotice] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState("");
 
   useEffect(() => {
     dispatch(clearCurrentOrder());
@@ -206,13 +213,42 @@ function OrderDetails() {
     }
   };
 
+  /* ---------- payment retry (an order that is not paid yet) ---------- */
+  const reloadOrder = () => dispatch(fetchOrder(orderNumber));
+
+  // Same rules as the payment-failure modal: 30 minute hold, 4 attempts, cool-down before the final one.
+  // A failed attempt opens the payment-failure modal; a paid one opens the success page.
+  const handleRetryPayment = async () => {
+    if (!order) return;
+    setRetrying(true);
+    setRetryError("");
+    try {
+      await retry({ orderNumber: order.orderNumber, gateway: order.paymentMethod });
+    } catch (message) {
+      setRetryError(errorText(message, "We couldn't restart your payment."));
+    } finally {
+      setRetrying(false);
+      reloadOrder();
+    }
+  };
+
+  const handleCancelPayment = async () => {
+    if (!order) return;
+    setRetrying(true);
+    await dispatch(abandonPayment(order.orderNumber)); // gives the held items back
+    setRetrying(false);
+    navigate("/cart");
+  };
+
   /* ---------- what to show ---------- */
   // Nothing to show yet and no error either -> still loading
   const isLoading = !order && currentStatus !== "failed";
   const backTo = state?.from || "/orders";
 
   const isDelivered = order?.status === "delivered";
-  const isCancelled = order?.status === "cancelled";
+  const displayStatus = order?.displayStatus || order?.status;
+  const isPaymentFailed = displayStatus === "payment_failed";
+  const isCancelled = order?.status === "cancelled" && !isPaymentFailed;
   const inTransit =
     order?.status === "shipped" || order?.status === "out_for_delivery";
 
@@ -380,6 +416,14 @@ function OrderDetails() {
                       </span>
                     </>
                   )}
+                  {isPaymentFailed && order.cancelledAt && (
+                    <>
+                      <span className="mx-2 text-gray-300">•</span>
+                      <span className="font-medium text-red-600">
+                        Payment failed {formatDate(order.cancelledAt)}
+                      </span>
+                    </>
+                  )}
                   {isCancelled && order.cancelledAt && (
                     <>
                       <span className="mx-2 text-gray-300">•</span>
@@ -392,10 +436,20 @@ function OrderDetails() {
               </div>
 
               <OrderStatusBadge
-                status={order.status}
+                status={displayStatus}
                 className="self-start px-3 py-1 text-[11px]"
               />
             </header>
+
+            {/* PAYMENT NOT FINISHED / PAYMENT FAILED */}
+            <PaymentRetryPanel
+              order={order}
+              retrying={retrying}
+              error={retryError}
+              onRetry={handleRetryPayment}
+              onCancelPayment={handleCancelPayment}
+              onRefresh={reloadOrder}
+            />
 
             {/* ADDRESS / PAYMENT / SUMMARY */}
             <section className="grid gap-8 border-b border-line px-6 py-6 sm:px-8 md:grid-cols-3">

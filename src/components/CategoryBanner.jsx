@@ -1,6 +1,9 @@
+import StaticImage from './StaticImage';
+
+// Pictures are fixed files in /public/images/home (see the README in that folder)
 const categories = [
-  { label: 'Men', sub: 'Shop the collection', img: 'https://placehold.co/560x420/4a4a4a/e5e5e5?text=Men' },
-  { label: 'Women', sub: 'Shop the collection', img: 'https://placehold.co/560x420/8a8a8a/e5e5e5?text=Women' }
+  { label: 'Men', sub: 'Shop the collection', img: '/images/home/men.jpg' },
+  { label: 'Women', sub: 'Shop the collection', img: '/images/home/women.jpg' }
 ];
 
 function CategoryBanner() {
@@ -13,11 +16,15 @@ function CategoryBanner() {
             className="group relative block overflow-hidden rounded-lg"
             key={cat.label}
           >
-            <img
+            <StaticImage
               src={cat.img}
               alt={cat.label}
+              label={cat.label}
+              fallbackClassName="bg-[#4a4a4a] text-white/60"
               className="h-[220px] w-full object-cover transition-transform duration-300 group-hover:scale-105 sm:h-[280px] lg:h-[340px]"
             />
+            {/* soft dark fade so the white text reads on any picture */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-4 left-4 flex flex-col text-white sm:bottom-6 sm:left-6">
               <span className="text-[18px] font-bold sm:text-[20px] lg:text-[22px]">{cat.label}</span>
               <span className="text-[11.5px] opacity-85 sm:text-[12.5px]">{cat.sub}</span>

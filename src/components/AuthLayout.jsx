@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -6,14 +7,23 @@ import Footer from './Footer';
 // children) on the right.
 
 function AuthLayout({ imageSrc, overlayTitle, children }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
 
       <div className="flex flex-1 flex-col md:flex-row">
-        <div className="relative hidden md:block md:w-1/2">
-          <img src={imageSrc} alt="" className="h-full w-full object-cover grayscale" />
-          <div className="absolute inset-0 bg-black/25" />
+        <div className="relative hidden bg-[#2b2b2b] md:block md:w-1/2">
+          {!imageFailed && (
+            <img
+              src={imageSrc}
+              alt=""
+              onError={() => setImageFailed(true)}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-10 left-10 max-w-xs text-3xl font-bold leading-tight text-white">
             {overlayTitle}
           </div>

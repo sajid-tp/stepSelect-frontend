@@ -50,27 +50,28 @@ const [selectedAddressId, setSelectedAddressId] = useState(null);
       <Navbar />
 
       {/* Main container matching the Profile layout */}
-      <main className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 flex-1 py-6 md:py-8">
+      <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         
-        {/* Breadcrumb pinned to the left */}
-        <p className="text-xs text-muted mb-4 md:mb-6 tracking-wide uppercase">
-          Home / Account / <span className="font-semibold text-ink">Addresses</span>
-        </p>
+        {/* Same shell as Orders / Wishlist / Cart: sidebar column + content column */}
+        <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
+          <AccountSidebar />
 
-        {/* Responsive flex layout: Sidebar on the left, content flows right */}
-        <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 items-start">
-          
-          {/* Sidebar on the far left */}
-          <aside className="w-full lg:w-[280px] shrink-0">
-            <AccountSidebar />
-          </aside>
+          <section className="min-w-0">
+            <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
+              <Link to="/" className="text-muted transition hover:text-ink">
+                Home
+              </Link>
+              <span className="mx-2 text-muted">/</span>
+              <Link to="/profile" className="text-muted transition hover:text-ink">
+                Account
+              </Link>
+              <span className="mx-2 text-muted">/</span>
+              <span className="font-semibold text-ink">Addresses</span>
+            </nav>
 
-          {/* Addresses Content Area */}
-          <section className="flex-1 w-full min-w-0">
-            
             {/* Header & Add Button */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-              <h1 className="text-xl sm:text-2xl font-bold">
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                 My <span className="text-[#f4511e]">Addresses</span>
               </h1>
               <Link

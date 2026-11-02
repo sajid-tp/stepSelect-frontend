@@ -11,12 +11,18 @@ function OrderCard({ order, backTo = "/orders" }) {
   const first = items[0];
   const extra = Math.max(items.length - 1, 0);
 
+  // payment_failed | payment_pending | the normal status (the server decides)
+  const displayStatus = order.displayStatus || order.status;
+  const isPaymentFailed = displayStatus === "payment_failed";
+  const isPaymentPending = displayStatus === "payment_pending";
   const isCancelled = order.status === "cancelled";
   const hasReturn = items.some((i) => i.status === "return_requested");
 
   const dateText =
     order.status === "delivered" && order.deliveredAt
       ? `Delivered ${formatDate(order.deliveredAt)}`
+      : isPaymentFailed && order.cancelledAt
+      ? `Payment failed ${formatDate(order.cancelledAt)}`
       : order.status === "cancelled" && order.cancelledAt
       ? `Cancelled ${formatDate(order.cancelledAt)}`
       : `Placed ${formatDate(order.createdAt)}`;
@@ -62,16 +68,30 @@ function OrderCard({ order, backTo = "/orders" }) {
         </p>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <OrderStatusBadge status={order.status} />
+          <OrderStatusBadge status={displayStatus} />
           {hasReturn && <OrderStatusBadge status="return_requested" />}
         </div>
+
+        {isPaymentPending && order.paymentFlow && (
+          <p className="mt-2 text-xs text-amber-700">
+            Payment not completed - {order.paymentFlow.attemptsLeft}{" "}
+            {order.paymentFlow.attemptsLeft === 1 ? "attempt" : "attempts"} left
+          </p>
+        )}
+        {isPaymentFailed && (
+          <p className="mt-2 text-xs text-red-600">
+            {order.paymentFlow?.closedReason === "expired"
+              ? "The payment time ran out. Nothing was charged."
+              : "All payment attempts failed. Nothing was charged."}
+          </p>
+        )}
       </div>
 
       {/* PRICE + LINK */}
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
         <p
           className={`text-base font-extrabold ${
-            isCancelled ? "text-gray-400 line-through" : "text-ink"
+            isCancelled || isPaymentFailed ? "text-gray-400 line-through" : "text-ink"
           }`}
         >
           {formatMoney(order.pricing?.totalAmount)}
@@ -82,7 +102,7 @@ function OrderCard({ order, backTo = "/orders" }) {
           state={{ from: backTo }}
           className="text-[11px] font-bold uppercase tracking-wider text-[#b13600] transition hover:text-[#8f2c00]"
         >
-          View details
+          {isPaymentPending && order.paymentFlow?.canRetry ? "Retry payment" : "View details"}
         </Link>
       </div>
     </article>

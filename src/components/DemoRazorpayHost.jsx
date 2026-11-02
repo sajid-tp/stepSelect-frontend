@@ -43,7 +43,8 @@ function DemoRazorpayHost() {
   useEffect(
     () =>
       subscribeDemoRazorpay((instance) => {
-        setCheckout(instance);
+        setCheckout(instance); // null = closed from code
+        if (!instance) return;
         setTab("card");
         setBusy(false);
         setMessage("");

@@ -170,7 +170,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="banner-form-title"
-        className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <h2 id="banner-form-title" className="text-lg font-bold text-gray-900">
@@ -193,7 +193,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className={`flex aspect-[16/6] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-gray-50 transition hover:border-[#ff5722] ${
+            className={`flex aspect-[7/5] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed bg-gray-50 transition hover:border-[#ff5722] ${
               errors.image ? "border-red-300" : "border-gray-300"
             }`}
           >
@@ -204,7 +204,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
                 <i className="fa-solid fa-cloud-arrow-up mb-2 block text-2xl text-gray-400" />
                 Click to choose an image
                 <span className="mt-1 block text-xs text-gray-400">
-                  Wide pictures work best (for example 1920 × 600), up to {IMAGE_MAX_MB} MB
+                  Use a 7:5 picture (for example 1400 × 1000), up to {IMAGE_MAX_MB} MB
                 </span>
               </span>
             )}
@@ -531,7 +531,7 @@ function Banners() {
           <div className={`space-y-3 transition-opacity ${isLoading && !showSkeleton ? "opacity-60" : ""}`}>
             {showSkeleton &&
               Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-[122px] animate-pulse rounded-lg border border-gray-100 bg-white" />
+                <div key={i} className="h-[154px] animate-pulse rounded-lg border border-gray-100 bg-white" />
               ))}
 
             {!showSkeleton &&
@@ -543,7 +543,7 @@ function Banners() {
                   <img
                     src={b.image}
                     alt={b.title}
-                    className={`h-[88px] w-[220px] shrink-0 rounded-md object-cover ${b.isActive ? "" : "opacity-50 grayscale"}`}
+                    className={`h-[120px] w-[168px] shrink-0 rounded-md object-cover ${b.isActive ? "" : "opacity-50 grayscale"}`}
                   />
 
                   <div className="min-w-0 flex-1">

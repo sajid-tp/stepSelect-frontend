@@ -15,7 +15,7 @@ import Addresses from './pages/Addresses';
 import Wallet from './pages/Wallet';
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
-import AdminDashboard from './pages/admin/adminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Categories from "./pages/admin/Categories";
@@ -34,13 +34,17 @@ import AdminOrderEdit from "./pages/admin/OrderEdit";
 import AdminInventory from "./pages/admin/Inventory";
 import SalesReport from "./pages/admin/SalesReport";
 import Banners from "./pages/admin/Banners";
-import Checkout from './pages/checkOut';
-import OrderSuccess from './pages/orderSuccess';
+import Checkout from './pages/CheckOut';
+import OrderSuccess from './pages/OrderSuccess';
 import Orders from './pages/Orders';
 import OrderDetails from './pages/OrderDetails';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailedPage from './pages/PaymentFailedPage';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Terms from './pages/Terms';
 import DemoRazorpayHost from './components/DemoRazorpayHost';
+import PaymentFailureModal from './components/PaymentFailureModal';
 import Products
   from "./pages/admin/Products";
 
@@ -55,6 +59,7 @@ function App() {
     <BrowserRouter>
     <BlockedModal/>
     <DemoRazorpayHost />
+    <PaymentFailureModal />
       <Routes>
         {/* User routes */}
         <Route path="/" element={<Home />} />
@@ -73,6 +78,9 @@ function App() {
         <Route path="/profile/wallet" element={<Wallet />} />
         <Route path="/profile/addresses/new" element={<AddressForm />} />
         <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />

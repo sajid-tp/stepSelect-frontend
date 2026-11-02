@@ -83,7 +83,7 @@ function ForgotPassword() {
 
   return (
     <AuthLayout
-      imageSrc="https://placehold.co/800x1000/4a4a4a/e5e5e5?text=Secure"
+      imageSrc="/images/auth/login.jpg"
       overlayTitle="Secure Your Account."
     >
       <h1 className="mb-2 text-3xl font-bold">

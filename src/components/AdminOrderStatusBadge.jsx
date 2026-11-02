@@ -24,7 +24,7 @@ export const getAdminStatusLabel = (status) =>
   ADMIN_STATUS_META[status]?.label ||
   (status ? String(status).replace(/_/g, " ") : "Unknown");
 
-function AdminOrderStatusBadge({ status, className = "" }) {
+function AdminOrderStatusBadge({ status, className = "", title }) {
   const meta = ADMIN_STATUS_META[status] || {
     label: getAdminStatusLabel(status),
     cls: "bg-gray-100 text-gray-600",
@@ -32,6 +32,7 @@ function AdminOrderStatusBadge({ status, className = "" }) {
 
   return (
     <span
+      title={title}
       className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${meta.cls} ${className}`}
     >
       {meta.label}

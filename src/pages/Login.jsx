@@ -90,7 +90,7 @@ function Login() {
 
   return (
     <AuthLayout
-      imageSrc="https://placehold.co/800x1000/3a3a3a/e5e5e5?text=Login"
+      imageSrc="/images/auth/login.jpg"
       overlayTitle="Welcome Back."
     >
       <h1 className="mb-2 text-3xl font-bold">

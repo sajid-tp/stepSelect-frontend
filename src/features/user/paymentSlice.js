@@ -7,11 +7,17 @@ import { logoutUser } from "./authSlice";
 
   POST /payments/initiate                { addressId, gateway }     -> data { orderNumber, gateway, ...gateway data }
   POST /payments/razorpay/verify         { orderNumber, razorpay_order_id, razorpay_payment_id, razorpay_signature }
-  POST /payments/:orderNumber/failed     { reason }
+  POST /payments/:orderNumber/failed     { reason, paymentId? }     (the open attempt failed; 4 attempts per order)
   POST /payments/:orderNumber/retry      { gateway? }               -> data { orderNumber, gateway, ...gateway data }
+                                                                       (or { alreadyPaid: true } when the money had already arrived)
   POST /payments/:orderNumber/abandon
-  GET  /payments/:orderNumber/status     -> data { orderNumber, paymentStatus, paymentMethod, totalAmount,
-                                                   paymentId, paidAt, failureReason, canRetry, ... }
+  GET  /payments/:orderNumber/status     -> data { orderNumber, displayStatus, paymentStatus, paymentMethod, totalAmount,
+                                                   failureReason, canRetry, closedReason (expired | exhausted | abandoned),
+                                                   failedAttempts, attemptsUsed, maxAttempts, attemptsLeft,
+                                                   nextAttemptIsFinal, cooldownSecondsLeft, secondsLeft (30 minute hold), ... }
+
+  Business rules (decided by the server, shown here): the order holds its stock for 30 minutes from the moment it was created,
+  4 attempts in total, and the 4th (final) attempt opens only after a 2 minute cool-down. After that the order is "Payment failed".
 
   The server decides every amount and checks every payment; this slice only passes things along.
 */
@@ -49,11 +55,11 @@ export const verifyRazorpayPayment = createAsyncThunk(
 
 export const reportPaymentFailure = createAsyncThunk(
   "payment/reportFailure",
-  async ({ orderNumber, reason }, { rejectWithValue }) => {
+  async ({ orderNumber, reason, paymentId }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(
         `/payments/${encodeURIComponent(orderNumber)}/failed`,
-        { reason }
+        { reason, paymentId }
       );
       return res.data.data;
     } catch (error) {
@@ -110,13 +116,22 @@ const initialState = {
   result: null, // the latest payment status the server sent
   status: "idle", // idle | loading | succeeded | failed (for fetchPaymentStatus)
   error: null,
+  // The one payment-failure modal (components/PaymentFailureModal.jsx). Any page can open it.
+  failureModal: { open: false, orderNumber: null, reason: "", error: "" },
 };
 
 const paymentSlice = createSlice({
   name: "payment",
   initialState,
   reducers: {
-    resetPayment: () => initialState,
+    resetPayment: (state) => ({ ...initialState, failureModal: state.failureModal }),
+    openPaymentFailure: (state, action) => {
+      const { orderNumber, reason = "", error = "" } = action.payload || {};
+      state.failureModal = { open: true, orderNumber, reason, error };
+    },
+    closePaymentFailure: (state) => {
+      state.failureModal = { open: false, orderNumber: null, reason: "", error: "" };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -140,6 +155,6 @@ const paymentSlice = createSlice({
   },
 });
 
-export const { resetPayment } = paymentSlice.actions;
+export const { resetPayment, openPaymentFailure, closePaymentFailure } = paymentSlice.actions;
 
 export default paymentSlice.reducer;

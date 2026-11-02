@@ -9,13 +9,14 @@ import Pagination from "../components/Pagination";
 import AddMoneyModal from "../components/AddMoneyModal";
 import { formatMoney } from "../components/CartItem";
 import { formatDateTime } from "../utils/orderFormat";
-import { fetchWallet, addMoney } from "../features/user/walletSlice";
+import useWalletTopUp from "../hooks/useWalletTopUp";
+import { fetchWallet } from "../features/user/walletSlice";
 
 /*
   /profile/wallet
   Balance card + the full history of the wallet (newest first, filter, pages).
-  Money comes in from: demo top-ups, cancelled orders (at once), returns (after admin approval).
-  Money goes out when an order is paid with the wallet at checkout.
+  Money comes in from: Razorpay top-ups, cancelled orders (at once), returns (after admin approval).
+  Money goes out only when an order is paid with the wallet at checkout (no withdrawal).
 */
 
 const PAGE_SIZE = 10;
@@ -28,7 +29,7 @@ const FILTERS = [
 
 // Title shown for each reason money moved
 const SOURCE_TITLE = {
-  ADD_MONEY: "Money added",
+  ADD_MONEY: "Money added via Razorpay",
   ORDER_PAYMENT: "Paid for an order",
   ORDER_CANCEL_REFUND: "Refund: order cancelled",
   ORDER_RETURN_REFUND: "Refund: return approved",
@@ -86,9 +87,11 @@ function TransactionRow({ tx }) {
 
 function Wallet() {
   const dispatch = useDispatch();
-  const { balance, transactions, pagination, topUpEnabled, limits, status, error } = useSelector(
+  const { balance, transactions, pagination, topUpEnabled, razorpayDemo, limits, status, error } = useSelector(
     (state) => state.wallet
   );
+
+  const { topUp } = useWalletTopUp();
 
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -124,9 +127,10 @@ function Wallet() {
     setModalError("");
 
     try {
-      await dispatch(addMoney(amount)).unwrap();
+      // Opens Razorpay; resolves only after the payment is verified and the money is in the wallet
+      const result = await topUp(amount);
       setModalOpen(false);
-      setNotice(`${formatMoney(amount)} was added to your wallet.`);
+      setNotice(`${formatMoney(result?.amount ?? amount)} was added to your wallet.`);
 
       // Newest rows first: show page 1 of "All" so the new row is visible
       if (filter !== "" || page !== 1) {
@@ -148,18 +152,24 @@ function Wallet() {
     <div className="flex min-h-screen flex-col bg-white">
       <Navbar />
 
-      <main className="w-full flex-1 px-4 py-6 sm:px-8 md:py-8 lg:px-12 xl:px-16">
-        <p className="mb-4 text-xs uppercase tracking-wide text-muted md:mb-6">
-          Home / Account / <span className="font-semibold text-ink">My Wallet</span>
-        </p>
+      <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
+        <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
+          <AccountSidebar />
 
-        <div className="flex flex-col items-start gap-8 lg:flex-row xl:gap-12">
-          <aside className="w-full shrink-0 lg:w-[280px]">
-            <AccountSidebar />
-          </aside>
+          <section className="min-w-0">
+            <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
+              <Link to="/" className="text-muted transition hover:text-ink">
+                Home
+              </Link>
+              <span className="mx-2 text-muted">/</span>
+              <Link to="/profile" className="text-muted transition hover:text-ink">
+                Account
+              </Link>
+              <span className="mx-2 text-muted">/</span>
+              <span className="font-semibold text-ink">My Wallet</span>
+            </nav>
 
-          <section className="w-full min-w-0 flex-1">
-            <h1 className="mb-6 text-xl font-bold sm:text-2xl">
+            <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
               My <span className="text-[#f4511e]">Wallet</span>
             </h1>
 
@@ -181,8 +191,8 @@ function Wallet() {
                 </p>
                 <p className="mt-2 text-3xl font-extrabold sm:text-4xl">{formatMoney(balance)}</p>
                 <p className="mt-2 max-w-sm text-[11px] leading-relaxed text-white/50">
-                  Refunds for cancelled and returned orders are added here. You can use this money to
-                  pay at checkout.
+                  Add money with Razorpay and use it to pay at checkout. Refunds for cancelled and
+                  returned orders are added here too. Wallet money can't be withdrawn.
                 </p>
               </div>
 
@@ -190,7 +200,7 @@ function Wallet() {
                 type="button"
                 onClick={openModal}
                 disabled={!topUpEnabled}
-                title={topUpEnabled ? "" : "Adding money is switched off"}
+                title={topUpEnabled ? "" : "Adding money is not available right now"}
                 className="shrink-0 rounded-md bg-[#b13600] px-6 py-3 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 + Add money
@@ -256,7 +266,7 @@ function Wallet() {
                     <p className="mt-1 text-xs text-muted">
                       {filter
                         ? "Nothing matches this filter."
-                        : "Add money or get a refund and it will show up here."}
+                        : "Add money with Razorpay or get a refund and it will show up here."}
                     </p>
                   </div>
                 )}
@@ -289,6 +299,7 @@ function Wallet() {
       {modalOpen && (
         <AddMoneyModal
           limits={limits}
+          demo={razorpayDemo}
           busy={adding}
           error={modalError}
           onAdd={handleAdd}

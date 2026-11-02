@@ -1,18 +1,26 @@
 import { Link } from "react-router-dom";
 
 import { formatMoney } from "./CartItem";
+import PaymentCountdown, { clock } from "./PaymentCountdown";
+import PaymentAttemptDots from "./PaymentAttemptDots";
 import { paymentLabel } from "../utils/orderFormat";
 
 /*
-  Payment failed / rejected card.
+  Payment failed card (shown inside the payment-failure modal).
   Props:
-    payment       -> the server's payment status { orderNumber, paymentMethod, totalAmount, canRetry, holdMinutes }
-    reason        -> why it failed (text)
-    retrying      -> true while the payment window is opening
-    error         -> text shown when retry itself failed
-    onRetry       -> "Retry payment" button
-    onBackToCart  -> "Back to cart" button (the page gives the held shoes back first, then redirects)
-  The "Back to checkout" button is a plain link.
+    payment        -> the server's payment status (GET /payments/:orderNumber/status)
+    reason         -> why the last attempt failed (text)
+    retrying       -> true while the payment window is opening
+    error          -> text shown when retry itself was refused
+    onRetry        -> "Retry payment" / "Make final attempt" button
+    onCancelPayment-> "Cancel payment" button (gives the held items back, then the cart opens)
+    onViewOrder    -> "View order" button (an order that is closed as Payment failed stays in Order History)
+    onRefresh      -> called when a countdown ends (the new state is loaded from the server)
+
+  The rules (decided by the server):
+    - the items are held for 30 minutes from the moment the order was created (retries never extend it)
+    - 4 attempts in total: attempts 1-3 straight away, the 4th and final one opens after a 2 minute cool-down
+    - when the 4th attempt fails, or the 30 minutes end, the order is closed as "Payment failed" and the items go back in stock
 */
 
 // Little drawing: a card with a cross badge
@@ -36,8 +44,46 @@ function FailureIllustration() {
   );
 }
 
-function PaymentFailed({ payment, reason, retrying, error, onRetry, onBackToCart }) {
-  const { orderNumber, paymentMethod, totalAmount, canRetry, holdMinutes } = payment;
+function PaymentFailed({ payment, reason, retrying, error, onRetry, onCancelPayment, onViewOrder, onRefresh }) {
+  const {
+    orderNumber,
+    paymentMethod,
+    totalAmount,
+    canRetry,
+    closedReason,
+    secondsLeft,
+    cooldownSecondsLeft = 0,
+    failedAttempts = 0,
+    attemptsUsed = 0,
+    maxAttempts = 4,
+    attemptsLeft = 0,
+    nextAttemptIsFinal,
+    attemptInProgress,
+    holdMinutes = 30,
+  } = payment;
+
+  const isClosed = closedReason !== null && closedReason !== undefined;
+  const inCooldown = !isClosed && cooldownSecondsLeft > 0;
+
+  const message = isClosed
+    ? closedReason === "exhausted"
+      ? `All ${maxAttempts} payment attempts failed, so this order is marked as Payment failed. Nothing was charged and the items are back in stock. Your cart is still there if you want to place the order again.`
+      : closedReason === "expired"
+      ? `The ${holdMinutes} minutes to pay for this order are over, so it is marked as Payment failed and the items are back in stock. Your cart is still there if you want to place the order again.`
+      : "This payment was cancelled and the items are back in stock."
+    : inCooldown
+    ? "Your payment didn't go through. You have one final attempt left, and it opens after a short wait."
+    : attemptInProgress
+    ? "A payment for this order is still in progress. If you already paid, it will show up here in a moment."
+    : "Your payment didn't go through and you have not been charged for this attempt. You can try again below.";
+
+  const retryLabel = retrying
+    ? "Opening payment…"
+    : inCooldown
+    ? `Final attempt in ${clock(cooldownSecondsLeft)}`
+    : nextAttemptIsFinal
+    ? "Make final attempt"
+    : "Retry payment";
 
   return (
     <div className="w-full rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-8">
@@ -47,13 +93,16 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onBackToCart
         Payment <span className="text-red-600">failed</span>
       </h1>
 
-      <p className="mt-2 text-sm text-gray-500">
-        {canRetry
-          ? "Your payment didn't go through and you have not been charged for this attempt. You can try again below."
-          : "Your payment didn't go through and this attempt has expired. Please go back and place the order again."}
-      </p>
+      <div className="mt-3">
+        <PaymentAttemptDots failed={failedAttempts} used={attemptsUsed} max={maxAttempts} />
+        <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+          {failedAttempts} of {maxAttempts} attempts failed
+        </p>
+      </div>
 
-      {reason && (
+      <p className="mt-3 text-sm text-gray-500">{message}</p>
+
+      {reason && !isClosed && (
         <p
           role="alert"
           className="mt-4 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-xs font-medium text-red-700"
@@ -79,10 +128,22 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onBackToCart
         </div>
       </dl>
 
-      {canRetry && (
-        <p className="mt-3 text-[11px] text-gray-500">
-          Your items are being held for {holdMinutes} minutes.
-        </p>
+      {!isClosed && (
+        <div role="status" className="mt-3 rounded-lg bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          <p>
+            Your items are held for <PaymentCountdown seconds={secondsLeft} onDone={onRefresh} />
+          </p>
+          <p className="mt-1">
+            {attemptsLeft} {attemptsLeft === 1 ? "attempt" : "attempts"} left
+            {nextAttemptIsFinal && !inCooldown ? " (this is the final one)" : ""}
+          </p>
+          {inCooldown && (
+            <p className="mt-1">
+              Final attempt opens in{" "}
+              <PaymentCountdown seconds={cooldownSecondsLeft} onDone={onRefresh} warnBelow={0} />
+            </p>
+          )}
+        </div>
       )}
 
       {error && (
@@ -92,32 +153,56 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onBackToCart
       )}
 
       <div className="mt-6 flex flex-col gap-3">
-        {canRetry && (
+        {!isClosed && (
           <button
             type="button"
             onClick={onRetry}
-            disabled={retrying}
+            disabled={retrying || !canRetry}
             className="w-full rounded-md bg-[#b13600] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            {retrying ? "Opening payment…" : "Retry payment"}
+            {retryLabel}
+          </button>
+        )}
+
+        {isClosed && (
+          <button
+            type="button"
+            onClick={onViewOrder}
+            className="w-full rounded-md bg-[#b13600] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00]"
+          >
+            View order
           </button>
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            to="/checkout"
-            className="flex-1 rounded-md border border-gray-200 px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-700 transition hover:bg-gray-50"
-          >
-            Change payment method
-          </Link>
-          <button
-            type="button"
-            onClick={onBackToCart}
-            disabled={retrying}
-            className="flex-1 rounded-md border border-gray-200 px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Back to cart
-          </button>
+          {!isClosed && (
+            <button
+              type="button"
+              onClick={onViewOrder}
+              disabled={retrying}
+              className="flex-1 rounded-md border border-gray-200 px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              View order
+            </button>
+          )}
+
+          {!isClosed ? (
+            <button
+              type="button"
+              onClick={onCancelPayment}
+              disabled={retrying}
+              className="flex-1 rounded-md border border-gray-200 px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel payment
+            </button>
+          ) : (
+            <Link
+              to="/cart"
+              className="flex-1 rounded-md border border-gray-200 px-5 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-gray-700 transition hover:bg-gray-50"
+            >
+              Back to cart
+            </Link>
+          )}
         </div>
       </div>
     </div>

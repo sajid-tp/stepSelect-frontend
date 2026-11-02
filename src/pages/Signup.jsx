@@ -31,6 +31,9 @@ function Signup() {
     confirmPassword: false,
   });
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState('');
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -142,7 +145,12 @@ password: !form.password
       confirmPassword: true,
     });
 
+    if (!acceptedTerms) {
+      setTermsError('Please accept the Terms & Conditions to create your account');
+    }
+
     if (!isValid) return;
+    if (!acceptedTerms) return;
     if (referralCheck.state === 'invalid') return;
 
     dispatch(clearAuthError());
@@ -161,6 +169,11 @@ password: !form.password
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    if (!acceptedTerms) {
+      setTermsError('Please accept the Terms & Conditions before signing up with Google');
+      return;
+    }
+
     try {
       const token = credentialResponse.credential;
       await dispatch(googleSignup({ token, referralCode: referral.trim() })).unwrap();
@@ -176,7 +189,7 @@ password: !form.password
 
   return (
     <AuthLayout
-      imageSrc="https://placehold.co/800x1000/2b2b2b/e5e5e5?text=Runner"
+      imageSrc="/images/auth/signup.jpg"
       overlayTitle={
         <>
           Join STEP
@@ -282,6 +295,33 @@ password: !form.password
           {referralCheck.state === 'invalid' && !fromLink && (
             <small className="text-red-500">This referral code is not valid.</small>
           )}
+        </div>
+
+        {/* Terms & Conditions (required) */}
+        <div className="mb-5">
+          <label className="flex cursor-pointer items-start gap-2.5 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => {
+                setAcceptedTerms(e.target.checked);
+                if (e.target.checked) setTermsError('');
+              }}
+              className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#f4511e]"
+            />
+            <span>
+              I agree to the{' '}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-ink underline"
+              >
+                Terms &amp; Conditions
+              </a>
+            </span>
+          </label>
+          {termsError && <small className="mt-1 block text-red-500">{termsError}</small>}
         </div>
 
         <button
