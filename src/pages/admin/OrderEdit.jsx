@@ -75,6 +75,8 @@ function OrderEdit() {
   const [returnBusy, setReturnBusy] = useState(false);
   const [rejectItemId, setRejectItemId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [approveItem, setApproveItem] = useState(null); // item whose return the admin is approving
+  const [stockChoice, setStockChoice] = useState(""); // "add" | "skip"
 
   useEffect(() => {
     dispatch(clearAdminOrder());
@@ -127,18 +129,20 @@ function OrderEdit() {
   };
 
   /* ---------------- RETURN REQUESTS ---------------- */
-  const doReturn = async (itemId, action, reason = "") => {
+  const doReturn = async (itemId, action, reason = "", restock) => {
     if (!order || returnBusy) return;
 
     try {
       setReturnBusy(true);
       const result = await dispatch(
-        handleAdminReturn({ orderId: order.id, itemId, action, reason })
+        handleAdminReturn({ orderId: order.id, itemId, action, reason, restock })
       ).unwrap();
 
       setToast({ type: "success", text: result.message || "Return updated." });
       setRejectItemId(null);
       setRejectReason("");
+      setApproveItem(null);
+      setStockChoice("");
     } catch (err) {
       setToast({
         type: "error",
@@ -147,6 +151,12 @@ function OrderEdit() {
     } finally {
       setReturnBusy(false);
     }
+  };
+
+  const closeApproveModal = () => {
+    if (returnBusy) return;
+    setApproveItem(null);
+    setStockChoice("");
   };
 
   const closeRejectModal = () => {
@@ -400,7 +410,10 @@ function OrderEdit() {
                                   <button
                                     type="button"
                                     disabled={returnBusy}
-                                    onClick={() => doReturn(item.id, "approve")}
+                                    onClick={() => {
+                                      setStockChoice("");
+                                      setApproveItem(item);
+                                    }}
                                     className="rounded-md bg-green-600 px-3 py-1.5 font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
                                   >
                                     Approve
@@ -415,6 +428,25 @@ function OrderEdit() {
                                   </button>
                                 </div>
                               </div>
+                            )}
+
+                            {/* what the admin decided about the stock of returned units */}
+                            {(item.returnRestockedQuantity > 0 || item.returnDiscardedQuantity > 0) && (
+                              <p className="mt-2 text-xs text-gray-500">
+                                Returned stock:{" "}
+                                {[
+                                  item.returnRestockedQuantity > 0 &&
+                                    `${item.returnRestockedQuantity} unit${
+                                      item.returnRestockedQuantity > 1 ? "s" : ""
+                                    } added back to stock`,
+                                  item.returnDiscardedQuantity > 0 &&
+                                    `${item.returnDiscardedQuantity} unit${
+                                      item.returnDiscardedQuantity > 1 ? "s" : ""
+                                    } not added to stock`,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
                             )}
 
                             {/* last rejection, if any */}
@@ -574,6 +606,110 @@ function OrderEdit() {
           if (!savingItemId) setCancelItem(null);
         }}
       />
+
+      {/* APPROVE RETURN (the admin chooses what happens to the stock) */}
+      {approveItem && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeApproveModal();
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="approve-return-title"
+          >
+            <h2 id="approve-return-title" className="text-lg font-bold text-gray-900">
+              Approve this return?
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              The customer's refund goes to their wallet. Choose what happens to the returned
+              stock.
+            </p>
+
+            <div className="mt-4 rounded-lg border border-orange-100 bg-orange-50 p-3 text-xs text-gray-600">
+              <p className="truncate font-semibold text-[#071a33]">
+                {approveItem.name}
+                {approveItem.size ? ` · Size ${approveItem.size}` : ""}
+              </p>
+              <p className="mt-1">
+                <span className="font-semibold">Reason:</span> {approveItem.returnReason}
+                {approveItem.returnRequestedQuantity > 0 &&
+                  ` (${approveItem.returnRequestedQuantity} unit${
+                    approveItem.returnRequestedQuantity > 1 ? "s" : ""
+                  })`}
+              </p>
+              {approveItem.returnDescription && (
+                <p className="mt-1 break-words">{approveItem.returnDescription}</p>
+              )}
+            </div>
+
+            <fieldset className="mt-4 space-y-2" disabled={returnBusy}>
+              <legend className="mb-1 text-xs font-semibold text-gray-600">
+                Are the returned items fit to sell again?
+              </legend>
+
+              {[
+                {
+                  value: "add",
+                  title: "Add back to stock",
+                  hint: "The items are in good condition and can be sold again.",
+                },
+                {
+                  value: "skip",
+                  title: "Don't add to stock",
+                  hint: "The items are damaged or unsellable, so the stock stays as it is.",
+                },
+              ].map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 transition ${
+                    stockChoice === opt.value
+                      ? "border-[#ff5722] bg-[#fff5f1]"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="return-stock-choice"
+                    value={opt.value}
+                    checked={stockChoice === opt.value}
+                    onChange={() => setStockChoice(opt.value)}
+                    className="mt-0.5 accent-[#ff5722]"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-gray-800">{opt.title}</span>
+                    <span className="block text-xs text-gray-500">{opt.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeApproveModal}
+                disabled={returnBusy}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  doReturn(approveItem.id, "approve", "", stockChoice === "add")
+                }
+                disabled={returnBusy || !stockChoice}
+                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {returnBusy ? "Approving..." : "Approve return"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* REJECT RETURN (reason is required) */}
       {rejectItemId && (

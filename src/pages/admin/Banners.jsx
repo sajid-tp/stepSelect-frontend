@@ -340,6 +340,7 @@ function Banners() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
+  const [toggleTarget, setToggleTarget] = useState(null); // banner waiting for show / hide confirmation
   const [deleting, setDeleting] = useState(null); // banner waiting for delete confirmation
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -424,6 +425,12 @@ function Banners() {
     setNotice({ type: "success", text: result.payload.message });
     // On the Active / Inactive tabs the row no longer belongs, so reload the list
     if (tab !== "all") fetchBanners();
+  };
+
+  const confirmToggle = async () => {
+    if (!toggleTarget) return;
+    await handleToggle(toggleTarget);
+    setToggleTarget(null);
   };
 
   const confirmDelete = async () => {
@@ -563,7 +570,7 @@ function Banners() {
                   <div className="flex w-[150px] items-center gap-2">
                     <Switch
                       checked={b.isActive}
-                      onChange={() => handleToggle(b)}
+                      onChange={() => setToggleTarget(b)}
                       disabled={togglingId === b.id}
                       label={`${b.isActive ? "Hide" : "Show"} ${b.title}`}
                     />
@@ -643,6 +650,23 @@ function Banners() {
           onClose={closeForm}
         />
       )}
+
+      {/* ACTIVATE / DEACTIVATE CONFIRMATION */}
+      <Modal
+        open={Boolean(toggleTarget)}
+        title={toggleTarget?.isActive ? "Deactivate banner?" : "Activate banner?"}
+        message={
+          toggleTarget?.isActive
+            ? `Are you sure you want to deactivate "${toggleTarget.title}"? It will be hidden from the landing page.`
+            : `Are you sure you want to activate "${toggleTarget?.title || ""}"? It will be shown on the landing page.`
+        }
+        confirmText={toggleTarget?.isActive ? "Deactivate" : "Activate"}
+        cancelText="Cancel"
+        onConfirm={confirmToggle}
+        onClose={() => !(toggleTarget && togglingId === toggleTarget.id) && setToggleTarget(null)}
+        loading={Boolean(toggleTarget) && togglingId === toggleTarget.id}
+        variant={toggleTarget?.isActive ? "danger" : "success"}
+      />
 
       {/* DELETE CONFIRMATION */}
       <Modal

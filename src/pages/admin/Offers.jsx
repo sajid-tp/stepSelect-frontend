@@ -204,6 +204,7 @@ function Offers() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selected, setSelected] = useState(null); // offer pending delete
+  const [toggleTarget, setToggleTarget] = useState(null); // offer waiting for switch on / off confirmation
   const [togglingId, setTogglingId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
@@ -249,6 +250,12 @@ function Offers() {
     } finally {
       setTogglingId(null);
     }
+  };
+
+  const handleConfirmToggle = async () => {
+    if (!toggleTarget) return;
+    await handleToggle(toggleTarget);
+    setToggleTarget(null);
   };
 
   const handleConfirmDelete = async () => {
@@ -413,7 +420,7 @@ function Offers() {
                               <Switch
                                 checked={offer.isActive && offer.status !== "expired"}
                                 disabled={togglingId === offer.id || offer.status === "expired"}
-                                onChange={() => handleToggle(offer)}
+                                onChange={() => setToggleTarget(offer)}
                                 label={`${offer.isActive ? "Switch off" : "Switch on"} ${offer.offerName}`}
                               />
                               <span className={`text-xs font-semibold ${STATUS_TEXT[offer.status]}`}>{STATUS_LABEL[offer.status]}</span>
@@ -475,6 +482,26 @@ function Offers() {
           setFormOpen(false);
           setToast({ type: "success", text });
           fetchOffers();
+        }}
+      />
+
+      <Modal
+        open={Boolean(toggleTarget)}
+        title={toggleTarget?.isActive ? "Deactivate offer?" : "Activate offer?"}
+        message={
+          toggleTarget
+            ? toggleTarget.isActive
+              ? `Are you sure you want to deactivate "${toggleTarget.offerName}"? Prices go back to normal straight away.`
+              : `Are you sure you want to activate "${toggleTarget.offerName}"? The discount will apply straight away (within its start and expiry dates).`
+            : ""
+        }
+        confirmText={toggleTarget?.isActive ? "Deactivate" : "Activate"}
+        cancelText="Cancel"
+        variant={toggleTarget?.isActive ? "danger" : "success"}
+        loading={togglingId !== null}
+        onConfirm={handleConfirmToggle}
+        onClose={() => {
+          if (togglingId === null) setToggleTarget(null);
         }}
       />
 

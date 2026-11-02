@@ -120,11 +120,15 @@ export const updateAdminOrderStatus = createAsyncThunk(
 // =====================================================
 export const handleAdminReturn = createAsyncThunk(
   "adminOrders/handleAdminReturn",
-  async ({ orderId, itemId, action, reason }, { rejectWithValue }) => {
+  async ({ orderId, itemId, action, reason, restock }, { rejectWithValue }) => {
     try {
+      // restock (approve only): true = add the returned units back to stock, false = do not
+      const body = { action, reason };
+      if (restock !== undefined) body.restock = restock;
+
       const response = await axiosInstance.patch(
         `/admin/orders/${orderId}/items/${itemId}/return`,
-        { action, reason }
+        body
       );
       return { message: response.data.message, order: response.data.data };
     } catch (error) {

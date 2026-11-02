@@ -259,6 +259,7 @@ function Coupons() {
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [selected, setSelected] = useState(null); // coupon pending delete
+  const [toggleTarget, setToggleTarget] = useState(null); // coupon waiting for activate / deactivate confirmation
   const [toast, setToast] = useState(null); // { type: "success" | "error", text }
 
   /* ---------------- FETCH ---------------- */
@@ -331,6 +332,12 @@ function Coupons() {
     } finally {
       setTogglingId(null);
     }
+  };
+
+  const handleConfirmToggle = async () => {
+    if (!toggleTarget) return;
+    await handleToggle(toggleTarget);
+    setToggleTarget(null);
   };
 
   const handleConfirmDelete = async () => {
@@ -520,7 +527,7 @@ function Coupons() {
                     toggling={togglingId === coupon.id}
                     deleting={deletingId === coupon.id}
                     onEdit={handleEdit}
-                    onToggle={handleToggle}
+                    onToggle={setToggleTarget}
                     onDelete={setSelected}
                   />
                 ))}
@@ -537,6 +544,27 @@ function Coupons() {
           )}
         </section>
       </main>
+
+      {/* ACTIVATE / DEACTIVATE MODAL */}
+      <Modal
+        open={Boolean(toggleTarget)}
+        title={toggleTarget?.isActive ? "Deactivate coupon?" : "Activate coupon?"}
+        message={
+          toggleTarget
+            ? toggleTarget.isActive
+              ? `Are you sure you want to deactivate "${toggleTarget.couponCode}"? Customers will no longer be able to apply it at checkout.`
+              : `Are you sure you want to activate "${toggleTarget.couponCode}"? Customers will be able to apply it at checkout (within its start and expiry dates).`
+            : ""
+        }
+        confirmText={toggleTarget?.isActive ? "Deactivate" : "Activate"}
+        cancelText="Cancel"
+        variant={toggleTarget?.isActive ? "danger" : "success"}
+        loading={togglingId !== null}
+        onConfirm={handleConfirmToggle}
+        onClose={() => {
+          if (togglingId === null) setToggleTarget(null);
+        }}
+      />
 
       {/* DELETE MODAL */}
       <Modal
