@@ -25,6 +25,8 @@ import Modal
 import AdminProductCard
   from "../../components/AdminProductCard";
 
+import useDebounce from "../../hooks/useDebounce";
+
 import {
   getProducts,
   deleteProduct,
@@ -86,6 +88,10 @@ function Products() {
   const [search, setSearch] =
     useState("");
 
+  // the list reloads after the admin pauses typing
+  const debouncedSearch =
+    useDebounce(search.trim(), 400);
+
   const [page, setPage] =
     useState(1);
 
@@ -128,7 +134,7 @@ function Products() {
 
     dispatch(
       getProducts({
-        search,
+        search: debouncedSearch,
         page,
         limit: PAGE_LIMIT,
         sort,
@@ -138,7 +144,7 @@ function Products() {
 
   }, [
     dispatch,
-    search,
+    debouncedSearch,
     page,
     sort,
     statusFilter,
@@ -404,7 +410,7 @@ function Products() {
 
           dispatch(
             getProducts({
-              search,
+              search: debouncedSearch,
               page,
               limit: PAGE_LIMIT,
               sort,

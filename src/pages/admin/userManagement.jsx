@@ -8,9 +8,11 @@ import {
 import AdminSidebar from "../../components/AdminSideBar";
 import Modal from "../../components/Modals";
 import AdminPagination from "../../components/Pagination";
+import useDebounce from "../../hooks/useDebounce";
 
 function Users() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 400); // the list reloads after the admin pauses typing
   const [page, setPage] = useState(1);
 
 
@@ -30,8 +32,8 @@ function Users() {
 
   // Fetch users
   useEffect(() => {
-    dispatch(getUsers({ search, page}));
-  }, [dispatch, search, page]);
+    dispatch(getUsers({ search: debouncedSearch, page }));
+  }, [dispatch, debouncedSearch, page]);
 
   // Search
   const handleSearchChange = (e) => {

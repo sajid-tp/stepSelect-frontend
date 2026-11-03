@@ -22,6 +22,8 @@ import Pagination
 import Modal
   from "../../components/Modals";
 
+import useDebounce from "../../hooks/useDebounce";
+
 import {
   getCategories,
   toggleCategoryStatus,
@@ -48,6 +50,10 @@ function Categories() {
 
   const [search, setSearch] =
     useState("");
+
+  // the list reloads after the admin pauses typing
+  const debouncedSearch =
+    useDebounce(search.trim(), 400);
 
   const [activeTab, setActiveTab] =
     useState("all");
@@ -95,7 +101,7 @@ function Categories() {
 
     dispatch(
       getCategories({
-        search,
+        search: debouncedSearch,
         page,
         sort,
         status : activeTab
@@ -104,7 +110,7 @@ function Categories() {
 
   }, [
     dispatch,
-    search,
+    debouncedSearch,
     page,
     sort,
     activeTab
@@ -293,7 +299,7 @@ function Categories() {
 
           dispatch(
             getCategories({
-              search,
+              search: debouncedSearch,
               page,
               limit,
               sort,

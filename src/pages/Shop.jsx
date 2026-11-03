@@ -60,6 +60,9 @@ function Shop() {
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  // typing a price ("2500") should load the products once, not after every digit
+  const debouncedMinPrice = useDebounce(minPrice, 400);
+  const debouncedMaxPrice = useDebounce(maxPrice, 400);
   // ---------- categories + brands ----------
   useEffect(() => {
     if (categoryStatus === "idle") dispatch(getCategories());
@@ -135,8 +138,8 @@ function Shop() {
         category: selectedCategories.join(","),
         brand: selectedBrands.join(","),
         gender: selectedGender,
-        minPrice,
-        maxPrice,
+        minPrice: debouncedMinPrice,
+        maxPrice: debouncedMaxPrice,
         sort: "",
         page,
         limit: 12,
@@ -147,8 +150,8 @@ function Shop() {
     selectedCategories,
     selectedBrands,
     selectedGender,
-    minPrice,
-    maxPrice,
+    debouncedMinPrice,
+    debouncedMaxPrice,
     page,
     debouncedSearch
   ]);

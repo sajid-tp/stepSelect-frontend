@@ -22,6 +22,8 @@ import Pagination
 import Modal
   from "../../components/Modals";
 
+import useDebounce from "../../hooks/useDebounce";
+
 import {
   getBrands,
   toggleBrandStatus,
@@ -75,6 +77,10 @@ function Brands() {
   const [search, setSearch] =
     useState("");
 
+  // the list reloads after the admin pauses typing
+  const debouncedSearch =
+    useDebounce(search.trim(), 400);
+
   const [page, setPage] =
     useState(1);
 
@@ -109,7 +115,7 @@ function Brands() {
 
     dispatch(
       getBrands({
-        search,
+        search: debouncedSearch,
         page,
         sort,
       })
@@ -117,7 +123,7 @@ function Brands() {
 
   }, [
     dispatch,
-    search,
+    debouncedSearch,
     page,
     sort,
   ]);
@@ -362,7 +368,7 @@ function Brands() {
 
           dispatch(
             getBrands({
-              search,
+              search: debouncedSearch,
               page,
               sort,
             })
