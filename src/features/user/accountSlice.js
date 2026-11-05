@@ -43,6 +43,19 @@ export const uploadProfileImage = createAsyncThunk(
   }
 );
 
+export const removeProfileImage = createAsyncThunk(
+  'account/removeProfileImage',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.delete('/account/profile-image');
+      // Backend responds with { message, data: updatedUser }
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Failed to remove photo');
+    }
+  }
+);
+
 export const updatePassword = createAsyncThunk(
   'account/updatePassword',
   async ({ currentPassword, newPassword, confirmPassword }, { rejectWithValue }) => {
@@ -121,7 +134,7 @@ const accountSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
-        state.profile = action.payload;
+        state.profile = { ...state.profile, ...action.payload };
         state.successMessage = 'Profile updated successfully';
       })
       .addCase(uploadProfileImage.pending, (state) => {
@@ -131,6 +144,9 @@ const accountSlice = createSlice({
      .addCase(uploadProfileImage.fulfilled, (state, action) => {
   state.profile = { ...state.profile, ...action.payload };
 })
+      .addCase(removeProfileImage.fulfilled, (state, action) => {
+        state.profile = { ...state.profile, ...action.payload };
+      })
       .addCase(uploadProfileImage.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;

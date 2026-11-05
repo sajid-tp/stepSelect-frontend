@@ -42,11 +42,12 @@ function VerifyOtp() {
       if (type === 'reset') {
         await dispatch(verifyResetOtp({ email, otp: code })).unwrap();
         clearOtpSession();
-        navigate('/update-password', { state: { email } });
+        // replace: true -> the OTP page is swapped out of history, so Back can't return to it
+        navigate('/update-password', { state: { email }, replace: true });
       } else {
         await dispatch(verifyOtp({ email, otp: code })).unwrap();
         clearOtpSession();
-        navigate('/');
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError(err || 'Invalid or expired code. Please try again.');

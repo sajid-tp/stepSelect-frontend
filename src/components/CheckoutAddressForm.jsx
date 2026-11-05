@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { validateRequiredPhone } from "../utils/validators";
 
 /*
   Inline add / edit address form used inside the checkout page.
@@ -42,9 +43,9 @@ const validate = (v) => {
   else if (name.length < 3 || name.length > 25)
     e.name = "Name must be 3 to 25 characters.";
 
-  if (!v.phoneNumber.trim()) e.phoneNumber = "Mobile number is required.";
-  else if (!/^\d{10}$/.test(v.phoneNumber.trim()))
-    e.phoneNumber = "Enter a 10-digit mobile number.";
+  // libphonenumber-js check, same as the server (the input already limits typing to 10 digits)
+  const phoneError = validateRequiredPhone(v.phoneNumber);
+  if (phoneError) e.phoneNumber = phoneError;
 
   if (!street) e.detailedAddress = "Street address is required.";
   else if (street.length < 10)

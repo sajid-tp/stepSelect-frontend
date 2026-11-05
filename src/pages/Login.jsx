@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
 import { GoogleLogin } from '@react-oauth/google';
+import { validateEmail } from '../utils/validators';
 
 import {
   loginUser,
@@ -24,17 +25,12 @@ function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
 
+  // Login only checks that the fields are filled in. Password strength is a
+  // signup / change-password rule; older accounts may have weaker passwords
+  // and must still be able to sign in.
   const errors = {
-    email: !form.email
-      ? 'Email is required'
-      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-      ? 'Enter a valid email address'
-      : '',
-   password: !form.password
-  ? 'Password is required'
-  : !/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(form.password)
-  ? 'Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character'
-  : '',
+    email: validateEmail(form.email),
+    password: form.password ? '' : 'Password is required',
   };
 
   const isValid = !errors.email && !errors.password;

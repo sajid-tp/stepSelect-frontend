@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FormField from '../components/FormField';
 import { addAddress, updateAddress, fetchAddresses } from '../features/user/addressSlice';
+import { validateRequiredPhone, validateEmail, normalizePhone } from '../utils/validators';
 
 function AddressForm() {
   const { id } = useParams();
@@ -61,8 +62,8 @@ function AddressForm() {
 
     if (!values.name.trim()) {
       newErrors.name = 'Name is required';
-    } else if (values.name.trim().length < 3 || values.name.trim().length > 50) {
-      newErrors.name = 'Name must be between 3 and 50 characters';
+    } else if (values.name.trim().length < 3 || values.name.trim().length > 25) {
+      newErrors.name = 'Name must be between 3 and 25 characters';
     }
 
     if (!values.detailedAddress.trim()) {
@@ -96,14 +97,14 @@ function AddressForm() {
       newErrors.pinCode = 'Enter a valid PIN code with 6 digits';
     }
 
-    if (!values.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(values.phoneNumber.trim())) {
-      newErrors.phoneNumber = 'Phone number must be 10 digits';
-    }
+    // libphonenumber-js check, same as the server
+    const phoneError = validateRequiredPhone(values.phoneNumber);
+    if (phoneError) newErrors.phoneNumber = phoneError;
 
-    if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
-      newErrors.email = 'Enter a valid email address';
+    // Email is optional; when typed it gets the same check as signup
+    if (values.email.trim()) {
+      const emailError = validateEmail(values.email);
+      if (emailError) newErrors.email = emailError;
     }
 
     return newErrors;
@@ -143,9 +144,15 @@ function AddressForm() {
     setIsSubmitting(true);
 
     try {
+      // send the clean 10-digit phone and a normalised email
+      const payload = {
+        ...form,
+        phoneNumber: normalizePhone(form.phoneNumber),
+        email: form.email.trim().toLowerCase(),
+      };
       const action = isEditing
-        ? updateAddress({ id, ...form })
-        : addAddress(form);
+        ? updateAddress({ id, ...payload })
+        : addAddress(payload);
 
       await dispatch(action).unwrap();
       navigate('/profile/addresses');

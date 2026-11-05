@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import FormField from '../components/FormField';
 import { requestEmailChange, confirmEmailChange, resetEmailChange } from '../features/user/accountSlice';
+import { validateEmail } from '../utils/validators';
 
 function ChangeEmail() {
   const dispatch = useDispatch();
@@ -26,9 +27,9 @@ function ChangeEmail() {
     setLocalError('');
 
     const trimmedEmail = newEmail.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
-      setLocalError('Please enter a valid email address');
+    const emailError = validateEmail(trimmedEmail);
+    if (emailError) {
+      setLocalError(emailError);
       return;
     }
 

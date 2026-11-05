@@ -15,6 +15,24 @@ import {
 import { GoogleLogin } from '@react-oauth/google';
 import { validateReferral } from '../features/user/referralSlice';
 import { REFERRAL_STORAGE_KEY } from './InviteRedirect';
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  validateConfirmPassword,
+  normalizeEmail,
+  MESSAGES as VALIDATION,
+} from '../utils/validators';
+
+// Live checklist shown under the password field. These mirror validatePassword()
+// in utils/validators.js (the server enforces the same rule).
+const PASSWORD_CHECKS = [
+  { label: '8 to 64 characters', test: (p) => p.length >= 8 && p.length <= 64 },
+  { label: 'An uppercase letter', test: (p) => /[A-Z]/.test(p) },
+  { label: 'A lowercase letter', test: (p) => /[a-z]/.test(p) },
+  { label: 'A number', test: (p) => /\d/.test(p) },
+  { label: 'A special character', test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
 
 function Signup() {
   const [form, setForm] = useState({
@@ -93,30 +111,12 @@ function Signup() {
   const authError = useSelector((state) => state.auth.error);
   const isSubmitting = authStatus === 'loading';
 
+  // Same rules and messages as the server (see utils/validators.js)
   const errors = {
-    username: !form.username
-      ? 'Username is required'
-      : form.username.length < 3
-      ? 'Username must be at least 3 characters'
-      : '',
-
-    email: !form.email
-      ? 'Email is required'
-      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-      ? 'Enter a valid email address'
-      : '',
-
-password: !form.password
-  ? 'Password is required'
-  : !/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(form.password)
-  ? 'Password must be at least 8 characters and contain an uppercase letter, a lowercase letter, a number, and a special character'
-  : '',
-
-    confirmPassword: !form.confirmPassword
-      ? 'Please confirm your password'
-      : form.confirmPassword !== form.password
-      ? 'Passwords do not match'
-      : '',
+    username: validateUsername(form.username),
+    email: validateEmail(form.email),
+    password: validatePassword(form.password),
+    confirmPassword: validateConfirmPassword(form.confirmPassword, form.password),
   };
 
   const isValid =
@@ -146,22 +146,41 @@ password: !form.password
     });
 
     if (!acceptedTerms) {
-      setTermsError('Please accept the Terms & Conditions to create your account');
+      setTermsError(VALIDATION.TERMS_REQUIRED);
     }
 
-    if (!isValid) return;
+    if (!isValid) {
+      // Take the user straight to the first problem (FormField ids = field names)
+      const firstInvalid = ['username', 'email', 'password', 'confirmPassword'].find(
+        (field) => errors[field]
+      );
+      document.getElementById(firstInvalid)?.focus();
+      return;
+    }
     if (!acceptedTerms) return;
     if (referralCheck.state === 'invalid') return;
 
     dispatch(clearAuthError());
 
+    // Send the same normalised email everywhere (trimmed + lower-case)
+    const email = normalizeEmail(form.email);
+
     try {
-      await dispatch(signupUser({ ...form, referralCode: referral.trim() })).unwrap();
+      await dispatch(
+        signupUser({
+          username: form.username.trim(),
+          email,
+          password: form.password,
+          confirmPassword: form.confirmPassword,
+          termsAccepted: true,
+          referralCode: referral.trim(),
+        })
+      ).unwrap();
       try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* ignore */ }
-     const otpRes = await dispatch(otpSignup({ email: form.email })).unwrap();
+      const otpRes = await dispatch(otpSignup({ email })).unwrap();
 
       navigate('/verify-otp', {
-        state: { email: form.email, type: 'signup', expiresAt: otpRes.expiresAt },
+        state: { email, type: 'signup', expiresAt: otpRes.expiresAt },
       });
     } catch (err) {
       console.log(err);
@@ -176,8 +195,8 @@ password: !form.password
 
     try {
       const token = credentialResponse.credential;
-      await dispatch(googleSignup({ token, referralCode: referral.trim() })).unwrap();
-      navigate('/');
+      await dispatch(googleSignup({ token, referralCode: referral.trim(), termsAccepted: true })).unwrap();
+      navigate('/', { replace: true });
     } catch (err) {
       console.log('Google signup failed:', err);
     }
@@ -236,12 +255,29 @@ password: !form.password
           label="Password"
           name="password"
           type="password"
-          placeholder="At least 6 characters"
+          placeholder="8+ characters: Aa, 1 and a symbol"
           value={form.password}
           onChange={handleChange}
           onBlur={handleBlur}
-          error={touched.password ? errors.password : ''}
+          error={touched.password && !form.password ? errors.password : ''}
+          invalid={touched.password && Boolean(errors.password)}
         />
+
+        {form.password && (
+          <ul className="-mt-3 mb-5 space-y-1 text-xs" aria-live="polite">
+            {PASSWORD_CHECKS.map(({ label, test }) => {
+              const met = test(form.password);
+              return (
+                <li
+                  key={label}
+                  className={met ? 'text-emerald-600' : touched.password ? 'text-red-500' : 'text-muted'}
+                >
+                  {met ? '✓' : '○'} {label}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         <FormField
           label="Confirm password"
@@ -285,7 +321,10 @@ password: !form.password
               onBlur={(e) => checkReferral(e.target.value)}
               placeholder="e.g. SAJID-7K2Q"
               maxLength={40}
-              className="w-full rounded-md border border-line px-4 py-3 text-sm outline-none focus:border-ink"
+              aria-invalid={referralCheck.state === 'invalid'}
+              className={`w-full rounded-md border px-4 py-3 text-sm outline-none focus:border-ink ${
+                referralCheck.state === 'invalid' ? 'border-red-400' : 'border-line'
+              }`}
             />
           )}
 

@@ -6,6 +6,7 @@ import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
 import { resetPassword } from '../features/user/authSlice'; // adjust path to match your slice location
 import { useSelector } from 'react-redux';
+import { validatePassword, validateConfirmPassword } from '../utils/validators';
 
 function UpdatePassword() {
   const dispatch = useDispatch();
@@ -29,17 +30,10 @@ function UpdatePassword() {
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Same password rule as signup, change-password and the server
   const errors = {
-    password: !form.password
-      ? 'Password is required'
-      : form.password.length < 6
-      ? 'Password must be at least 6 characters'
-      : '',
-    confirmPassword: !form.confirmPassword
-      ? 'Please confirm your password'
-      : form.confirmPassword !== form.password
-      ? 'Passwords do not match'
-      : '',
+    password: validatePassword(form.password),
+    confirmPassword: validateConfirmPassword(form.confirmPassword, form.password),
   };
 
   const isValid = !errors.password && !errors.confirmPassword;
@@ -82,7 +76,7 @@ function UpdatePassword() {
 
     try {
       await dispatch(resetPassword({ newPassword: form.password, resetToken })).unwrap();
-      navigate('/login');
+      navigate('/login', { replace: true });
     } catch (err) {
       setServerError(err || 'Could not update password. Please try again.');
     } finally {
@@ -112,7 +106,7 @@ function UpdatePassword() {
           label="New password"
           name="password"
           type="password"
-          placeholder="At least 6 characters"
+          placeholder="8+ characters: Aa, 1 and a symbol"
           value={form.password}
           onChange={handleChange}
           onBlur={handleBlur}

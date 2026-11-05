@@ -66,10 +66,11 @@ function App() {
           <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        {/* Guest-only: a signed-in user who hits Back to the OTP page is sent home */}
+        <Route path="/verify-otp" element={<VerifyOtp />} />
          </Route>
         <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/update-password" element={<UpdatePassword />} />
         <Route path="/profile" element={<AccountOverview />} />
         <Route path="/profile/edit" element={<EditProfile />} />
@@ -99,9 +100,7 @@ function App() {
 />
  
        {/* Admin routes */}
-         <Route element={<GuestRoute />}>
         <Route path="/admin/auth/login" element={<AdminLogin/>}/>
-        </Route>
        <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<Users />} />

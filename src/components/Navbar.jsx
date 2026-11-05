@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 
 import { logoutUser, logout } from "../features/user/authSlice";
+import { fetchUserProfile } from "../features/user/accountSlice";
 import { getWishlistIds } from "../features/user/wishlistSlice";
 import { getCart, selectCartCount } from "../features/user/cartSlice";
 import Modal from "./Modals";
@@ -12,6 +13,7 @@ function Navbar() {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.auth.user);
+  const profile = useSelector((state) => state.account.profile);
   const wishlistCount = useSelector((state) => state.wishlist.wishlistCount);
   const wishlistIdsStatus = useSelector((state) => state.wishlist.idsStatus);
   const cartCount = useSelector(selectCartCount);
@@ -26,8 +28,27 @@ function Navbar() {
 
   const dropdownRef = useRef(null);
 
+  // Avatar image: fall back to the initial if it fails to load
+  const [avatarError, setAvatarError] = useState(false);
+  const profileFetchedFor = useRef(null);
+
   const navLinkClass = ({ isActive }) =>
     `text-[13px] ${isActive ? "font-semibold text-ink" : "text-muted"}`;
+
+  // Load the profile once per logged-in user so the avatar can show their photo
+  // on every page (not just the account pages)
+  const userId = user?.id || user?._id;
+  useEffect(() => {
+    if (!userId) {
+      profileFetchedFor.current = null;
+      return;
+    }
+    const profileIsThisUser = profile && String(profile._id) === String(userId);
+    if (!profileIsThisUser && profileFetchedFor.current !== userId) {
+      profileFetchedFor.current = userId;
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch, userId, profile]);
 
   // Load the wishlist count for the badge (once per login)
   useEffect(() => {
@@ -57,6 +78,14 @@ function Navbar() {
   // FIX: the user object has `username`, not `name`
   const initial =
     (user?.username || user?.name)?.trim()?.charAt(0)?.toUpperCase() || "U";
+
+  // Prefer the freshly loaded profile; until it arrives, use the saved user data.
+  // An empty profileImage (photo removed) correctly falls back to the initial.
+  const avatarSrc = profile ? profile.profileImage : user?.profileImage;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarSrc]);
 
   // ============================================
   // LOGOUT
@@ -190,10 +219,19 @@ function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((open) => !open)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f4511e] text-[13px] font-semibold text-white"
+                  className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#f4511e] text-[13px] font-semibold text-white"
                   aria-label="Account menu"
                 >
-                  {initial}
+                  {avatarSrc && !avatarError ? (
+                    <img
+                      src={avatarSrc}
+                      alt=""
+                      onError={() => setAvatarError(true)}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initial
+                  )}
                 </button>
 
                 {/* Dropdown */}

@@ -8,6 +8,7 @@ import {
   fetchUserProfile,
   updateProfile,
   uploadProfileImage,
+  removeProfileImage,
   confirmEmailChange,
 } from './accountSlice';
 
@@ -25,12 +26,14 @@ export const loginUser = createAsyncThunk(
 
 export const signupUser = createAsyncThunk(
   'auth/signup',
-  async ({ username, email, password, referralCode }, { rejectWithValue }) => {
+  async ({ username, email, password, confirmPassword, termsAccepted, referralCode }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post('/auth/signup', {
         username,
         email,
         password,
+        confirmPassword,
+        termsAccepted,
         ...(referralCode ? { referralCode } : {}),
       });
       return res.data; // { _id, username }
@@ -54,10 +57,11 @@ export const logoutUser = createAsyncThunk(
 
 export const googleSignup = createAsyncThunk(
   'auth/googleSignup',
-  async ({ token, referralCode }, { rejectWithValue }) => {
+  async ({ token, referralCode, termsAccepted }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/google', {
         token,
+        termsAccepted,
         ...(referralCode ? { referralCode } : {}),
       });
       return response.data;
@@ -335,6 +339,7 @@ const authSlice = createSlice({
           fetchUserProfile.fulfilled,
           updateProfile.fulfilled,
           uploadProfileImage.fulfilled,
+          removeProfileImage.fulfilled,
           confirmEmailChange.fulfilled
         ),
         (state, action) => {

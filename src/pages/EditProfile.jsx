@@ -16,7 +16,18 @@ import {
   confirmEmailChange,
   fetchUserProfile,
   uploadProfileImage,
+  removeProfileImage,
 } from '../features/user/accountSlice';
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  validatePhone,
+  normalizePhone,
+  validateOtp,
+  validateProfileImage,
+  MESSAGES as VALIDATION,
+} from '../utils/validators';
 
 function EditProfile() {
   const dispatch = useDispatch();
@@ -49,21 +60,14 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   });
 
   useEffect(() => {
+    // Same rules and messages as the server (see utils/validators.js)
     registerPersonal('username', {
-      required: 'Name is required',
-      minLength: {
-        value: 6,
-        message: 'Name must be at least 6 characters long',
-      },
+      validate: (v) => validateUsername(v, 'Name') || true,
     });
 
+    // Phone is optional: it is only checked when something is typed
     registerPersonal('phoneNumber', {
-    
-      pattern: {
-        value: /^\d{10,15}$/,
-        message:
-          'Phone number must contain only digits and be at least 10 digits long',
-      },
+      validate: (v) => validatePhone(v) || true,
     });
   }, [registerPersonal]);
 
@@ -97,16 +101,10 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       required: 'Current password is required',
     });
 
+    // Same password rule as signup, reset-password and the server
     registerSecurity('newPassword', {
       required: 'New password is required',
-      minLength: {
-        value: 6,
-        message: 'Password must be at least 6 characters long',
-      },
-      maxLength: {
-        value: 15,
-        message: 'Password must be at most 15 characters long',
-      },
+      validate: (v) => validatePassword(v) || true,
     });
 
     registerSecurity('confirmPassword', {
@@ -127,12 +125,15 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [imageError, setImageError] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [removeImageModalOpen, setRemoveImageModalOpen] = useState(false);
+  const [isRemovingImage, setIsRemovingImage] = useState(false);
 
   // --------------------------------------------------
   // Success Messages
   // --------------------------------------------------
 
   const [personalSuccess, setPersonalSuccess] = useState('');
+  const [personalError, setPersonalError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
@@ -193,6 +194,8 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       if (profile.profileImage) {
         setPreviewImage(profile.profileImage);
         setImgError(false);
+      } else {
+        setPreviewImage(null);
       }
     }
   }, [profile, resetPersonalForm]);
@@ -208,17 +211,12 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
     setImageError('');
 
-    if (!file.type.startsWith('image/')) {
-      setImageError(
-        'Please select a valid image file (PNG, JPG, JPEG, WEBP).'
-      );
-      return;
-    }
+    // PNG / JPG / WEBP only, max 3MB (same limits as the server)
+    const imageValidationError = validateProfileImage(file);
 
-    const MAX_SIZE = 3 * 1024 * 1024;
-
-    if (file.size > MAX_SIZE) {
-      setImageError('Image must be smaller than 3MB.');
+    if (imageValidationError) {
+      setImageError(imageValidationError);
+      e.target.value = '';
       return;
     }
 
@@ -243,14 +241,40 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   };
 
   // --------------------------------------------------
+  // Image Removal
+  // --------------------------------------------------
+
+  const handleConfirmRemoveImage = async () => {
+    setImageError('');
+    setIsRemovingImage(true);
+
+    try {
+      await dispatch(removeProfileImage()).unwrap();
+      setPreviewImage(null);
+      setImgError(false);
+      setIsViewerOpen(false);
+      setRemoveImageModalOpen(false);
+    } catch (err) {
+      setRemoveImageModalOpen(false);
+      setImageError(
+        typeof err === 'string' ? err : 'Failed to remove photo. Please try again.'
+      );
+    } finally {
+      setIsRemovingImage(false);
+    }
+  };
+
+  // --------------------------------------------------
   // Personal Information Submit
   // --------------------------------------------------
 
   const onPersonalSubmit = async (data) => {
     setPersonalSuccess('');
+    setPersonalError('');
 
     const trimmedName = data.username.trim();
-    const trimmedPhone = String(data.phoneNumber).trim();
+    // "+91 98765 43210" is sent as "9876543210" (empty stays empty and clears the phone)
+    const trimmedPhone = normalizePhone(data.phoneNumber);
 
     try {
       await dispatch(
@@ -267,6 +291,9 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       }, 4000);
     } catch (err) {
       console.error(err);
+      setPersonalError(
+        typeof err === 'string' ? err : 'Could not save your details. Please try again.'
+      );
     }
   };
 
@@ -280,7 +307,12 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     setPasswordSuccess('');
 
     if (data.newPassword !== data.confirmPassword) {
-      setPasswordError('Passwords do not match');
+      setPasswordError(VALIDATION.PASSWORDS_DO_NOT_MATCH);
+      return;
+    }
+
+    if (data.newPassword === data.currentPassword) {
+      setPasswordError(VALIDATION.NEW_PASSWORD_SAME_AS_CURRENT);
       return;
     }
 
@@ -336,8 +368,10 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
     const trimmed = newEmail.trim().toLowerCase();
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setEmailError('Please enter a valid email');
+    const emailValidationError = validateEmail(trimmed);
+
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
       return;
     }
 
@@ -400,8 +434,10 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   // --------------------------------------------------
 
   const handleOtpSubmit = async (code) => {
-    if (code.length !== 6) {
-      setOtpError('Enter all 6 digits.');
+    const otpValidationError = validateOtp(code);
+
+    if (otpValidationError) {
+      setOtpError(otpValidationError);
       return;
     }
 
@@ -512,7 +548,7 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             <input
               type="file"
               ref={fileInputRef}
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
               className="hidden"
               onChange={handleImageChange}
             />
@@ -573,6 +609,21 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
                 </>
               )}
 
+              {profile?.profileImage && (
+                <>
+                  <span className="text-gray-300">|</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setRemoveImageModalOpen(true)}
+                    disabled={isUploadingImage || isRemovingImage}
+                    className="font-bold uppercase tracking-wider text-red-500 hover:underline disabled:opacity-50"
+                  >
+                    Remove Photo
+                  </button>
+                </>
+              )}
+
             </div>
 
             {imageError && (
@@ -582,6 +633,13 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             )}
 
           </div>
+
+          {/* Personal Error */}
+          {personalError && (
+            <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+              {personalError}
+            </p>
+          )}
 
           {/* Personal Success */}
           {personalSuccess && (
@@ -873,6 +931,26 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       </main>
 
       {/* --------------------------------------------- */}
+      {/* Remove Photo Confirmation Modal */}
+      {/* --------------------------------------------- */}
+
+      <Modal
+        open={removeImageModalOpen}
+        title="Remove Profile Photo"
+        message="Are you sure you want to remove your profile photo? Your initial will be shown instead."
+        confirmText="Yes, Remove Photo"
+        cancelText="Cancel"
+        onConfirm={handleConfirmRemoveImage}
+        onClose={() => {
+          if (!isRemovingImage) {
+            setRemoveImageModalOpen(false);
+          }
+        }}
+        loading={isRemovingImage}
+        variant="danger"
+      />
+
+      {/* --------------------------------------------- */}
       {/* Password Confirmation Modal */}
       {/* --------------------------------------------- */}
 
@@ -990,6 +1068,17 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             </div>
 
             <div className="p-4 flex justify-end gap-3 bg-white border-t border-line">
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsViewerOpen(false);
+                  setRemoveImageModalOpen(true);
+                }}
+                className="px-4 py-2 text-xs font-semibold border border-red-200 text-red-600 rounded-md hover:bg-red-50"
+              >
+                Remove
+              </button>
 
               <button
                 type="button"
