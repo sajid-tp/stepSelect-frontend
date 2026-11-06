@@ -10,8 +10,25 @@ import Modal from "../../components/Modals";
 import AdminPagination from "../../components/Pagination";
 import useDebounce from "../../hooks/useDebounce";
 
+const SORT_OPTIONS = [
+  { value: "name_asc", label: "Name: A to Z" },
+  { value: "name_desc", label: "Name: Z to A" },
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "email_asc", label: "Email: A to Z" },
+  { value: "email_desc", label: "Email: Z to A" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All users" },
+  { value: "active", label: "Active" },
+  { value: "blocked", label: "Blocked" },
+];
+
 function Users() {
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("name_asc");
+  const [statusFilter, setStatusFilter] = useState("all");
   const debouncedSearch = useDebounce(search.trim(), 400); // the list reloads after the admin pauses typing
   const [page, setPage] = useState(1);
 
@@ -27,13 +44,31 @@ function Users() {
     users = [],
     totalPages = 1,
     totalUsers = 0,
+    totalResults = 0,
     status,
   } = useSelector((state) => state.adminUsers);
 
   // Fetch users
   useEffect(() => {
-    dispatch(getUsers({ search: debouncedSearch, page }));
-  }, [dispatch, debouncedSearch, page]);
+    dispatch(
+      getUsers({
+        search: debouncedSearch,
+        page,
+        sort,
+        status: statusFilter,
+      })
+    );
+  }, [dispatch, debouncedSearch, page, sort, statusFilter]);
+
+  const handleSortChange = (e) => {
+    setSort(e.target.value);
+    setPage(1);
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  };
 
   // Search
   const handleSearchChange = (e) => {
@@ -157,10 +192,43 @@ function Users() {
 
           </div>
 
-          {search && (
+          {/* Status filter */}
+          <select
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+            aria-label="Filter by status"
+            className="cursor-pointer rounded-md border border-gray-200 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-700 outline-none transition focus:border-[#f4511e] focus:ring-1 focus:ring-[#f4511e]"
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Sort */}
+          <select
+            value={sort}
+            onChange={handleSortChange}
+            aria-label="Sort users"
+            className="cursor-pointer rounded-md border border-gray-200 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-700 outline-none transition focus:border-[#f4511e] focus:ring-1 focus:ring-[#f4511e]"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {(search || statusFilter !== "all" || sort !== "name_asc") && (
             <button
               type="button"
-              onClick={handleClearSearch}
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("all");
+                setSort("name_asc");
+                setPage(1);
+              }}
               className="rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
             >
               Clear
@@ -322,7 +390,7 @@ function Users() {
         <AdminPagination
   currentPage={page}
   totalPages={totalPages}
-  totalResults={totalUsers}
+  totalResults={totalResults}
   limit={10}
   onPageChange={setPage}
 />

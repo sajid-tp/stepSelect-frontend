@@ -4,10 +4,10 @@ import axiosInstance from "../../api/axiosInstance";
 
 export const getUsers = createAsyncThunk(
   'adminUsers/getUsers',
-  async ({ search = '', page = 1}, { rejectWithValue }) => {
+  async ({ search = '', page = 1, sort, status } = {}, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.get('/admin/users', {
-        params: { search, page},
+        params: { search, page, sort, status },
       });
 
       return res.data; // { users, totalPages, currentPage, totalUsers }
@@ -37,6 +37,7 @@ const adminUsersSlice = createSlice({
     totalPages: 1,
     currentPage: 1,
     totalUsers: 0,
+    totalResults: 0,
     status: 'idle',
     error: null,
   },
@@ -52,7 +53,8 @@ const adminUsersSlice = createSlice({
         state.users = action.payload.users;
         state.totalPages = action.payload.totalPages;
         state.currentPage = action.payload.page;
-        state.totalUsers = action.payload.totalCustomers;
+        state.totalUsers = action.payload.totalCustomers; // all customers (header)
+        state.totalResults = action.payload.totalResults; // matches of the current search/filter (pagination)
       })
       .addCase(getUsers.rejected, (state, action) => {
         state.status = 'failed';

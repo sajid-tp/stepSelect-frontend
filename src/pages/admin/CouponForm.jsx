@@ -20,6 +20,8 @@ const RULES = {
   CODE_MIN: 3,
   CODE_MAX: 40,
   DESCRIPTION_MAX: 500,
+  MAX_DISCOUNT_PERCENT: 90, // same number as MAX_DISCOUNT_PERCENT in server/src/constants/couponConstants.js
+  MIN_PERCENT: 1,
 };
 
 const CODE_REGEX = /^[A-Z0-9_-]+$/;
@@ -114,6 +116,8 @@ const buildPayload = (f) => {
 |--------------------------------------------------------------------------
 */
 const isWholeNumber = (v) => /^\d+$/.test(String(v).trim());
+// 12, 12.5 and 12.55 are fine; 12.555 is not (max 2 decimal places)
+const hasMaxTwoDecimals = (v) => /^(\d+\.?\d{0,2}|\.\d{1,2})$/.test(String(v).trim());
 
 const VALIDATORS = {
   couponCode: (d) => {
@@ -133,8 +137,13 @@ const VALIDATORS = {
     const value = Number(d.discountValue);
     if (!Number.isFinite(value) || value <= 0)
       return "Discount value must be greater than 0.";
-    if (d.discountType === "percentage" && value > 100)
-      return "Percentage discount cannot exceed 100.";
+    if (!hasMaxTwoDecimals(d.discountValue))
+      return "Use at most 2 decimal places.";
+    if (
+      d.discountType === "percentage" &&
+      (value < RULES.MIN_PERCENT || value > RULES.MAX_DISCOUNT_PERCENT)
+    )
+      return `Percentage must be between ${RULES.MIN_PERCENT}% and ${RULES.MAX_DISCOUNT_PERCENT}%.`;
     return "";
   },
 
@@ -143,14 +152,27 @@ const VALIDATORS = {
     const value = Number(d.maximumDiscount);
     if (!Number.isFinite(value) || value <= 0)
       return "Must be greater than 0 (or leave empty for no cap).";
+    if (!hasMaxTwoDecimals(d.maximumDiscount))
+      return "Use at most 2 decimal places.";
     return "";
   },
 
   minimumPurchase: (d) => {
-    if (isBlank(d.minimumPurchase)) return "";
+    const isFlat = d.discountType === "flat";
+    if (isBlank(d.minimumPurchase))
+      return isFlat ? "A flat coupon needs a minimum purchase." : "";
     const value = Number(d.minimumPurchase);
     if (!Number.isFinite(value) || value < 0)
       return "Minimum purchase cannot be negative.";
+    if (!hasMaxTwoDecimals(d.minimumPurchase))
+      return "Use at most 2 decimal places.";
+    if (isFlat) {
+      if (value <= 0) return "A flat coupon needs a minimum purchase.";
+      const discount = Number(d.discountValue);
+      const allowed = Math.floor((value * RULES.MAX_DISCOUNT_PERCENT) / 100);
+      if (Number.isFinite(discount) && discount > allowed)
+        return `With a ₹${value} minimum, the flat discount can be at most ₹${allowed}.`;
+    }
     return "";
   },
 
@@ -315,7 +337,19 @@ function CouponForm() {
     const { name } = e.target;
     const validate = VALIDATORS[name];
     if (!validate) return;
-    setErrors((prev) => ({ ...prev, [name]: validate(formData, ctx) }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validate(formData, ctx),
+      // the flat discount and the minimum purchase depend on each other
+      ...(name === "discountValue" || name === "minimumPurchase"
+        ? {
+            minimumPurchase: VALIDATORS.minimumPurchase(formData, ctx),
+            ...(name === "minimumPurchase" && !isBlank(formData.discountValue)
+              ? { discountValue: VALIDATORS.discountValue(formData, ctx) }
+              : {}),
+          }
+        : {}),
+    }));
   };
 
   const handleTypeChange = (e) => {
@@ -479,8 +513,9 @@ function CouponForm() {
                       id="discountValue"
                       name="discountValue"
                       type="number"
-                      min="0"
-                      step="any"
+                      min={isPercentage ? RULES.MIN_PERCENT : "0"}
+                      max={isPercentage ? RULES.MAX_DISCOUNT_PERCENT : undefined}
+                      step="0.01"
                       inputMode="decimal"
                       value={formData.discountValue}
                       onChange={handleChange}
@@ -510,7 +545,7 @@ function CouponForm() {
                       name="maximumDiscount"
                       type="number"
                       min="0"
-                      step="any"
+                      step="0.01"
                       inputMode="decimal"
                       value={formData.maximumDiscount}
                       onChange={handleChange}
@@ -527,7 +562,12 @@ function CouponForm() {
                   label="Min Purchase"
                   htmlFor="minimumPurchase"
                   error={errors.minimumPurchase}
-                  hint="Cart value needed to use this coupon. Empty = none."
+                  required={!isPercentage}
+                  hint={
+                    isPercentage
+                      ? "Cart value needed to use this coupon. Empty = none."
+                      : `Required for flat coupons. The discount can be at most ${RULES.MAX_DISCOUNT_PERCENT}% of it.`
+                  }
                 >
                   <div className="relative">
                     <Adornment>₹</Adornment>
@@ -536,7 +576,7 @@ function CouponForm() {
                       name="minimumPurchase"
                       type="number"
                       min="0"
-                      step="any"
+                      step="0.01"
                       inputMode="decimal"
                       value={formData.minimumPurchase}
                       onChange={handleChange}
