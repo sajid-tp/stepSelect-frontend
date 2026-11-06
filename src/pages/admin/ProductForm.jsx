@@ -579,6 +579,7 @@ const ProductForm = () => {
         search: "",
         page: 1,
         limit: 100,
+        status: "active", // blocked categories must not be selectable
       })
     );
 
@@ -2043,6 +2044,20 @@ const ProductForm = () => {
                     </option>
 
                   ))}
+
+                  {/* Edit mode: the product's current category may have been blocked after it was
+                      assigned. Keep it visible (labelled) so the select doesn't look empty; the
+                      server still rejects saving it, so the admin must pick an active one. */}
+                  {existingProduct?.category?.id &&
+                    !categories?.some(
+                      (category) =>
+                        String(category.id) ===
+                        String(existingProduct.category.id)
+                    ) && (
+                      <option value={existingProduct.category.id}>
+                        {existingProduct.category.name} (blocked)
+                      </option>
+                    )}
 
                 </select>
 

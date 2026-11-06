@@ -14,7 +14,8 @@ export const getCategories = createAsyncThunk(
       search = "",
       page = 1,
       sort,
-      status
+      status,
+      limit
     },
     { rejectWithValue }
   ) => {
@@ -26,7 +27,8 @@ export const getCategories = createAsyncThunk(
             search,
             page,
             sort,
-            status
+            status,
+            limit
           },
         }
       );
