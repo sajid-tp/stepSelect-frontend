@@ -597,6 +597,7 @@ const ProductForm = () => {
         search: "",
         page: 1,
         limit: 100,
+        status: "active", // blocked brands must not be selectable
       })
     );
 
@@ -2006,6 +2007,19 @@ const ProductForm = () => {
                     </option>
 
                   ))}
+
+                  {/* Edit mode: keep the product's current brand visible even if it was blocked
+                      later; the server still rejects saving it, so the admin must pick an active one. */}
+                  {existingProduct?.brand?.id &&
+                    !brands?.some(
+                      (brand) =>
+                        String(brand.id) ===
+                        String(existingProduct.brand.id)
+                    ) && (
+                      <option value={existingProduct.brand.id}>
+                        {existingProduct.brand.name} (blocked)
+                      </option>
+                    )}
 
                 </select>
 

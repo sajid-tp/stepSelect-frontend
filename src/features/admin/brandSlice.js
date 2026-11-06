@@ -9,13 +9,15 @@ import axiosInstance from "../../api/axiosInstance";
 
 export const getBrands = createAsyncThunk(
   "adminBrands/getBrands",
-  async ({ search = "", page = 1 ,sort} = {}, { rejectWithValue }) => {
+  async ({ search = "", page = 1, sort, status, limit } = {}, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/admin/brands", {
         params: {
           search,
           page,
-          sort
+          sort,
+          status,
+          limit
         },
       });
 
