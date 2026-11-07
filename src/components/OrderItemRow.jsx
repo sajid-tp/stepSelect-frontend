@@ -11,8 +11,8 @@ const primaryBtn =
   One product line on the Order Details page.
   Which buttons show depends on the ITEM status (the server also sends canCancel / canReturn):
 
-    pending                       -> Cancel
-    shipped / out for delivery    -> Track Item
+    pending (still processing)    -> Cancel item  (even if another item of the order has shipped)
+    shipped / out for delivery    -> Track Item   (no Cancel any more)
     delivered                     -> Track Item, Return
     return requested              -> Track Item
     cancelled / returned          -> no buttons

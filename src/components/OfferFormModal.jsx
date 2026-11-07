@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createOffer, getOfferOptions, updateOffer } from "../features/admin/offerSlice";
 import useDebounce from "../hooks/useDebounce";
@@ -35,6 +35,12 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
   const debouncedSearch = useDebounce(productSearch.trim(), 300);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const errorRef = useRef(null);
+
+  // The popup scrolls on small screens and the message sits near the bottom, so bring it into view
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [error]);
 
   // reset the form each time the modal opens
   useEffect(() => {
@@ -209,7 +215,7 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
         </div>
 
         {error && (
-          <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+          <p ref={errorRef} role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
         )}
 
         <div className="mt-6 flex justify-end gap-3">

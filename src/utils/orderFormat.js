@@ -54,8 +54,10 @@ export const getStatusMeta = (status) =>
 
 /* ---------- Which items may show which buttons ---------- */
 
-// Item has left the warehouse (or beyond), so tracking makes sense
+// Tracking is available from the moment the order is placed ("pending" = placed / processing),
+// through shipped and out for delivery, and stays available after delivery (and in the return flow)
 export const TRACKABLE_ITEM_STATUSES = [
+  "pending",
   "shipped",
   "out_for_delivery",
   "delivered",

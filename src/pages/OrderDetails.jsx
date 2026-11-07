@@ -41,11 +41,15 @@ const sectionLabel =
 
   Buttons follow the status (the server also sends canCancel / canReturn flags):
 
-    Pending                       item: Cancel item        bottom: Cancel order
-    Shipped / Out for delivery    item: Track item         (cancelling is closed by the server)
+    Pending (processing)          item: Cancel item        bottom: Cancel order
+    Shipped / Out for delivery    item: Track item         (no cancel any more, the server also refuses it)
     Delivered                     item: Track, Return
                                   bottom: Return order, Download invoice
     Cancelled                     no buttons
+
+  Cancel item: for every item that is still processing.
+  Cancel order: only while ALL items are still processing (before ANY item has shipped).
+  Shipped items can only be returned, once they are delivered.
 */
 function OrderDetails() {
   const { orderNumber } = useParams();
@@ -221,10 +225,18 @@ function OrderDetails() {
   const displayStatus = order?.displayStatus || order?.status;
   const isPaymentFailed = displayStatus === "payment_failed";
   const isCancelled = order?.status === "cancelled" && !isPaymentFailed;
-  const inTransit =
-    order?.status === "shipped" || order?.status === "out_for_delivery";
 
-  const showCancelOrder = Boolean(order?.canCancel);
+  // Has any item left processing? (shipped, out for delivery, delivered or in the return flow)
+  // The order badge follows the slowest item, so look at the items themselves: an order can still say
+  // "Processing" while one of its pairs is already on the way.
+  const leftProcessing = (order?.items || []).some(
+    (item) => item.status !== "pending" && item.status !== "cancelled"
+  );
+  const inTransit = leftProcessing && !isDelivered && !isCancelled;
+  const anyItemCancellable = (order?.items || []).some((item) => item.canCancel);
+
+  // Cancel order only while everything is still processing; a still-processing item keeps its own Cancel item
+  const showCancelOrder = Boolean(order?.canCancel) && !leftProcessing;
   const showReturnOrder = Boolean(order?.canReturn);
   const showInvoice = isDelivered && order?.canDownloadInvoice !== false;
   const hasBottomActions = showCancelOrder || showReturnOrder || showInvoice;
@@ -551,8 +563,11 @@ function OrderDetails() {
 
               {inTransit && (
                 <p className="mt-2 text-xs text-muted">
-                  This order has already left our warehouse, so it can no longer
-                  be cancelled. Once it's delivered you can return it if needed.
+                  Part of this order has already been shipped, so the whole order
+                  can no longer be cancelled.
+                  {anyItemCancellable &&
+                    " Items still being processed can be cancelled one by one."}
+                  {" "}Shipped items can be returned once they're delivered.
                 </p>
               )}
             </section>

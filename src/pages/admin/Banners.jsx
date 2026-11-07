@@ -471,7 +471,7 @@ function Banners() {
         />
 
         <section className="px-12 py-8">
-          <h2 className="mb-4 text-lg font-extrabold text-[#111]">Banners</h2>
+          {/* <h2 className="mb-4 text-lg font-extrabold text-[#111]">Banners</h2> */}
 
           {/* SEARCH */}
           <div className="relative mb-5 w-full max-w-[460px]">
@@ -484,7 +484,7 @@ function Banners() {
                 setPage(1);
               }}
               placeholder="Search banners"
-              className="h-10 w-full rounded-md border border-[#f1d6cc] bg-[#fdf1ec] pl-9 pr-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-[#ff5722] focus:bg-white"
+              className="h-10 w-full rounded-md border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-gray-400"
             />
           </div>
 

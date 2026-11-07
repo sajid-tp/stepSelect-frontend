@@ -38,8 +38,8 @@ const PAYMENT_STATUS_TEXT = {
   The order details are read-only. The admin changes the DELIVERY STATUS OF EACH PRODUCT:
   every item row has its own dropdown that lists exactly what the server allows right now
   (item.allowedStatuses):
-    forward only: Processing -> Shipped -> Out for Delivery -> Delivered
-    or Cancelled any time before that product is delivered.
+    one step at a time: Processing -> Shipped -> (Out for Delivery) -> Delivered
+    (Shipped can also go straight to Delivered), or Cancelled while it is still Processing.
   Delivered and Cancelled products are final, so they show no dropdown.
   The order status on the right is worked out by the server from its products
   (it shows the product that is furthest behind), so it is never edited by hand.

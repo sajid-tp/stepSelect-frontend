@@ -15,8 +15,8 @@ import axiosInstance from "../../api/axiosInstance";
 |
 | Every PRODUCT (item) of an order has its own delivery status. The order's
 | status is worked out by the server from its items, so it is never edited.
-| The server decides which status changes are allowed (forward only,
-| cancel only before delivery) and sends them in each item's
+| The server decides which status changes are allowed (one step forward,
+| cancel only while still pending) and sends them in each item's
 | `allowedStatuses`, so this slice and the pages never repeat those rules.
 */
 
