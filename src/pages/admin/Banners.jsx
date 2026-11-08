@@ -20,7 +20,7 @@ import {
 | CONSTANTS
 |--------------------------------------------------------------------------
 */
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 9; // three full rows of the 3-column card grid
 const IMAGE_MAX_MB = 5;
 const TITLE_MIN = 2;
 const TITLE_MAX = 80;
@@ -170,7 +170,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="banner-form-title"
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+        className="w-full max-w-3xl rounded-xl bg-white p-6 shadow-xl"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <h2 id="banner-form-title" className="text-lg font-bold text-gray-900">
@@ -187,8 +187,9 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
           </button>
         </div>
 
+        <div className="grid gap-6 md:grid-cols-[300px_1fr]">
         {/* Picture */}
-        <div className="mb-4">
+        <div>
           <label className="mb-1 block text-xs font-semibold text-gray-600">Banner image</label>
           <button
             type="button"
@@ -222,6 +223,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
           {errors.image && <p className="mt-1 text-xs font-medium text-red-500">{errors.image}</p>}
         </div>
 
+        <div>
         {/* Title */}
         <div className="mb-4">
           <label htmlFor="banner-title" className="mb-1 block text-xs font-semibold text-gray-600">
@@ -278,7 +280,7 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         </div>
 
         {/* Visible */}
-        <div className="mb-5 flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-gray-800">Visible on landing page</p>
             <p className="text-xs text-gray-500">Switch off to keep the banner saved but hidden.</p>
@@ -290,13 +292,16 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
           />
         </div>
 
+        </div>
+        </div>
+
         {serverError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
             {serverError}
           </div>
         )}
 
-        <div className="flex justify-end gap-3">
+        <div className="mt-5 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
@@ -474,8 +479,8 @@ function Banners() {
           {/* <h2 className="mb-4 text-lg font-extrabold text-[#111]">Banners</h2> */}
 
           {/* SEARCH */}
-          <div className="relative mb-5 w-full max-w-[460px]">
-            <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-gray-500" />
+          <div className="relative mb-6 w-full max-w-[420px]">
+            <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
             <input
               type="text"
               value={search}
@@ -484,12 +489,12 @@ function Banners() {
                 setPage(1);
               }}
               placeholder="Search banners"
-              className="h-10 w-full rounded-md border border-gray-200 bg-white pl-9 pr-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-500 focus:border-gray-400"
+              className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10"
             />
           </div>
 
           {/* TABS */}
-          <div className="mb-5 flex items-center gap-7 border-b border-gray-200">
+          <div className="mb-8 flex items-center gap-8 border-b border-gray-200">
             {TABS.map((t) => (
               <button
                 key={t.value}
@@ -498,8 +503,8 @@ function Banners() {
                   setTab(t.value);
                   setPage(1);
                 }}
-                className={`relative pb-3 text-xs font-semibold transition ${
-                  tab === t.value ? "text-[#111]" : "text-gray-500 hover:text-gray-800"
+                className={`relative pb-3 text-sm font-medium transition ${
+                  tab === t.value ? "text-[#071a33]" : "text-gray-500 hover:text-gray-800"
                 }`}
               >
                 {t.label}
@@ -534,28 +539,36 @@ function Banners() {
             </div>
           )}
 
-          {/* LIST */}
-          <div className={`space-y-3 transition-opacity ${isLoading && !showSkeleton ? "opacity-60" : ""}`}>
+          {/* LIST (card grid, same as the Coupons page) */}
+          <div
+            className={`grid grid-cols-1 gap-5 transition-opacity md:grid-cols-2 xl:grid-cols-3 ${
+              isLoading && !showSkeleton ? "opacity-60" : ""
+            }`}
+          >
             {showSkeleton &&
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-[154px] animate-pulse rounded-lg border border-gray-100 bg-white" />
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-[300px] animate-pulse rounded-xl border border-gray-200 bg-white" />
               ))}
 
             {!showSkeleton &&
               banners.map((b) => (
                 <div
                   key={b.id}
-                  className="flex items-center gap-5 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                  className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                 >
-                  <img
-                    src={b.image}
-                    alt={b.title}
-                    className={`h-[120px] w-[168px] shrink-0 rounded-md object-cover ${b.isActive ? "" : "opacity-50 grayscale"}`}
-                  />
+                  {/* the picture keeps its 7:5 shape, so it is never cropped or stretched */}
+                  <div className="aspect-[7/5] w-full bg-gray-100">
+                    <img
+                      src={b.image}
+                      alt={b.title}
+                      className={`h-full w-full object-cover ${b.isActive ? "" : "opacity-50 grayscale"}`}
+                    />
+                  </div>
 
-                  <div className="min-w-0 flex-1">
+                  <div className="flex flex-1 flex-col p-4">
                     <p
-                      className={`truncate text-base font-bold ${b.isActive ? "text-[#111]" : "text-gray-500"}`}
+                      title={b.title}
+                      className={`truncate text-base font-bold ${b.isActive ? "text-[#071a33]" : "text-gray-500"}`}
                     >
                       {b.title}
                     </p>
@@ -563,66 +576,64 @@ function Banners() {
                       <i className="fa-regular fa-eye text-[10px]" />
                       Slot: Hero Slider #{b.displayOrder}
                     </p>
-                  </div>
 
-                  <div className="hidden h-9 w-px bg-gray-200 sm:block" />
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-gray-100 pt-3">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={b.isActive}
+                          onChange={() => setToggleTarget(b)}
+                          disabled={togglingId === b.id}
+                          label={`${b.isActive ? "Hide" : "Show"} ${b.title}`}
+                        />
+                        <span className="text-[10px] font-medium text-gray-500">
+                          {b.isActive ? "Visible on Landing" : "Hidden"}
+                        </span>
+                      </div>
 
-                  <div className="flex w-[150px] items-center gap-2">
-                    <Switch
-                      checked={b.isActive}
-                      onChange={() => setToggleTarget(b)}
-                      disabled={togglingId === b.id}
-                      label={`${b.isActive ? "Hide" : "Show"} ${b.title}`}
-                    />
-                    <span className="text-[10px] font-medium text-gray-500">
-                      {b.isActive ? "Visible on Landing" : "Hidden"}
-                    </span>
-                  </div>
-
-                  <div className="hidden h-9 w-px bg-gray-200 sm:block" />
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(b)}
-                      className="rounded border border-gray-400 bg-white px-4 py-1.5 text-xs font-semibold text-gray-800 transition hover:bg-gray-100"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleting(b)}
-                      aria-label={`Delete ${b.title}`}
-                      className="flex h-8 w-8 items-center justify-center rounded text-gray-500 transition hover:bg-red-50 hover:text-red-600"
-                    >
-                      <i className="fa-regular fa-trash-can text-sm" />
-                    </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(b)}
+                          className="rounded border border-gray-300 bg-white px-4 py-1.5 text-xs font-semibold text-gray-800 transition hover:bg-gray-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleting(b)}
+                          aria-label={`Delete ${b.title}`}
+                          className="flex h-8 w-8 items-center justify-center rounded text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                        >
+                          <i className="fa-regular fa-trash-can text-sm" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
-
-            {/* EMPTY */}
-            {!isLoading && !error && banners.length === 0 && (
-              <div className="flex min-h-[240px] flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white px-6 text-center">
-                <i className="fa-regular fa-image text-4xl text-gray-300" />
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">No banners found</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {hasFilters
-                    ? "Try a different search or tab."
-                    : "Upload your first banner to show it on the landing page."}
-                </p>
-                {!hasFilters && (
-                  <button
-                    type="button"
-                    onClick={openNew}
-                    className="mt-4 rounded-md bg-[#ff5722] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#f4511e]"
-                  >
-                    Upload new banner
-                  </button>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* EMPTY */}
+          {!isLoading && !error && banners.length === 0 && (
+            <div className="flex min-h-[380px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-6 text-center">
+              <i className="fa-regular fa-image text-4xl text-gray-300" />
+              <h3 className="mt-4 text-lg font-semibold text-gray-900">No banners found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {hasFilters
+                  ? "Try a different search or tab."
+                  : "Upload your first banner to show it on the landing page."}
+              </p>
+              {!hasFilters && (
+                <button
+                  type="button"
+                  onClick={openNew}
+                  className="mt-4 rounded-lg bg-[#ff5722] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#f4511e]"
+                >
+                  Upload new banner
+                </button>
+              )}
+            </div>
+          )}
 
           {/* PAGINATION */}
           {banners.length > 0 && (

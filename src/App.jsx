@@ -18,6 +18,7 @@ import Wishlist from "./pages/Wishlist";
 import AdminDashboard from './pages/admin/AdminDashboard';
 import BlockedModal from './components/BlockedModal';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import TabIdentity from './components/TabIdentity';
 import Categories from "./pages/admin/Categories";
 import CategoryForm from "./pages/admin/CategoryForm";
 import Brands from "./pages/admin/Brands";
@@ -57,6 +58,7 @@ import ProductForm
 function App() {
   return (
     <BrowserRouter>
+    <TabIdentity />
     <BlockedModal/>
     <DemoRazorpayHost />
     <PaymentFailureModal />

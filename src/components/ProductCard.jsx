@@ -137,16 +137,6 @@ function ProductCard({
           )}
         </div>
 
-        {/* OFFER NAME (product or category offer) */}
-        {product?.offer && discountPercent > 0 && (
-          <p
-            className="mt-1 line-clamp-1 text-[11px] font-semibold text-[#f4511e]"
-            title={`${product.offer.name} (${product.offer.source} offer)`}
-          >
-            {product.offer.name} · save ₹{(price - discountedPrice).toLocaleString("en-IN")}
-          </p>
-        )}
-
         {/* REFERRAL OFFER (customers who signed up through a referral) */}
         <ReferralOfferNote variant="compact" />
 

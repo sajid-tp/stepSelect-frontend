@@ -195,6 +195,14 @@ function Checkout() {
     dispatch(fetchCheckout());
   }, [dispatch]);
 
+  /* ---------- if the chosen payment method is not offered (e.g. COD above its limit), pick another ---------- */
+  useEffect(() => {
+    if (!data || data.paymentMethods.includes(paymentMethod)) return;
+    setPaymentMethod(
+      data.paymentMethods.find((m) => m !== "WALLET") || data.paymentMethods[0] || "COD"
+    );
+  }, [data, paymentMethod]);
+
   /* ---------- keep a valid address selected (default first) ---------- */
   useEffect(() => {
     if (!data) return;
@@ -283,12 +291,15 @@ function Checkout() {
     Boolean(data?.canPlaceOrder) &&
     Boolean(selectedAddressId) &&
     !hasItemIssue &&
+    !data?.limitIssue &&
+    Boolean(data?.paymentMethods.includes(paymentMethod)) &&
     !walletTooLow &&
     !placing &&
     !refreshing;
 
   let placeHint = "";
   if (hasItemIssue) placeHint = "Some items in your cart are unavailable.";
+  else if (data?.limitIssue) placeHint = data.limitIssue;
   else if (!selectedAddressId) placeHint = "Select or add a delivery address.";
 
   /* ---------- confirmation modal text ---------- */
@@ -472,7 +483,17 @@ function Checkout() {
 
                     let shownOption = option;
                     if (!enabled) {
-                      shownOption = { ...option, note: "Not available right now" };
+                      const codTooHigh =
+                        option.id === "COD" &&
+                        data.limits &&
+                        pricing &&
+                        pricing.totalAmount > data.limits.maxCodOrderValue;
+                      shownOption = {
+                        ...option,
+                        note: codTooHigh
+                          ? `Available only for orders up to ${formatMoney(data.limits.maxCodOrderValue)}`
+                          : "Not available right now",
+                      };
                     } else if (option.id === "WALLET") {
                       shownOption = { ...option, note: `Balance ${formatMoney(walletBalance)}` };
                     }

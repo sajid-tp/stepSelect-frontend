@@ -23,7 +23,7 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
   const [amount, setAmount] = useState("");
   const [localError, setLocalError] = useState("");
 
-  const min = limits?.MIN_TOP_UP ?? 1;
+  const min = limits?.MIN_TOP_UP ?? 100;
   const max = limits?.MAX_TOP_UP ?? 50000;
 
   // Escape closes the window

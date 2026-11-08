@@ -625,8 +625,9 @@ function OrderEdit() {
               Approve this return?
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              The customer's refund goes to their wallet. Choose what happens to the returned
-              stock.
+              {approveItem.returnIsDamage
+                ? "The customer's refund goes to their wallet."
+                : "The customer's refund goes to their wallet. Read the reason and description below, then choose what happens to the returned stock."}
             </p>
 
             <div className="mt-4 rounded-lg border border-orange-100 bg-orange-50 p-3 text-xs text-gray-600">
@@ -646,6 +647,13 @@ function OrderEdit() {
               )}
             </div>
 
+            {approveItem.returnIsDamage ? (
+              <p className="mt-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-xs text-red-600">
+                This return is for a damaged / defective product, so the units are{" "}
+                <span className="font-semibold">not added to stock</span>. The stock stays as it
+                is.
+              </p>
+            ) : (
             <fieldset className="mt-4 space-y-2" disabled={returnBusy}>
               <legend className="mb-1 text-xs font-semibold text-gray-600">
                 Are the returned items fit to sell again?
@@ -686,6 +694,7 @@ function OrderEdit() {
                 </label>
               ))}
             </fieldset>
+            )}
 
             <div className="mt-5 flex justify-end gap-3">
               <button
@@ -699,9 +708,14 @@ function OrderEdit() {
               <button
                 type="button"
                 onClick={() =>
-                  doReturn(approveItem.id, "approve", "", stockChoice === "add")
+                  doReturn(
+                    approveItem.id,
+                    "approve",
+                    "",
+                    approveItem.returnIsDamage ? false : stockChoice === "add"
+                  )
                 }
-                disabled={returnBusy || !stockChoice}
+                disabled={returnBusy || (!approveItem.returnIsDamage && !stockChoice)}
                 className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {returnBusy ? "Approving..." : "Approve return"}
