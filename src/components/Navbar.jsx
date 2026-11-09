@@ -114,7 +114,7 @@ function Navbar() {
     } finally {
       setLoggingOut(false);
       setLogoutModalOpen(false);
-      navigate("/login", { replace: true });
+      navigate("/login", { replace: true, state: { loggedOut: true } });
     }
   };
 

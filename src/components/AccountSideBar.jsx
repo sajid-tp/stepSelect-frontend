@@ -55,6 +55,7 @@ export default function AccountSidebar() {
 
       navigate('/login', {
         replace: true,
+        state: { loggedOut: true },
       });
     } catch (error) {
       console.error('Logout failed:', error);
@@ -64,6 +65,7 @@ export default function AccountSidebar() {
 
       navigate('/login', {
         replace: true,
+        state: { loggedOut: true },
       });
     } finally {
       setLoggingOut(false);

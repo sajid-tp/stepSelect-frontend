@@ -25,6 +25,8 @@ import Brands from "./pages/admin/Brands";
 import BrandForm from "./pages/admin/BrandForm";
 import Shop from "./pages/Shop";
 import GuestRoute from './components/GuestRoute';
+import ProtectedRoute from './components/ProtectedRoute';
+import SessionGuard from './components/SessionGuard';
 import ProductDetailsPage from "./pages/ProductDetails"
 import Coupons from "./pages/admin/Coupons";
 import Offers from "./pages/admin/Offers";
@@ -59,6 +61,7 @@ function App() {
   return (
     <BrowserRouter>
     <TabIdentity />
+    <SessionGuard />
     <BlockedModal/>
     <DemoRazorpayHost />
     <PaymentFailureModal />
@@ -74,28 +77,31 @@ function App() {
         <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
-        <Route path="/profile" element={<AccountOverview />} />
-        <Route path="/profile/edit" element={<EditProfile />} />
-        <Route path="/profile/change-email" element={<ChangeEmail/>} />
-        <Route path="/profile/addresses" element={<Addresses />} />
-        <Route path="/profile/wallet" element={<Wallet />} />
-        <Route path="/profile/addresses/new" element={<AddressForm />} />
-        <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/shop" element={<Shop />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route
-  path="/order-success/:orderNumber"
-  element={<OrderSuccess />}
-/>
-        <Route path="/payment-success/:orderNumber" element={<PaymentSuccessPage />} />
-        <Route path="/payment-failed/:orderNumber" element={<PaymentFailedPage />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/orders/:orderNumber" element={<OrderDetails />} />
-        <Route path="/wishlist" element={<Wishlist />} />
+        {/* Customer-only pages: redirect to /login when signed out */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<AccountOverview />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/profile/change-email" element={<ChangeEmail/>} />
+          <Route path="/profile/addresses" element={<Addresses />} />
+          <Route path="/profile/wallet" element={<Wallet />} />
+          <Route path="/profile/addresses/new" element={<AddressForm />} />
+          <Route path="/profile/addresses/edit/:id" element={<AddressForm />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route
+    path="/order-success/:orderNumber"
+    element={<OrderSuccess />}
+  />
+          <Route path="/payment-success/:orderNumber" element={<PaymentSuccessPage />} />
+          <Route path="/payment-failed/:orderNumber" element={<PaymentFailedPage />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:orderNumber" element={<OrderDetails />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+        </Route>
         <Route
   path="/products/:productId"
   element={<ProductDetailsPage />}

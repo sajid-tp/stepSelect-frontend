@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
@@ -16,6 +16,8 @@ function Login() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const navigationType = useNavigationType();
 
   const status = useSelector((state) => state.auth.status);
   const error = useSelector((state) => state.auth.error);
@@ -66,6 +68,17 @@ function Login() {
   useEffect(()=>{
     dispatch(clearAuthError());
   },[dispatch])
+
+  // After a logout, Back must not return to the signed-in pages. We land here with
+  // state.loggedOut; each time this page is reached by Back (POP) or by the logout
+  // redirect (REPLACE) we add one more /login entry on top, so Back keeps the person here.
+  useEffect(() => {
+    if (!location.state?.loggedOut) return;
+    if (navigationType === 'POP' || navigationType === 'REPLACE') {
+      navigate('/login', { state: { loggedOut: true } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   
 
