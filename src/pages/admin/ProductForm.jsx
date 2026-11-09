@@ -100,8 +100,6 @@ const RULES = {
   DESCRIPTION_MIN: 20,
   DESCRIPTION_MAX: 1000,
 
-  PRICE_MAX: 1000000,
-
   STOCK_MAX: 100000,
 
   MIN_IMAGES: 3, // backend: "A variant must have minimum 3 images."
@@ -244,10 +242,6 @@ const validatePrice = (value) => {
 
   if (number <= 0) {
     return "Price must be greater than 0.";
-  }
-
-  if (number > RULES.PRICE_MAX) {
-    return `Price cannot exceed ₹${RULES.PRICE_MAX.toLocaleString()}.`;
   }
 
   // Maximum 2 decimal places

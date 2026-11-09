@@ -12,6 +12,7 @@ import {
 import AdminSidebar
   from "../../components/AdminSideBar";
 import AdminPageHeader from "../../components/AdminPageHeader";
+import AdminTabsSort from "../../components/AdminTabsSort";
 
 import AdminEntityCard
   from "../../components/AdminEntityCard";
@@ -40,6 +41,13 @@ const SORT_OPTIONS = [
   { value: "oldest", label: "Oldest first" },
   { value: "name_asc", label: "Name (A → Z)" },
   { value: "name_desc", label: "Name (Z → A)" },
+];
+
+
+const STATUS_TABS = [
+  { value: "all", label: "All brands" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
 ];
 
 
@@ -498,220 +506,16 @@ function Brands() {
           {/* TABS + SORT */}
           {/* ================================================= */}
 
-          <div
-            className="
-              mb-10
-              flex
-              items-end
-              justify-between
-              border-b
-              border-gray-200
-            "
-          >
-
-            {/* TABS */}
-
-            <div
-              className="
-                flex
-                items-center
-                gap-9
-              "
-            >
-
-              {/* ALL BRANDS */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleTabChange("all")
-                }
-                className={`
-                  relative
-                  pb-4
-                  text-sm
-                  font-medium
-                  transition
-                  ${
-                    activeTab === "all"
-                      ? "text-[#071a33]"
-                      : "text-gray-500 hover:text-gray-800"
-                  }
-                `}
-              >
-
-                All brands
-
-                {activeTab === "all" && (
-
-                  <span
-                    className="
-                      absolute
-                      bottom-0
-                      left-0
-                      h-[2px]
-                      w-full
-                      bg-[#ff5722]
-                    "
-                  />
-
-                )}
-
-              </button>
-
-
-              {/* ACTIVE */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleTabChange("active")
-                }
-                className={`
-                  relative
-                  pb-4
-                  text-sm
-                  font-medium
-                  transition
-                  ${
-                    activeTab === "active"
-                      ? "text-[#071a33]"
-                      : "text-gray-500 hover:text-gray-800"
-                  }
-                `}
-              >
-
-                Active
-
-                {activeTab === "active" && (
-
-                  <span
-                    className="
-                      absolute
-                      bottom-0
-                      left-0
-                      h-[2px]
-                      w-full
-                      bg-[#ff5722]
-                    "
-                  />
-
-                )}
-
-              </button>
-
-
-              {/* INACTIVE */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleTabChange("inactive")
-                }
-                className={`
-                  relative
-                  pb-4
-                  text-sm
-                  font-medium
-                  transition
-                  ${
-                    activeTab === "inactive"
-                      ? "text-[#071a33]"
-                      : "text-gray-500 hover:text-gray-800"
-                  }
-                `}
-              >
-
-                Inactive
-
-                {activeTab === "inactive" && (
-
-                  <span
-                    className="
-                      absolute
-                      bottom-0
-                      left-0
-                      h-[2px]
-                      w-full
-                      bg-[#ff5722]
-                    "
-                  />
-
-                )}
-
-              </button>
-
-            </div>
-
-
-            {/* SORT DROPDOWN */}
-
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                pb-3
-              "
-            >
-
-              <label
-                htmlFor="brand-sort"
-                className="
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wide
-                  text-gray-400
-                "
-              >
-                Sort by
-              </label>
-
-
-              <select
-                id="brand-sort"
-                value={sort}
-                onChange={
-                  handleSortChange
-                }
-                className="
-                  cursor-pointer
-                  rounded-lg
-                  border
-                  border-gray-300
-                  bg-white
-                  py-2
-                  pl-3
-                  pr-8
-                  text-sm
-                  text-gray-700
-                  outline-none
-                  transition
-                  focus:border-[#ff5722]
-                  focus:ring-1
-                  focus:ring-[#ff5722]
-                "
-              >
-
-                {SORT_OPTIONS.map(
-                  (opt) => (
-
-                    <option
-                      key={opt.value}
-                      value={opt.value}
-                    >
-                      {opt.label}
-                    </option>
-
-                  )
-                )}
-
-              </select>
-
-            </div>
-
-          </div>
+          <AdminTabsSort
+            className="mt-14 mb-10"
+            tabs={STATUS_TABS}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            sortOptions={SORT_OPTIONS}
+            sort={sort}
+            onSortChange={handleSortChange}
+            sortId="brand-sort"
+          />
 
 
           {/* ================================================= */}

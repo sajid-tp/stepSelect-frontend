@@ -24,18 +24,15 @@ import {
 |--------------------------------------------------------------------------
 */
 
+// Name and description use the same numbers as server/src/constants/brandConstants.js - change both together.
 const RULES = {
   NAME_MIN: 2,
   NAME_MAX: 50,
 
-  DESCRIPTION_MIN: 10,
   DESCRIPTION_MAX: 500,
 
   LOGO_MAX: 500,
 };
-
-// Starts with a letter/number; allows letters, numbers, spaces and  - ' . , & ( ) !
-const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s\-'.,&()!]*$/;
 
 // Collapses repeated spaces: "New   Balance " -> "New Balance"
 const normalizeSpaces = (value) =>
@@ -57,32 +54,16 @@ const validateBrandName = (value) => {
     return `Brand name cannot exceed ${RULES.NAME_MAX} characters.`;
   }
 
-  if (!NAME_REGEX.test(name)) {
-    return "Brand name must start with a letter or number and can only contain letters, numbers, spaces and - ' . , & ( ) !";
-  }
-
   return "";
 };
 
 
-// Description is optional, but if it is entered it must be meaningful
+// Description is optional, but cannot be longer than the maximum
 const validateDescription = (value) => {
   const text = String(value || "").trim();
 
-  if (!text) {
-    return "";
-  }
-
-  if (text.length < RULES.DESCRIPTION_MIN) {
-    return `Description must be at least ${RULES.DESCRIPTION_MIN} characters (or leave it empty).`;
-  }
-
   if (text.length > RULES.DESCRIPTION_MAX) {
     return `Description cannot exceed ${RULES.DESCRIPTION_MAX} characters.`;
-  }
-
-  if (!/[A-Za-z]/.test(text)) {
-    return "Description must contain readable text, not only numbers or symbols.";
   }
 
   return "";
@@ -220,9 +201,13 @@ function BrandForm() {
       [name]: value,
     }));
 
+    // Once a field shows an error, re-check it on every keystroke so the
+    // red message updates (or disappears) as soon as the value is fixed
     setErrors((previous) => ({
       ...previous,
-      [name]: "",
+      [name]: previous[name] && VALIDATORS[name]
+        ? VALIDATORS[name](value)
+        : "",
     }));
 
     if (name === "logo") {
@@ -523,6 +508,9 @@ function BrandForm() {
                   "
                 >
                   Description
+                  <span className="ml-1 text-xs font-normal text-gray-400">
+                    (optional)
+                  </span>
                 </label>
 
 
@@ -546,7 +534,9 @@ function BrandForm() {
                       {errors.description}
                     </p>
                   ) : (
-                    <span />
+                    <p className="text-xs text-gray-400">
+                      Optional. Maximum {RULES.DESCRIPTION_MAX} characters.
+                    </p>
                   )}
 
                   <p className="text-xs text-gray-400">

@@ -46,7 +46,7 @@ export const addToCart = createAsyncThunk(
 
 // =====================================================
 // QUICK ADD (shop card, no size picker)
-// Uses the first colour that has an in-stock size.
+// Uses the cheapest colour (the one the Shop card shows) that has an in-stock size.
 // =====================================================
 
 export const quickAddToCart = createAsyncThunk(
@@ -56,8 +56,13 @@ export const quickAddToCart = createAsyncThunk(
       const details = await axiosInstance.get(`/products/${productId}`);
       const variants = details.data.data?.variants || [];
 
+      // Cheapest colour first = the colour the Shop card shows (same rule as the Shop list and the details page)
+      const byPrice = [...variants].sort(
+        (a, b) => Number(a.price) - Number(b.price)
+      );
+
       let pick = null;
-      for (const variant of variants) {
+      for (const variant of byPrice) {
         const size = (variant.sizes || []).find((s) => s.quantity > 0);
         if (size) {
           pick = { variantId: variant.id, size: size.size };

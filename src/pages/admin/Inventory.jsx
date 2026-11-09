@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import AdminSidebar from "../../components/AdminSideBar";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import Pagination from "../../components/Pagination";
 import { formatMoney } from "../../components/CartItem";
 import useDebounce from "../../hooks/useDebounce";
@@ -433,54 +434,31 @@ function Inventory() {
               />
             </div>
 
-            <div className="flex items-center gap-3">
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="text-sm font-semibold text-[#ff5722] transition hover:underline"
-                >
-                  Clear
-                </button>
-              )}
-              <select
-                value={sort}
-                onChange={(e) => {
-                  setSort(e.target.value);
-                  setPage(1);
-                }}
-                aria-label="Sort inventory"
-                className="h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10"
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-sm font-semibold text-[#ff5722] transition hover:underline"
               >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                Clear
+              </button>
+            )}
           </div>
 
-          {/* TABS */}
-          <div className="mb-6 flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-gray-200">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => handleTabChange(t.value)}
-                className={`relative pb-3 text-sm font-medium transition ${
-                  tab === t.value
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t.label}
-                {tab === t.value && (
-                  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#ff5722]" />
-                )}
-              </button>
-            ))}
-          </div>
+          {/* TABS + SORT */}
+          <AdminTabsSort
+            className="mt-14 mb-8"
+            tabs={TABS}
+            activeTab={tab}
+            onTabChange={handleTabChange}
+            sortOptions={SORT_OPTIONS}
+            sort={sort}
+            onSortChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
+            sortId="inventory-sort"
+          />
 
           {/* LIST ERROR */}
           {error && (

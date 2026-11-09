@@ -19,7 +19,26 @@ import AdminSidebar from "../../components/AdminSideBar";
 import {
   createCategory,
   updateCategory,
+  resetCategoryFormState,
 } from "../../features/admin/categorySlice";
+
+// Same numbers as ICON_CLASS_LIMITS in server/src/constants/categoryConstants.js - change both together.
+const ICON_CLASS_RULES = { MIN: 3, MAX: 100 };
+// Letters, numbers, spaces and hyphens only
+const ICON_CLASS_REGEX = /^[A-Za-z0-9 -]+$/;
+// server messages about the icon class ("Icon class is required", "Icon class must be ...")
+const ICON_CLASS_ERROR_REGEX = /icon class/i;
+
+// Same numbers as NAME_LIMITS in server/src/constants/categoryConstants.js - change both together.
+const NAME_RULES = { MIN: 2, MAX: 50 };
+// server messages about the name ("Category name is required.", "Category name must be ...")
+const NAME_ERROR_REGEX = /^category name/i;
+
+// Same numbers as DESCRIPTION_LIMITS in server/src/constants/categoryConstants.js - change both together.
+// The description is optional, so there is no minimum.
+const DESCRIPTION_RULES = { MAX: 500 };
+// server messages about the description ("Description must be ...", "Description cannot exceed ...")
+const DESCRIPTION_ERROR_REGEX = /^description/i;
 
 
 function CategoryForm() {
@@ -76,11 +95,15 @@ function CategoryForm() {
     handleSubmit,
     watch,
     reset,
+    setError,
     formState: {
       errors,
     },
 
   } = useForm({
+
+    // show the red message after leaving a field, then update it live while typing
+    mode: "onTouched",
 
     defaultValues: {
 
@@ -93,6 +116,14 @@ function CategoryForm() {
     },
 
   });
+
+
+  // clear any old create/update error left in the store from an earlier visit to this form
+  useEffect(() => {
+
+    dispatch(resetCategoryFormState());
+
+  }, [dispatch]);
 
 
   useEffect(() => {
@@ -127,6 +158,12 @@ function CategoryForm() {
   const iconClass =
     watch("iconClass");
 
+  const nameValue =
+    watch("categoryName") || "";
+
+  const descriptionValue =
+    watch("description") || "";
+
 
   const onSubmit = async (data) => {
 
@@ -136,7 +173,7 @@ function CategoryForm() {
         data.categoryName.trim(),
 
       iconClass:
-        data.iconClass.trim(),
+        data.iconClass.trim().replace(/\s+/g, " "),
 
       description:
         data.description.trim(),
@@ -174,6 +211,33 @@ function CategoryForm() {
       );
 
     } catch (error) {
+
+      // show the server's icon class error right under the icon class field
+      const message =
+        typeof error === "string"
+          ? error
+          : error?.message || "";
+
+      if (NAME_ERROR_REGEX.test(message)) {
+        setError("categoryName", {
+          type: "server",
+          message,
+        });
+      }
+
+      if (ICON_CLASS_ERROR_REGEX.test(message)) {
+        setError("iconClass", {
+          type: "server",
+          message,
+        });
+      }
+
+      if (DESCRIPTION_ERROR_REGEX.test(message)) {
+        setError("description", {
+          type: "server",
+          message,
+        });
+      }
 
       console.error(
         isEditMode
@@ -431,7 +495,10 @@ function CategoryForm() {
             {/* ERROR */}
             {/* ================================================= */}
 
-            {formError && (
+            {formError &&
+              !NAME_ERROR_REGEX.test(formError) &&
+              !ICON_CLASS_ERROR_REGEX.test(formError) &&
+              !DESCRIPTION_ERROR_REGEX.test(formError) && (
 
               <div
                 className="
@@ -497,6 +564,7 @@ function CategoryForm() {
                 <input
                   id="categoryName"
                   type="text"
+                  maxLength={NAME_RULES.MAX}
                   placeholder="Enter category name"
                   {...register(
                     "categoryName",
@@ -504,9 +572,15 @@ function CategoryForm() {
                       required:
                         "Category name is required",
 
-                      validate: (value) =>
-                        (value.trim().length >= 3 && value.trim().length<20) ||
-                        "Category name should be between 3 and 20 characters",
+                      validate: (value) => {
+                        const name = value.trim().replace(/\s+/g, " ");
+                        if (!name) return "Category name is required";
+                        if (name.length < NAME_RULES.MIN)
+                          return `Category name must be at least ${NAME_RULES.MIN} characters`;
+                        if (name.length > NAME_RULES.MAX)
+                          return `Category name cannot exceed ${NAME_RULES.MAX} characters`;
+                        return true;
+                      },
                     }
                   )}
                   className={`
@@ -529,19 +603,31 @@ function CategoryForm() {
                 />
 
 
-                {errors.categoryName && (
+                <div className="mt-1.5 flex justify-between">
 
-                  <p
-                    className="
-                      mt-1.5
-                      text-xs
-                      text-red-500
-                    "
-                  >
-                    {errors.categoryName.message}
+                  {errors.categoryName ? (
+
+                    <p
+                      className="
+                        text-xs
+                        text-red-500
+                      "
+                    >
+                      {errors.categoryName.message}
+                    </p>
+
+                  ) : (
+
+                    <span />
+
+                  )}
+
+
+                  <p className="text-xs text-gray-400">
+                    {nameValue.length}/{NAME_RULES.MAX}
                   </p>
 
-                )}
+                </div>
 
               </div>
 
@@ -582,6 +668,7 @@ function CategoryForm() {
                   <input
                     id="iconClass"
                     type="text"
+                    maxLength={ICON_CLASS_RULES.MAX}
                     placeholder="fa-solid fa-mobile-screen"
                     {...register(
                       "iconClass",
@@ -589,9 +676,18 @@ function CategoryForm() {
                         required:
                           "Icon class is required",
 
-                        validate: (value) =>
-                          value.trim().length > 0 ||
-                          "Icon class is required",
+                        validate: (value) => {
+                          const icon = value.trim();
+                          if (!icon) return "Icon class is required";
+                          if (
+                            icon.length < ICON_CLASS_RULES.MIN ||
+                            icon.length > ICON_CLASS_RULES.MAX
+                          )
+                            return `Icon class must be ${ICON_CLASS_RULES.MIN} to ${ICON_CLASS_RULES.MAX} characters`;
+                          if (!ICON_CLASS_REGEX.test(icon))
+                            return "Only letters, numbers, spaces and hyphens are allowed";
+                          return true;
+                        },
                       }
                     )}
                     className={`
@@ -614,72 +710,44 @@ function CategoryForm() {
                   />
 
 
-                  {/* PREVIEW */}
-
-                  <div
-                    className="
-                      flex
-                      h-12
-                      w-12
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-lg
-                      border
-                      border-gray-200
-                      bg-gray-50
-                      text-xl
-                      text-[#ff5722]
-                    "
-                  >
-
-                    {iconClass?.trim() ? (
-
-                      <i
-                        className={iconClass}
-                      />
-
-                    ) : (
-
-                      <span
-                        className="
-                          text-gray-300
-                        "
-                      >
-                        ?
-                      </span>
-
-                    )}
-
-                  </div>
-
                 </div>
 
 
-                {errors.iconClass && (
+                <div className="mt-1.5 flex justify-between gap-4">
 
-                  <p
-                    className="
-                      mt-1.5
-                      text-xs
-                      text-red-500
-                    "
-                  >
-                    {errors.iconClass.message}
+                  <div>
+
+                    {errors.iconClass && (
+
+                      <p
+                        className="
+                          text-xs
+                          text-red-500
+                        "
+                      >
+                        {errors.iconClass.message}
+                      </p>
+
+                    )}
+
+
+                    <p
+                      className="
+                        text-xs
+                        text-gray-400
+                      "
+                    >
+                      Example: fa-solid fa-mobile-screen
+                    </p>
+
+                  </div>
+
+
+                  <p className="shrink-0 text-xs text-gray-400">
+                    {iconClass?.length || 0}/{ICON_CLASS_RULES.MAX}
                   </p>
 
-                )}
-
-
-                <p
-                  className="
-                    mt-1.5
-                    text-xs
-                    text-gray-400
-                  "
-                >
-                  Example: fa-solid fa-mobile-screen
-                </p>
+                </div>
 
               </div>
 
@@ -796,6 +864,17 @@ function CategoryForm() {
                   "
                 >
                   Description
+
+                  <span
+                    className="
+                      ml-1
+                      text-xs
+                      font-normal
+                      text-gray-400
+                    "
+                  >
+                    (optional)
+                  </span>
                 </label>
 
 
@@ -803,18 +882,24 @@ function CategoryForm() {
                   id="description"
                   rows={5}
                   placeholder="Enter a short description for this category"
+                  maxLength={DESCRIPTION_RULES.MAX}
                   {...register(
                     "description",
                     {
-                        required : "Description is required"
+                      validate: (value) => {
+                        const text = value.trim().replace(/\s+/g, " ");
+                        if (text.length > DESCRIPTION_RULES.MAX)
+                          return `Description cannot exceed ${DESCRIPTION_RULES.MAX} characters`;
+                        return true;
+                      },
                     }
                   )}
-                  className="
+                  className={`
                     w-full
                     resize-none
                     rounded-lg
                     border
-                    border-gray-300
+                    ${errors.description ? "border-red-400" : "border-gray-300"}
                     bg-white
                     px-4
                     py-3
@@ -824,22 +909,41 @@ function CategoryForm() {
                     focus:border-[#ff5722]
                     focus:ring-1
                     focus:ring-[#ff5722]
-                  "
+                  `}
                 />
 
-            {errors.description && (
+                <div className="mt-1.5 flex justify-between">
 
-                  <p
-                    className="
-                      mt-1.5
-                      text-xs
-                      text-red-500
-                    "
-                  >
-                    {errors.description.message}
+                  {errors.description ? (
+
+                    <p
+                      className="
+                        text-xs
+                        text-red-500
+                      "
+                    >
+                      {errors.description.message}
+                    </p>
+
+                  ) : (
+
+                    <p
+                      className="
+                        text-xs
+                        text-gray-400
+                      "
+                    >
+                      Optional. Maximum {DESCRIPTION_RULES.MAX} characters.
+                    </p>
+
+                  )}
+
+
+                  <p className="text-xs text-gray-400">
+                    {descriptionValue.length}/{DESCRIPTION_RULES.MAX}
                   </p>
 
-                )}
+                </div>
 
 
               </div>

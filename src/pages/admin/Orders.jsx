@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import AdminSidebar from "../../components/AdminSideBar";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import AdminOrderStatusBadge from "../../components/AdminOrderStatusBadge";
 import Pagination from "../../components/Pagination";
 import { formatMoney } from "../../components/CartItem";
@@ -111,9 +112,9 @@ function Orders() {
     setPage(1);
   };
 
-  const activeFilterCount =
-    (sort !== "newest" ? 1 : 0) + (from ? 1 : 0) + (to ? 1 : 0);
-  const hasFilters = Boolean(debouncedSearch) || tab !== "all" || activeFilterCount > 0;
+  const activeFilterCount = (from ? 1 : 0) + (to ? 1 : 0);
+  const hasFilters =
+    Boolean(debouncedSearch) || tab !== "all" || sort !== "newest" || activeFilterCount > 0;
 
   const isLoading = status === "loading";
   const showSkeleton = isLoading && orders.length === 0;
@@ -151,27 +152,45 @@ function Orders() {
               />
             </div>
 
-            <div className="flex items-center gap-3">
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="text-sm font-semibold text-[#ff5722] transition hover:underline"
-                >
-                  Clear
-                </button>
-              )}
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-sm font-semibold text-[#ff5722] transition hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
 
+          {/* TABS + SORT */}
+          <AdminTabsSort
+            className="mt-14 mb-8"
+            tabs={TABS.map((t) =>
+              t.value === "return_requested"
+                ? { ...t, badge: pendingReturnOrders }
+                : t
+            )}
+            activeTab={tab}
+            onTabChange={handleTabChange}
+            sortOptions={SORT_OPTIONS}
+            sort={sort}
+            onSortChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
+            sortId="order-sort"
+            extra={
               <div className="relative" ref={filterRef}>
                 <button
                   type="button"
                   onClick={() => setFilterOpen((o) => !o)}
                   aria-haspopup="dialog"
                   aria-expanded={filterOpen}
-                  className="inline-flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50"
                 >
-                  <i className="fa-solid fa-filter text-xs" />
-                  Filter
+                  <i className="fa-regular fa-calendar text-xs" />
+                  Date range
                   {activeFilterCount > 0 && (
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5722] text-[10px] font-bold text-white">
                       {activeFilterCount}
@@ -182,33 +201,9 @@ function Orders() {
                 {filterOpen && (
                   <div
                     role="dialog"
-                    aria-label="Filter orders"
+                    aria-label="Filter orders by date"
                     className="absolute right-0 z-20 mt-2 w-72 space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-lg"
                   >
-                    <div>
-                      <label
-                        htmlFor="order-sort"
-                        className="mb-1 block text-xs font-semibold text-gray-600"
-                      >
-                        Sort by
-                      </label>
-                      <select
-                        id="order-sort"
-                        value={sort}
-                        onChange={(e) => {
-                          setSort(e.target.value);
-                          setPage(1);
-                        }}
-                        className={inputClass}
-                      >
-                        {SORT_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label
@@ -254,7 +249,6 @@ function Orders() {
                     <button
                       type="button"
                       onClick={() => {
-                        setSort("newest");
                         setFrom("");
                         setTo("");
                         setPage(1);
@@ -262,39 +256,13 @@ function Orders() {
                       disabled={activeFilterCount === 0}
                       className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Reset filters
+                      Reset dates
                     </button>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* TABS */}
-          <div className="mb-6 flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-gray-200">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => handleTabChange(t.value)}
-                className={`relative pb-3 text-sm font-medium transition ${
-                  tab === t.value
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t.label}
-                {t.value === "return_requested" && pendingReturnOrders > 0 && (
-                  <span className="ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                    {pendingReturnOrders}
-                  </span>
-                )}
-                {tab === t.value && (
-                  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#ff5722]" />
-                )}
-              </button>
-            ))}
-          </div>
+            }
+          />
 
           {/* LIST ERROR */}
           {error && (

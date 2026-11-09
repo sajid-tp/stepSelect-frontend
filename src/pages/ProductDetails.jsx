@@ -74,6 +74,34 @@ const cartStatus = useSelector((state) => state.cart.status);
   }, [dispatch, productId]);
 
 
+  // The Shop list shows the cheapest variant of each product, so open that same variant here
+  // (otherwise the first variant opens and its price/photos don't match the card that was clicked)
+  useEffect(() => {
+
+    const list = productDetails?.variants;
+
+    if (
+      !list?.length ||
+      String(productDetails.id) !== String(productId)
+    ) {
+      return;
+    }
+
+    let cheapest = 0;
+
+    list.forEach((variant, index) => {
+      if (Number(variant.price) < Number(list[cheapest].price)) {
+        cheapest = index;
+      }
+    });
+
+    setColorIndex(cheapest);
+    setSelectedSize(null);
+    setSelectedImage(0);
+
+  }, [productDetails, productId]);
+
+
   useEffect(() => {
   if (user && cartStatus === "idle") dispatch(getCart());
 }, [dispatch, user, cartStatus]);

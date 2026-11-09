@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import AdminSidebar from "../../components/AdminSideBar";
 import AdminPageHeader from "../../components/AdminPageHeader";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import Modal from "../../components/Modals";
 import Pagination from "../../components/Pagination";
 import useDebounce from "../../hooks/useDebounce";
@@ -23,7 +24,7 @@ import {
 const PAGE_SIZE = 9; // three full rows of the 3-column card grid
 const IMAGE_MAX_MB = 5;
 const TITLE_MIN = 2;
-const TITLE_MAX = 80;
+const TITLE_MAX = 60; // same as TITLE_MAX in server/src/services/admin/adminBannerServices.js - change both together
 
 // value = what the server filters on
 const TABS = [
@@ -234,11 +235,20 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
             type="text"
             value={values.title}
             onChange={(e) => setField("title", e.target.value)}
-            maxLength={TITLE_MAX + 20}
+            maxLength={TITLE_MAX}
             placeholder="e.g. Pegasus 41 Launch"
             className={inputClass}
           />
-          {errors.title && <p className="mt-1 text-xs font-medium text-red-500">{errors.title}</p>}
+          <div className="mt-1 flex justify-between">
+            {errors.title ? (
+              <p className="text-xs font-medium text-red-500">{errors.title}</p>
+            ) : (
+              <span />
+            )}
+            <p className="text-xs text-gray-400">
+              {values.title.length}/{TITLE_MAX}
+            </p>
+          </div>
         </div>
 
         <div className="mb-4 grid grid-cols-[1fr_130px] gap-3">
@@ -494,26 +504,15 @@ function Banners() {
           </div>
 
           {/* TABS */}
-          <div className="mb-8 flex items-center gap-8 border-b border-gray-200">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => {
-                  setTab(t.value);
-                  setPage(1);
-                }}
-                className={`relative pb-3 text-sm font-medium transition ${
-                  tab === t.value ? "text-[#071a33]" : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t.label}
-                {tab === t.value && (
-                  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#ff5722]" />
-                )}
-              </button>
-            ))}
-          </div>
+          <AdminTabsSort
+            className="mt-14 mb-8"
+            tabs={TABS}
+            activeTab={tab}
+            onTabChange={(value) => {
+              setTab(value);
+              setPage(1);
+            }}
+          />
 
           {/* MESSAGE */}
           {notice && (

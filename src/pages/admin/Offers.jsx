@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import AdminSidebar from "../../components/AdminSideBar";
 import AdminPageHeader from "../../components/AdminPageHeader";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import Pagination from "../../components/Pagination";
 import Modal from "../../components/Modals";
 import OfferFormModal from "../../components/OfferFormModal";
@@ -27,8 +28,16 @@ const STATUS_FILTERS = [
   { value: "all", label: "All offers" },
   { value: "active", label: "Active" },
   { value: "scheduled", label: "Scheduled" },
-  { value: "inactive", label: "Switched off" },
+  { value: "inactive", label: "Inactive" },
   { value: "expired", label: "Expired" },
+];
+
+// values must match sortMap in adminOfferServices.getOffers
+const OFFER_SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "discount_desc", label: "Discount: high to low" },
+  { value: "expiry_asc", label: "Expiring soonest" },
 ];
 
 const STATUS_TEXT = {
@@ -37,7 +46,7 @@ const STATUS_TEXT = {
   inactive: "text-gray-400",
   expired: "text-red-500",
 };
-const STATUS_LABEL = { active: "Active", scheduled: "Scheduled", inactive: "Off", expired: "Expired" };
+const STATUS_LABEL = { active: "Active", scheduled: "Scheduled", inactive: "Inactive", expired: "Expired" };
 
 const formatDate = (value) =>
   new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -196,10 +205,8 @@ function Offers() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search.trim(), 400);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
-
-  const [filterOpen, setFilterOpen] = useState(false);
-  const filterRef = useRef(null);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -212,26 +219,18 @@ function Offers() {
   const isOfferTab = tab !== "referral";
 
   const fetchOffers = () =>
-    dispatch(getOffers({ type: tab, search: debouncedSearch, status: statusFilter, page, limit: PAGE_SIZE }));
+    dispatch(getOffers({ type: tab, search: debouncedSearch, status: statusFilter, sort, page, limit: PAGE_SIZE }));
 
   useEffect(() => {
     if (isOfferTab) fetchOffers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, tab, debouncedSearch, statusFilter, page]);
+  }, [dispatch, tab, debouncedSearch, statusFilter, sort, page]);
 
   useEffect(() => {
     if (!toast) return undefined;
     const timer = setTimeout(() => setToast(null), 3500);
     return () => clearTimeout(timer);
   }, [toast]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const changeTab = (value) => {
     setTab(value);
@@ -296,21 +295,13 @@ function Offers() {
         />
 
         <section className="px-12 py-8">
-          {/* TABS */}
-          <div className="mb-6 inline-flex rounded-lg border border-gray-200 bg-white p-1">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => changeTab(t.value)}
-                className={`rounded-md px-6 py-2.5 text-xs font-bold uppercase tracking-wide transition ${
-                  tab === t.value ? "bg-[#ff5722] text-white" : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {/* OFFER TYPE TABS */}
+          <AdminTabsSort
+            className="mb-8"
+            tabs={TABS}
+            activeTab={tab}
+            onTabChange={changeTab}
+          />
 
           {!isOfferTab ? (
             <ReferralTab setToast={setToast} />
@@ -332,44 +323,25 @@ function Offers() {
                   />
                 </div>
 
-                <div className="relative" ref={filterRef}>
-                  <button
-                    type="button"
-                    onClick={() => setFilterOpen((o) => !o)}
-                    aria-haspopup="menu"
-                    aria-expanded={filterOpen}
-                    className="inline-flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                  >
-                    <i className="fa-solid fa-filter text-xs" />
-                    Filter
-                    {statusFilter !== "all" && <span className="h-2 w-2 rounded-full bg-[#ff5722]" />}
-                  </button>
-
-                  {filterOpen && (
-                    <div role="menu" className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                      {STATUS_FILTERS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={statusFilter === opt.value}
-                          onClick={() => {
-                            setStatusFilter(opt.value);
-                            setPage(1);
-                            setFilterOpen(false);
-                          }}
-                          className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition hover:bg-gray-50 ${
-                            statusFilter === opt.value ? "font-semibold text-[#ff5722]" : "text-gray-700"
-                          }`}
-                        >
-                          {opt.label}
-                          {statusFilter === opt.value && <i className="fa-solid fa-check text-xs" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
+
+              {/* STATUS TABS + SORT */}
+              <AdminTabsSort
+                className="mt-8 mb-8"
+                tabs={STATUS_FILTERS}
+                activeTab={statusFilter}
+                onTabChange={(value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+                sortOptions={OFFER_SORT_OPTIONS}
+                sort={sort}
+                onSortChange={(e) => {
+                  setSort(e.target.value);
+                  setPage(1);
+                }}
+                sortId="offer-sort"
+              />
 
               {error && (
                 <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">

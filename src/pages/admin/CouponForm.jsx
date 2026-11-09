@@ -16,13 +16,22 @@ import {
 | VALIDATION RULES  (kept in line with models/coupon.js + adminCouponServices)
 |--------------------------------------------------------------------------
 */
+// Same numbers as COUPON_LIMITS in server/src/constants/couponConstants.js - change both together.
 const RULES = {
   CODE_MIN: 3,
-  CODE_MAX: 40,
-  DESCRIPTION_MAX: 500,
-  MAX_DISCOUNT_PERCENT: 90, // same number as COUPON_LIMITS.MAX_PERCENT in server/src/constants/couponConstants.js
+  CODE_MAX: 20,
   MIN_PERCENT: 1,
+  MAX_DISCOUNT_PERCENT: 90,
+  FLAT_MIN: 1,
+  FLAT_MAX: 25000,
+  CAP_MIN: 1,
+  REDEMPTION_MIN: 1,
+  PER_USER_MIN: 1,
+  PER_USER_MAX: 5,
+  DESCRIPTION_MAX: 500,
 };
+
+const formatINR = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 
 const CODE_REGEX = /^[A-Z0-9_-]+$/;
 
@@ -147,6 +156,8 @@ const VALIDATORS = {
         return `Percentage must be a whole number from ${RULES.MIN_PERCENT} to ${RULES.MAX_DISCOUNT_PERCENT}.`;
       return "";
     }
+    if (value < RULES.FLAT_MIN || value > RULES.FLAT_MAX)
+      return `Fixed discount must be between ${formatINR(RULES.FLAT_MIN)} and ${formatINR(RULES.FLAT_MAX)}.`;
     if (!hasMaxTwoDecimals(d.discountValue))
       return "Use at most 2 decimal places.";
     return "";
@@ -155,19 +166,21 @@ const VALIDATORS = {
   maximumDiscount: (d) => {
     if (d.discountType !== "percentage" || isBlank(d.maximumDiscount)) return "";
     const value = Number(d.maximumDiscount);
-    if (!Number.isFinite(value) || value <= 0)
-      return "Must be greater than 0 (or leave empty for no cap).";
+    if (!Number.isFinite(value) || value < RULES.CAP_MIN)
+      return `Cap must be at least ${formatINR(RULES.CAP_MIN)} (or leave empty for no cap).`;
+    if (value > Number.MAX_SAFE_INTEGER) return "That amount is too large.";
     if (!hasMaxTwoDecimals(d.maximumDiscount))
       return "Use at most 2 decimal places.";
     return "";
   },
 
-  // No restriction on minimum purchase except: empty (= none) or a non-negative amount.
+  // Empty (= none) or any amount from ₹0 upwards.
   minimumPurchase: (d) => {
     if (isBlank(d.minimumPurchase)) return "";
     const value = Number(d.minimumPurchase);
     if (!Number.isFinite(value) || value < 0)
       return "Minimum purchase cannot be negative.";
+    if (value > Number.MAX_SAFE_INTEGER) return "That amount is too large.";
     if (!hasMaxTwoDecimals(d.minimumPurchase))
       return "Use at most 2 decimal places.";
     return "";
@@ -175,17 +188,24 @@ const VALIDATORS = {
 
   redemptionLimit: (d, ctx) => {
     if (isBlank(d.redemptionLimit)) return "";
-    if (!isWholeNumber(d.redemptionLimit) || Number(d.redemptionLimit) < 1)
-      return "Enter a whole number of 1 or more (or leave empty for unlimited).";
-    if (ctx.usedCount && Number(d.redemptionLimit) < ctx.usedCount)
+    const value = Number(d.redemptionLimit);
+    if (!isWholeNumber(d.redemptionLimit) || value < RULES.REDEMPTION_MIN)
+      return `Enter a whole number of ${RULES.REDEMPTION_MIN} or more (or leave empty for unlimited).`;
+    if (value > Number.MAX_SAFE_INTEGER) return "That number is too large.";
+    if (ctx.usedCount && value < ctx.usedCount)
       return `Already redeemed ${ctx.usedCount} times — limit can't be lower.`;
     return "";
   },
 
   usageLimitPerUser: (d) => {
     if (isBlank(d.usageLimitPerUser)) return "Per-customer limit is required.";
-    if (!isWholeNumber(d.usageLimitPerUser) || Number(d.usageLimitPerUser) < 1)
-      return "Enter a whole number of 1 or more.";
+    const value = Number(d.usageLimitPerUser);
+    if (
+      !isWholeNumber(d.usageLimitPerUser) ||
+      value < RULES.PER_USER_MIN ||
+      value > RULES.PER_USER_MAX
+    )
+      return `Enter a whole number from ${RULES.PER_USER_MIN} to ${RULES.PER_USER_MAX}.`;
     return "";
   },
 
@@ -450,7 +470,7 @@ function CouponForm() {
                   htmlFor="couponCode"
                   required
                   error={errors.couponCode}
-                  hint="Letters, numbers, - and _ only. Saved in capitals."
+                  hint={`${RULES.CODE_MIN}–${RULES.CODE_MAX} characters. Letters, numbers, - and _ only. Saved in capitals.`}
                 >
                   <input
                     id="couponCode"
@@ -491,6 +511,11 @@ function CouponForm() {
                   htmlFor="discountValue"
                   required
                   error={errors.discountValue}
+                  hint={
+                    isPercentage
+                      ? `Whole number from ${RULES.MIN_PERCENT} to ${RULES.MAX_DISCOUNT_PERCENT}.`
+                      : `${formatINR(RULES.FLAT_MIN)} to ${formatINR(RULES.FLAT_MAX)}.`
+                  }
                 >
                   <div className="relative">
                     <Adornment>{isPercentage ? "%" : "₹"}</Adornment>
@@ -498,8 +523,8 @@ function CouponForm() {
                       id="discountValue"
                       name="discountValue"
                       type="number"
-                      min={isPercentage ? RULES.MIN_PERCENT : "0"}
-                      max={isPercentage ? RULES.MAX_DISCOUNT_PERCENT : undefined}
+                      min={isPercentage ? RULES.MIN_PERCENT : RULES.FLAT_MIN}
+                      max={isPercentage ? RULES.MAX_DISCOUNT_PERCENT : RULES.FLAT_MAX}
                       step={isPercentage ? "1" : "0.01"}
                       inputMode={isPercentage ? "numeric" : "decimal"}
                       value={formData.discountValue}
@@ -519,7 +544,7 @@ function CouponForm() {
                   error={errors.maximumDiscount}
                   hint={
                     isPercentage
-                      ? "Optional cap on the discount amount."
+                      ? `Optional cap, ${formatINR(RULES.CAP_MIN)} or more. Empty = no cap.`
                       : "Only applies to percentage coupons."
                   }
                 >
@@ -529,7 +554,7 @@ function CouponForm() {
                       id="maximumDiscount"
                       name="maximumDiscount"
                       type="number"
-                      min="0"
+                      min={RULES.CAP_MIN}
                       step="0.01"
                       inputMode="decimal"
                       value={formData.maximumDiscount}
@@ -547,7 +572,7 @@ function CouponForm() {
                   label="Min Purchase"
                   htmlFor="minimumPurchase"
                   error={errors.minimumPurchase}
-                  hint="Cart value needed to use this coupon. Empty = none."
+                  hint="Cart value needed to use the coupon. Empty = none."
                 >
                   <div className="relative">
                     <Adornment>₹</Adornment>
@@ -575,7 +600,7 @@ function CouponForm() {
                   error={errors.redemptionLimit}
                   hint={
                     isEditMode
-                      ? `Used ${usedCount} time${usedCount === 1 ? "" : "s"} so far. Empty = unlimited.`
+                      ? `Used ${usedCount} time${usedCount === 1 ? "" : "s"} so far. Whole number, or empty = unlimited.`
                       : "Total uses across all customers. Empty = unlimited."
                   }
                 >
@@ -583,7 +608,7 @@ function CouponForm() {
                     id="redemptionLimit"
                     name="redemptionLimit"
                     type="number"
-                    min="1"
+                    min={RULES.REDEMPTION_MIN}
                     step="1"
                     inputMode="numeric"
                     value={formData.redemptionLimit}
@@ -641,13 +666,14 @@ function CouponForm() {
                   htmlFor="usageLimitPerUser"
                   required
                   error={errors.usageLimitPerUser}
-                  hint="How many times one customer can redeem it."
+                  hint={`How many times one customer can redeem it (${RULES.PER_USER_MIN} to ${RULES.PER_USER_MAX}).`}
                 >
                   <input
                     id="usageLimitPerUser"
                     name="usageLimitPerUser"
                     type="number"
-                    min="1"
+                    min={RULES.PER_USER_MIN}
+                    max={RULES.PER_USER_MAX}
                     step="1"
                     inputMode="numeric"
                     value={formData.usageLimitPerUser}

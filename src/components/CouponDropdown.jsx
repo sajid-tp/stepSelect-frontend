@@ -11,6 +11,16 @@ const formatDate = (value) =>
     year: "numeric",
   });
 
+// "10% off, up to ₹500" / "₹500 off" - the rule of the coupon, shown on the applied coupon
+const ruleLabel = (coupon) =>
+  coupon.discountType === "percentage"
+    ? `${coupon.discountValue}% off${
+        coupon.maximumDiscount > 0
+          ? `, up to ${formatMoney(coupon.maximumDiscount)}`
+          : ""
+      }`
+    : `${formatMoney(coupon.discountValue)} off`;
+
 const offLabel = (coupon) =>
   coupon.discountType === "percentage"
     ? `${coupon.discountValue}% OFF`
@@ -121,9 +131,15 @@ function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
             <div className="min-w-0">
               <p className="truncate text-xs font-bold tracking-wide text-gray-900">
                 {appliedCoupon.couponCode}
+                {appliedCoupon.discountValue > 0 && (
+                  <span className="ml-1.5 font-medium normal-case tracking-normal text-gray-500">
+                    · {ruleLabel(appliedCoupon)}
+                  </span>
+                )}
               </p>
               <p className="text-[11px] text-green-700">
                 You saved {formatMoney(appliedCoupon.discountAmount)}
+                {appliedCoupon.capApplied && " · Maximum discount applied"}
               </p>
             </div>
           </div>

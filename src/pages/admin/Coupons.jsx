@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import AdminSidebar from "../../components/AdminSideBar";
 import AdminPageHeader from "../../components/AdminPageHeader";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import Pagination from "../../components/Pagination";
 import Modal from "../../components/Modals";
 import useDebounce from "../../hooks/useDebounce";
@@ -253,9 +254,6 @@ function Coupons() {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
 
-  const [sortOpen, setSortOpen] = useState(false);
-  const sortRef = useRef(null);
-
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [selected, setSelected] = useState(null); // coupon pending delete
@@ -286,17 +284,6 @@ function Coupons() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  /* ---------------- close sort menu on outside click ---------------- */
-  useEffect(() => {
-    const handler = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) {
-        setSortOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
   const errorText = (err) =>
     typeof err === "string" ? err : err?.message || "Something went wrong.";
 
@@ -309,7 +296,6 @@ function Coupons() {
   const handleSortChange = (value) => {
     setSort(value);
     setPage(1);
-    setSortOpen(false);
   };
 
   const handleEdit = (coupon) =>
@@ -395,67 +381,19 @@ function Coupons() {
               />
             </div>
 
-            <div className="relative" ref={sortRef}>
-              <button
-                type="button"
-                onClick={() => setSortOpen((o) => !o)}
-                aria-haspopup="menu"
-                aria-expanded={sortOpen}
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                <i className="fa-solid fa-arrow-down-wide-short text-xs" />
-                Sort
-              </button>
-
-              {sortOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-                >
-                  {SORT_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      role="menuitemradio"
-                      aria-checked={sort === opt.value}
-                      onClick={() => handleSortChange(opt.value)}
-                      className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition hover:bg-gray-50 ${
-                        sort === opt.value
-                          ? "font-semibold text-[#ff5722]"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {opt.label}
-                      {sort === opt.value && (
-                        <i className="fa-solid fa-check text-xs" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* TABS */}
-          <div className="mb-8 flex items-center gap-8 border-b border-gray-200">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => handleTabChange(t.value)}
-                className={`relative pb-3 text-sm font-medium transition ${
-                  tab === t.value
-                    ? "text-[#071a33]"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t.label}
-                {tab === t.value && (
-                  <span className="absolute bottom-0 left-0 h-[2px] w-full bg-[#ff5722]" />
-                )}
-              </button>
-            ))}
-          </div>
+          {/* TABS + SORT */}
+          <AdminTabsSort
+            className="mt-14 mb-8"
+            tabs={TABS}
+            activeTab={tab}
+            onTabChange={handleTabChange}
+            sortOptions={SORT_OPTIONS}
+            sort={sort}
+            onSortChange={(e) => handleSortChange(e.target.value)}
+            sortId="coupon-sort"
+          />
 
           {/* LIST ERROR */}
           {error && (

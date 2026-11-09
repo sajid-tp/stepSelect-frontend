@@ -3,6 +3,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { createOffer, getOfferOptions, updateOffer } from "../features/admin/offerSlice";
 import useDebounce from "../hooks/useDebounce";
 
+// Same numbers as OFFER_NAME_LIMITS in server/src/constants/offerConstants.js - change both together.
+const NAME_MIN = 2;
+const NAME_MAX = 80;
+
 const toDateInput = (value) => {
   if (!value) return "";
   const d = new Date(value);
@@ -30,7 +34,8 @@ const validateField = (name, form, { isCategory, isEdit }) => {
     case "offerName": {
       const len = form.offerName.trim().length;
       if (!len) return "Enter an offer name.";
-      if (len < 3) return "Offer name must be at least 3 characters.";
+      if (len < NAME_MIN) return `Offer name must be at least ${NAME_MIN} characters.`;
+      if (len > NAME_MAX) return `Offer name cannot exceed ${NAME_MAX} characters.`;
       return "";
     }
     case "targetId":
@@ -212,12 +217,21 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
             <input
               className={inputClass(errors.offerName)}
               value={form.offerName}
-              maxLength={80}
+              maxLength={NAME_MAX}
               onChange={(e) => set("offerName", e.target.value)}
               onBlur={handleBlur("offerName")}
               placeholder={isCategory ? "e.g. Monsoon Running Sale" : "e.g. Air Runner launch deal"}
             />
-            <FieldError message={errors.offerName} />
+            <div className="mt-1 flex justify-between">
+              {errors.offerName ? (
+                <p className="text-xs text-red-500">{errors.offerName}</p>
+              ) : (
+                <span />
+              )}
+              <p className="text-xs text-gray-400">
+                {form.offerName.length}/{NAME_MAX}
+              </p>
+            </div>
           </label>
 
           {isCategory ? (

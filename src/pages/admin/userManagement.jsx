@@ -6,6 +6,7 @@ import {
 } from "../../features/admin/userSlice";
 
 import AdminSidebar from "../../components/AdminSideBar";
+import AdminTabsSort from "../../components/AdminTabsSort";
 import Modal from "../../components/Modals";
 import AdminPagination from "../../components/Pagination";
 import useDebounce from "../../hooks/useDebounce";
@@ -62,11 +63,6 @@ function Users() {
 
   const handleSortChange = (e) => {
     setSort(e.target.value);
-    setPage(1);
-  };
-
-  const handleStatusFilterChange = (e) => {
-    setStatusFilter(e.target.value);
     setPage(1);
   };
 
@@ -192,34 +188,6 @@ function Users() {
 
           </div>
 
-          {/* Status filter */}
-          <select
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-            aria-label="Filter by status"
-            className="cursor-pointer rounded-md border border-gray-200 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-700 outline-none transition focus:border-[#f4511e] focus:ring-1 focus:ring-[#f4511e]"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Sort */}
-          <select
-            value={sort}
-            onChange={handleSortChange}
-            aria-label="Sort users"
-            className="cursor-pointer rounded-md border border-gray-200 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-700 outline-none transition focus:border-[#f4511e] focus:ring-1 focus:ring-[#f4511e]"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
           {(search || statusFilter !== "all" || sort !== "name_asc") && (
             <button
               type="button"
@@ -236,6 +204,21 @@ function Users() {
           )}
 
         </div>
+
+        {/* ================= TABS + SORT ================= */}
+        <AdminTabsSort
+          className="mt-14 mb-8"
+          tabs={STATUS_OPTIONS}
+          activeTab={statusFilter}
+          onTabChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
+          sortOptions={SORT_OPTIONS}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortId="user-sort"
+        />
 
 
         {/* ================= LOADING ================= */}

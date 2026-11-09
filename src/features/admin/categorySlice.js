@@ -189,7 +189,15 @@ const adminCategorySlice = createSlice({
   },
 
 
-  reducers: {},
+  reducers: {
+    // Clears the create/update status and errors, so an old error doesn't show up when the form is opened again
+    resetCategoryFormState: (state) => {
+      state.createStatus = "idle";
+      state.createError = null;
+      state.updateStatus = "idle";
+      state.updateError = null;
+    },
+  },
 
 
   extraReducers: (builder) => {
@@ -452,5 +460,7 @@ const adminCategorySlice = createSlice({
 
 });
 
+
+export const { resetCategoryFormState } = adminCategorySlice.actions;
 
 export default adminCategorySlice.reducer;
