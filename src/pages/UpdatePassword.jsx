@@ -12,6 +12,7 @@ function UpdatePassword() {
   const navigate = useNavigate();
   const location = useLocation();
   const resetToken = useSelector((state)=>state.auth.resetToken);
+  const isLoggedIn = useSelector((state) => Boolean(state.auth.user));
 
 
   const { email } = location.state || {};
@@ -74,7 +75,7 @@ function UpdatePassword() {
 
     try {
       await dispatch(resetPassword({ newPassword: form.password, resetToken })).unwrap();
-      navigate('/login', { replace: true });
+      navigate(isLoggedIn ? '/profile/edit' : '/login', { replace: true });
     } catch (err) {
       setServerError(err || 'Could not update password. Please try again.');
     } finally {

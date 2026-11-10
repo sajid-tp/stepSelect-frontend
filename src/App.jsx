@@ -70,8 +70,8 @@ function App() {
           <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
          </Route>
+        <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
