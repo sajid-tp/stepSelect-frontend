@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-// 1. Admin Login
 export const loginAdmin = createAsyncThunk(
   "adminAuth/login",
   async ({ email, password }, { rejectWithValue }) => {
@@ -19,7 +18,6 @@ export const loginAdmin = createAsyncThunk(
   }
 );
 
-// 2. Admin Logout
 export const adminLogout = createAsyncThunk(
   "adminAuth/logout",
   async (_, { rejectWithValue }) => {
@@ -34,7 +32,6 @@ export const adminLogout = createAsyncThunk(
   }
 );
 
-// 3. Verify Admin Session (Runs when page reloads or user opens URL directly)
 export const checkAdminAuth = createAsyncThunk(
   "adminAuth/checkAuth",
   async (_, { rejectWithValue }) => {
@@ -55,7 +52,7 @@ const authSlice = createSlice({
   initialState: {
     isAdmin: false,
     status: "idle",
-    isCheckingAuth: true, // Set to true initially so route guards wait before deciding
+    isCheckingAuth: true,
     error: null,
   },
 
@@ -74,7 +71,6 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // LOGIN
       .addCase(loginAdmin.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -92,7 +88,6 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // LOGOUT
       .addCase(adminLogout.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -104,14 +99,12 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(adminLogout.rejected, (state, action) => {
-        // Clear local state even if the network call failed
         state.isAdmin = false;
         state.status = "idle";
         state.isCheckingAuth = false;
         state.error = action.payload;
       })
 
-      // CHECK AUTH (Session Check)
       .addCase(checkAdminAuth.pending, (state) => {
         state.isCheckingAuth = true;
       })

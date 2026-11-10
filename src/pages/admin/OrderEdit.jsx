@@ -32,23 +32,8 @@ const PAYMENT_STATUS_TEXT = {
   refunded: "Refunded",
 };
 
-/*
-  Edit order  (/admin/orders/:orderId)
-
-  The order details are read-only. The admin changes the DELIVERY STATUS OF EACH PRODUCT:
-  every item row has its own dropdown that lists exactly what the server allows right now
-  (item.allowedStatuses):
-    one step at a time: Processing -> Shipped -> (Out for Delivery) -> Delivered
-    (Shipped can also go straight to Delivered), or Cancelled while it is still Processing.
-  Delivered and Cancelled products are final, so they show no dropdown.
-  The order status on the right is worked out by the server from its products
-  (it shows the product that is furthest behind), so it is never edited by hand.
-*/
-
-// item statuses that mean "this product has reached the customer"
 const DELIVERED_LIKE = ["delivered", "return_requested", "returned"];
 
-// when the product was marked delivered (from its own history)
 const deliveredOn = (item) =>
   [...(item.statusHistory || [])].reverse().find((h) => h.status === "delivered")
     ?.updatedAt || null;
@@ -60,23 +45,21 @@ function OrderEdit() {
     (state) => state.adminOrders
   );
 
-  // only use the stored order if it is the one in the URL
   const order =
     current && (current.id === orderId || current.orderNumber === orderId)
       ? current
       : null;
 
-  const [drafts, setDrafts] = useState({}); // { [itemId]: chosen status }
+  const [drafts, setDrafts] = useState({});
   const [savingItemId, setSavingItemId] = useState(null);
-  const [cancelItem, setCancelItem] = useState(null); // { id, name } waiting for confirmation
-  const [toast, setToast] = useState(null); // { type, text }
+  const [cancelItem, setCancelItem] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  // return requests
   const [returnBusy, setReturnBusy] = useState(false);
   const [rejectItemId, setRejectItemId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [approveItem, setApproveItem] = useState(null); // item whose return the admin is approving
-  const [stockChoice, setStockChoice] = useState(""); // "add" | "skip"
+  const [approveItem, setApproveItem] = useState(null);
+  const [stockChoice, setStockChoice] = useState("");
 
   useEffect(() => {
     dispatch(clearAdminOrder());
@@ -93,7 +76,6 @@ function OrderEdit() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  /* ---------------- SAVE (one product) ---------------- */
   const saveItem = async (itemId, status) => {
     if (!order || !itemId || !status || savingItemId) return;
 
@@ -123,12 +105,10 @@ function OrderEdit() {
   const handleSaveClick = (item) => {
     const status = drafts[item.id];
     if (!status) return;
-    // cancelling cannot be undone (stock goes back), so ask first
     if (status === "cancelled") setCancelItem({ id: item.id, name: item.name });
     else saveItem(item.id, status);
   };
 
-  /* ---------------- RETURN REQUESTS ---------------- */
   const doReturn = async (itemId, action, reason = "", restock) => {
     if (!order || returnBusy) return;
 
@@ -169,18 +149,15 @@ function OrderEdit() {
   const pricing = order?.pricing || {};
   const addr = order?.shippingAddress;
 
-  // "2 of 3 products delivered" (cancelled products are not counted)
   const liveItems = (order?.items || []).filter((i) => i.status !== "cancelled");
   const deliveredCount = liveItems.filter((i) => DELIVERED_LIKE.includes(i.status)).length;
   const paidOnline = order?.paymentMethod !== "COD" && order?.paymentStatus === "paid";
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-        {/* HEADER */}
         <header className="border-b border-gray-200 bg-white px-12 py-7">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
             <Link to="/admin/orders" className="transition hover:text-gray-700">
@@ -195,7 +172,6 @@ function OrderEdit() {
         </header>
 
         <section className="px-12 py-8">
-          {/* LOADING */}
           {isLoading && (
             <div className="grid animate-pulse gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
               <div className="h-96 rounded-xl border border-gray-200 bg-white" />
@@ -203,7 +179,6 @@ function OrderEdit() {
             </div>
           )}
 
-          {/* ERROR */}
           {!isLoading && !order && currentStatus === "failed" && (
             <div className="flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 px-6 text-center">
               <h2 className="text-base font-semibold text-red-700">
@@ -230,9 +205,7 @@ function OrderEdit() {
 
           {order && (
             <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-              {/* ================= LEFT: READ-ONLY DETAILS ================= */}
               <div className="space-y-6">
-                {/* customer + address + payment */}
                 <div className={`${cardClass} grid gap-6 md:grid-cols-3`}>
                   <div>
                     <h2 className={labelClass}>Customer</h2>
@@ -284,7 +257,6 @@ function OrderEdit() {
                   </div>
                 </div>
 
-                {/* items */}
                 <div className={cardClass}>
                   <h2 className="text-base font-bold text-[#071a33]">
                     Items ({order.items?.length || 0})
@@ -340,7 +312,6 @@ function OrderEdit() {
                               )}
                             </div>
 
-                            {/* delivery status of THIS product */}
                             {(item.allowedStatuses || []).length > 0 && (
                               <div className="mt-3">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -385,7 +356,6 @@ function OrderEdit() {
                               </div>
                             )}
 
-                            {/* return request: the admin decides here */}
                             {item.status === "return_requested" && (
                               <div className="mt-3 rounded-lg border border-orange-100 bg-orange-50 p-3 text-xs text-gray-600">
                                 <p>
@@ -430,7 +400,6 @@ function OrderEdit() {
                               </div>
                             )}
 
-                            {/* what the admin decided about the stock of returned units */}
                             {(item.returnRestockedQuantity > 0 || item.returnDiscardedQuantity > 0) && (
                               <p className="mt-2 text-xs text-gray-500">
                                 Returned stock:{" "}
@@ -449,7 +418,6 @@ function OrderEdit() {
                               </p>
                             )}
 
-                            {/* last rejection, if any */}
                             {item.returnRejectReason && item.status !== "return_requested" && (
                               <p className="mt-2 text-xs text-red-500">
                                 Return rejected: {item.returnRejectReason}
@@ -476,9 +444,7 @@ function OrderEdit() {
                 </div>
               </div>
 
-              {/* ================= RIGHT: STATUS + SUMMARY ================= */}
               <div className="space-y-6">
-                {/* ORDER STATUS (follows the products, not edited here) */}
                 <div className={cardClass}>
                   <h2 className={labelClass}>Order status</h2>
 
@@ -512,7 +478,6 @@ function OrderEdit() {
                   </p>
                 </div>
 
-                {/* SUMMARY */}
                 <div className={cardClass}>
                   <h2 className={labelClass}>Order summary</h2>
 
@@ -592,7 +557,6 @@ function OrderEdit() {
         </section>
       </main>
 
-      {/* CANCEL ONE PRODUCT: CONFIRMATION */}
       <Modal
         open={Boolean(cancelItem)}
         title="Cancel this product?"
@@ -607,7 +571,6 @@ function OrderEdit() {
         }}
       />
 
-      {/* APPROVE RETURN (the admin chooses what happens to the stock) */}
       {approveItem && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
@@ -725,7 +688,6 @@ function OrderEdit() {
         </div>
       )}
 
-      {/* REJECT RETURN (reason is required) */}
       {rejectItemId && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
@@ -777,7 +739,6 @@ function OrderEdit() {
         </div>
       )}
 
-      {/* TOAST */}
       {toast && (
         <div
           role="status"

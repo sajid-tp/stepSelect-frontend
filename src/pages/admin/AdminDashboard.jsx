@@ -8,12 +8,6 @@ import { formatDate } from "../../utils/orderFormat";
 
 import { getAdminDashboard } from "../../features/admin/dashboardSlice";
 
-/*
-|--------------------------------------------------------------------------
-| CONSTANTS
-|--------------------------------------------------------------------------
-*/
-// value = what the server calls the period
 const PERIODS = [
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
@@ -29,15 +23,9 @@ const DONUT_COLORS = [
 const inputClass =
   "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10";
 
-/*
-|--------------------------------------------------------------------------
-| SMALL HELPERS
-|--------------------------------------------------------------------------
-*/
 const rupees = (value) =>
   `₹${Math.round(Number(value) || 0).toLocaleString("en-IN")}`;
 
-// Today as YYYY-MM-DD in the browser's own time zone (for the date inputs)
 const todayText = () => {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
@@ -46,11 +34,6 @@ const todayText = () => {
 
 const dayText = (ymd) => formatDate(`${ymd}T00:00:00`);
 
-/*
-|--------------------------------------------------------------------------
-| SMALL COMPONENTS
-|--------------------------------------------------------------------------
-*/
 function Change({ value }) {
   if (value === null || value === undefined) return null;
   const up = value >= 0;
@@ -112,7 +95,6 @@ function Skeleton({ rows = 5 }) {
   );
 }
 
-/* ---------------- Best selling products (Top 10) ---------------- */
 function TopProducts({ products }) {
   if (!products.length) return <Empty text="No products sold in this period." />;
 
@@ -154,7 +136,6 @@ function TopProducts({ products }) {
   );
 }
 
-/* ---------------- Best selling categories (Top 10) ---------------- */
 function TopCategories({ categories }) {
   if (!categories.length) return <Empty text="No category sales in this period." />;
 
@@ -212,7 +193,6 @@ function TopCategories({ categories }) {
   );
 }
 
-/* ---------------- Best selling brands (Top 10) ---------------- */
 function TopBrands({ brands }) {
   if (!brands.length) return <Empty text="No brand sales in this period." />;
 
@@ -240,34 +220,26 @@ function TopBrands({ brands }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function AdminDashboard() {
   const dispatch = useDispatch();
 
   const { data, status, error } = useSelector((state) => state.adminDashboard);
 
   const [period, setPeriod] = useState("weekly");
-  const [range, setRange] = useState({ from: "", to: "" }); // applied custom range
-  const [draft, setDraft] = useState({ from: "", to: "" }); // what is typed in the popup
+  const [range, setRange] = useState({ from: "", to: "" });
+  const [draft, setDraft] = useState({ from: "", to: "" });
   const [rangeOpen, setRangeOpen] = useState(false);
   const [rangeError, setRangeError] = useState("");
   const rangeRef = useRef(null);
 
   const customReady = period !== "custom" || (range.from && range.to);
 
-  /* ---------------- FETCH ---------------- */
   useEffect(() => {
     if (!customReady) return undefined;
     const request = dispatch(getAdminDashboard({ period, from: range.from, to: range.to }));
-    // a newer choice cancels the older request, so a slow answer can't overwrite a fresh one
     return () => request.abort();
   }, [dispatch, period, range, customReady]);
 
-  /* ---------------- close the custom range popup on outside click ---------------- */
   useEffect(() => {
     const handler = (e) => {
       if (rangeRef.current && !rangeRef.current.contains(e.target)) setRangeOpen(false);
@@ -276,7 +248,6 @@ function AdminDashboard() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ---------------- HANDLERS ---------------- */
   const choosePeriod = (value) => {
     setPeriod(value);
     setRangeOpen(false);
@@ -300,7 +271,6 @@ function AdminDashboard() {
   const retry = () =>
     dispatch(getAdminDashboard({ period, from: range.from, to: range.to }));
 
-  /* ---------------- VALUES ---------------- */
   const loading = status === "loading";
   const firstLoad = loading && !data;
   const summary = data?.summary;
@@ -311,13 +281,11 @@ function AdminDashboard() {
       : `${dayText(data.range.from)} – ${dayText(data.range.to)}`
     : "";
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-        {/* HEADER */}
         <header className="border-b border-gray-200 bg-white px-10 py-5">
           <h1 className="text-xl font-extrabold tracking-tight text-[#111]">Dashboard</h1>
           {rangeText && (
@@ -328,7 +296,6 @@ function AdminDashboard() {
         </header>
 
         <section className="mx-auto max-w-[1180px] px-10 py-7">
-          {/* REPORT ERROR */}
           {error && (
             <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -345,7 +312,6 @@ function AdminDashboard() {
           )}
 
           <div className={`transition-opacity ${loading && data ? "opacity-60" : ""}`}>
-            {/* KPI CARDS */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
                 loading={firstLoad}
@@ -383,7 +349,6 @@ function AdminDashboard() {
               />
             </div>
 
-            {/* REVENUE TREND + FILTERS */}
             <Card
               title="Revenue Trends"
               hint={data ? data.range.label : ""}
@@ -480,7 +445,6 @@ function AdminDashboard() {
               )}
             </Card>
 
-            {/* BEST SELLERS (Top 10) */}
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <Card title="Best Selling Products" hint="Top 10 · by units sold">
                 {data ? <TopProducts products={data.topProducts} /> : <Skeleton rows={6} />}

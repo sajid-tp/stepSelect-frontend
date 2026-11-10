@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
-import { resetPassword } from '../features/user/authSlice'; // adjust path to match your slice location
+import { resetPassword } from '../features/user/authSlice';
 import { useSelector } from 'react-redux';
 import { validatePassword, validateConfirmPassword } from '../utils/validators';
 
@@ -30,7 +29,6 @@ function UpdatePassword() {
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Same password rule as signup, change-password and the server
   const errors = {
     password: validatePassword(form.password),
     confirmPassword: validateConfirmPassword(form.confirmPassword, form.password),

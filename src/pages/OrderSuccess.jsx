@@ -5,13 +5,6 @@ import Footer from "../components/Footer";
 import { formatMoney } from "../components/CartItem";
 import InvoiceButton from "../components/InvoiceButton";
 
-/*
-  Shown after POST /checkout/place-order succeeds.
-  Checkout.jsx passes the order summary through router state
-  ({ order: { orderNumber, totalAmount, couponCode, couponDiscount, referralDiscount, paymentMethod } }),
-  so a refresh of this page still works (history state survives) and a direct
-  visit just shows the order number from the URL.
-*/
 function OrderSuccess() {
   const { orderNumber } = useParams();
   const { state } = useLocation();
@@ -79,7 +72,6 @@ function OrderSuccess() {
             )}
           </dl>
 
-          {/* The invoice is ready the moment the order is placed */}
           <div className="mt-5">
             <InvoiceButton orderNumber={orderNumber} />
           </div>

@@ -54,13 +54,6 @@ const appReducer = combineReducers({
   adminBanners: adminBannerReducer,
 });
 
-/*
-  Wipe signed-in data on logout so nothing from the old session can be shown again.
-  - Customer logout (the thunk finishing either way, or the local `logout` action)
-    resets every customer slice. `auth` clears itself and `products` is the public catalogue.
-  - Admin logout resets every admin data slice. `adminAuth` clears itself.
-  Action type strings are used (not imports) to avoid circular imports with the slices.
-*/
 const USER_LOGOUT_ACTIONS = ['auth/logout', 'auth/logout/fulfilled', 'auth/logout/rejected'];
 const ADMIN_LOGOUT_ACTIONS = ['adminAuth/logout', 'adminAuth/logout/fulfilled', 'adminAuth/logout/rejected'];
 
@@ -74,7 +67,7 @@ const ADMIN_DATA_SLICES = [
 
 const without = (state, keys) => {
   const next = { ...state };
-  keys.forEach((key) => delete next[key]); // undefined -> slice falls back to its initial state
+  keys.forEach((key) => delete next[key]);
   return next;
 };
 

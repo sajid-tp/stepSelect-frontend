@@ -36,7 +36,6 @@ function WishlistItem({ item, disabled, moving, onRemove, onMoveToCart }) {
 
   return (
     <div className="group flex w-full max-w-[260px] flex-col">
-      {/* IMAGE */}
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#f7f7f7]">
         <Link to={link} className="block h-full w-full">
           {image ? (
@@ -60,7 +59,6 @@ function WishlistItem({ item, disabled, moving, onRemove, onMoveToCart }) {
           </span>
         )}
 
-        {/* REMOVE */}
         <button
           type="button"
           onClick={onRemove}
@@ -78,7 +76,6 @@ function WishlistItem({ item, disabled, moving, onRemove, onMoveToCart }) {
         )}
       </div>
 
-      {/* PRODUCT INFO */}
       <div className="mt-2 flex flex-1 flex-col">
         <p className="line-clamp-1 text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-xs">
           {brand?.name || ""}
@@ -125,7 +122,6 @@ function WishlistItem({ item, disabled, moving, onRemove, onMoveToCart }) {
           )
         )}
 
-        {/* MOVE TO CART */}
         <div className="mt-auto pt-3">
           <button
             type="button"

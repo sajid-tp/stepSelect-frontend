@@ -1,6 +1,3 @@
-// Loads Razorpay's checkout script once (shared by shop payments and wallet top-ups).
-// Resolves when window.Razorpay is ready; rejects with a readable message.
-
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
 let razorpayScript = null;

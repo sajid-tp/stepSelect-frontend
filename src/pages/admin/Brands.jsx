@@ -32,10 +32,6 @@ import {
 } from "../../features/admin/brandSlice";
 
 
-// ===================================================
-// SORT OPTIONS (constant, so it lives outside the component)
-// ===================================================
-
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
@@ -59,10 +55,6 @@ function Brands() {
     useNavigate();
 
 
-  // ===================================================
-  // REDUX
-  // ===================================================
-
   const {
     brands = [],
     totalResults = 0,
@@ -78,14 +70,9 @@ function Brands() {
   );
 
 
-  // ===================================================
-  // LOCAL STATE
-  // ===================================================
-
   const [search, setSearch] =
     useState("");
 
-  // the list reloads after the admin pauses typing
   const debouncedSearch =
     useDebounce(search.trim(), 400);
 
@@ -110,14 +97,9 @@ function Brands() {
   const [selectedBrand, setSelectedBrand] =
     useState(null);
 
-  // The brand waiting for the admin to confirm activate / deactivate
   const [statusConfirmTarget, setStatusConfirmTarget] =
     useState(null);
 
-
-  // ===================================================
-  // FETCH BRANDS
-  // ===================================================
 
   useEffect(() => {
 
@@ -137,10 +119,6 @@ function Brands() {
   ]);
 
 
-  // ===================================================
-  // SEARCH
-  // ===================================================
-
   const handleSearchChange =
     (e) => {
 
@@ -152,10 +130,6 @@ function Brands() {
 
     };
 
-
-  // ===================================================
-  // SORT
-  // ===================================================
 
   const handleSortChange =
     (e) => {
@@ -169,10 +143,6 @@ function Brands() {
     };
 
 
-  // ===================================================
-  // TAB CHANGE
-  // ===================================================
-
   const handleTabChange =
     (tab) => {
 
@@ -180,10 +150,6 @@ function Brands() {
 
     };
 
-
-  // ===================================================
-  // FRONTEND STATUS FILTER
-  // ===================================================
 
   const filteredBrands =
     brands.filter(
@@ -209,10 +175,6 @@ function Brands() {
     );
 
 
-  // ===================================================
-  // EDIT
-  // ===================================================
-
   const handleEdit =
     (brand) => {
 
@@ -228,11 +190,6 @@ function Brands() {
     };
 
 
-  // ===================================================
-  // TOGGLE STATUS
-  // ===================================================
-
-  // STEP 1: the button was clicked -> only open the confirmation modal
   const handleToggleStatus =
     (brand) => {
 
@@ -259,7 +216,6 @@ function Brands() {
     };
 
 
-  // STEP 2: the admin confirmed -> really change the status
   const handleConfirmToggleStatus =
     async () => {
 
@@ -304,10 +260,6 @@ function Brands() {
     };
 
 
-  // ===================================================
-  // OPEN DELETE MODAL
-  // ===================================================
-
   const handleDeleteClick =
     (brand) => {
 
@@ -321,10 +273,6 @@ function Brands() {
 
     };
 
-
-  // ===================================================
-  // DELETE
-  // ===================================================
 
   const handleConfirmDelete =
     async () => {
@@ -356,11 +304,6 @@ function Brands() {
           null
         );
 
-
-        /*
-         * If current page becomes empty,
-         * move to previous page.
-         */
 
         if (
           brands.length === 1 &&
@@ -400,17 +343,9 @@ function Brands() {
     };
 
 
-  // ===================================================
-  // LOADING
-  // ===================================================
-
   const isLoading =
     status === "loading";
 
-
-  // ===================================================
-  // RENDER
-  // ===================================================
 
   return (
 
@@ -431,10 +366,6 @@ function Brands() {
         "
       >
 
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
-
         <AdminPageHeader
           eyebrow="Collection"
           title="Brand"
@@ -443,20 +374,12 @@ function Brands() {
         />
 
 
-        {/* ================================================= */}
-        {/* CONTENT */}
-        {/* ================================================= */}
-
         <section
           className="
             px-12
             py-10
           "
         >
-
-          {/* ================================================= */}
-          {/* SEARCH */}
-          {/* ================================================= */}
 
           <div
             className="
@@ -502,10 +425,6 @@ function Brands() {
           </div>
 
 
-          {/* ================================================= */}
-          {/* TABS + SORT */}
-          {/* ================================================= */}
-
           <AdminTabsSort
             className="mt-14 mb-10"
             tabs={STATUS_TABS}
@@ -517,10 +436,6 @@ function Brands() {
             sortId="brand-sort"
           />
 
-
-          {/* ================================================= */}
-          {/* ERROR */}
-          {/* ================================================= */}
 
           {error && (
 
@@ -542,10 +457,6 @@ function Brands() {
 
           )}
 
-
-          {/* ================================================= */}
-          {/* LOADING / CONTENT */}
-          {/* ================================================= */}
 
           {isLoading ? (
 
@@ -580,10 +491,6 @@ function Brands() {
             </div>
 
           ) : filteredBrands.length === 0 ? (
-
-            /* ================================================= */
-            /* EMPTY STATE */
-            /* ================================================= */
 
             <div
               className="
@@ -715,10 +622,6 @@ function Brands() {
 
             <>
 
-              {/* ================================================= */}
-              {/* BRAND GRID */}
-              {/* ================================================= */}
-
               <div
                 className="
                   grid
@@ -778,10 +681,6 @@ function Brands() {
               </div>
 
 
-              {/* ================================================= */}
-              {/* PAGINATION */}
-              {/* ================================================= */}
-
               {activeTab === "all" && (
 
                 <Pagination
@@ -802,10 +701,6 @@ function Brands() {
 
       </main>
 
-
-      {/* ================================================= */}
-      {/* DELETE MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={deleteModalOpen}
@@ -851,10 +746,6 @@ function Brands() {
         }}
       />
 
-
-      {/* ================================================= */}
-      {/* ACTIVATE / DEACTIVATE MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={
@@ -902,10 +793,6 @@ function Brands() {
         }
       />
 
-
-      {/* ================================================= */}
-      {/* DELETE ERROR */}
-      {/* ================================================= */}
 
       {deleteError && (
 

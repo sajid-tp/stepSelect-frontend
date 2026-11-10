@@ -221,43 +221,33 @@ function AdminSidebar() {
 
   const adminAuth = useSelector((state) => state.adminAuth);
 
-  // Logout modal state
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Open logout confirmation modal
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);
   };
 
-  // Close logout confirmation modal
   const handleCloseLogoutModal = () => {
     if (loggingOut) return;
 
     setLogoutModalOpen(false);
   };
 
-  // Actually logout
   const handleConfirmLogout = async () => {
     try {
       setLoggingOut(true);
 
       await dispatch(adminLogout()).unwrap();
 
-      // Close modal
       setLogoutModalOpen(false);
 
-      // Go back to admin login
       navigate("/admin/auth/login", {
         replace: true,
       });
     } catch (error) {
       console.error("Admin logout failed:", error);
 
-      /*
-       * Even if the backend logout request fails,
-       * you can still send the admin back to login.
-       */
       setLogoutModalOpen(false);
 
       navigate("/admin/auth/login", {
@@ -270,11 +260,8 @@ function AdminSidebar() {
 
   return (
     <>
-      {/* ================= SIDEBAR ================= */}
 
       <aside className="fixed left-0 top-0 z-40 flex h-screen w-[214px] flex-col border-r border-[#e8e8e8] bg-white">
-
-        {/* ================= LOGO ================= */}
 
         <div className="border-b border-[#eeeeee] px-6 py-5">
 
@@ -287,8 +274,6 @@ function AdminSidebar() {
           </p>
 
         </div>
-
-        {/* ================= NAVIGATION ================= */}
 
         <nav className="flex-1 overflow-y-auto px-2.5 py-6">
 
@@ -314,8 +299,6 @@ function AdminSidebar() {
           ))}
 
         </nav>
-
-        {/* ================= SIGN OUT ================= */}
 
         <div className="border-t border-[#eeeeee] px-2.5 py-4">
 
@@ -367,8 +350,6 @@ function AdminSidebar() {
         </div>
 
       </aside>
-
-      {/* ================= LOGOUT MODAL ================= */}
 
       <Modal
         open={logoutModalOpen}

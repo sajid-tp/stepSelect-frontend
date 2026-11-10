@@ -1,18 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-// Uncontrolled by design — grab values with `new FormData(e.target)` in the
-// form's onSubmit, or swap to value/onChange yourself once you wire up
-// controlled state (useState, or an RTK form slice).
-//
-// Any field with type="password" automatically gets an eye icon that
-// toggles the password between hidden and visible.
-//
-// Accessibility: when `error` is set, the input is marked aria-invalid and
-// linked to its message, and the message is announced by screen readers.
-//
-// `invalid` marks the field red WITHOUT showing a message under it (used when
-// the explanation is shown somewhere else, e.g. the password checklist).
 function FormField({ label, type = 'text', name, placeholder, rightElement, value, onChange, onBlur, onKeyDown, error, invalid = false, disabled, readOnly }) {
   const [showPassword, setShowPassword] = useState(false);
 

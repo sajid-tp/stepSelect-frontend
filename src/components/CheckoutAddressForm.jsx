@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { validateRequiredPhone } from "../utils/validators";
 
-/*
-  Inline add / edit address form used inside the checkout page.
-  Same fields and rules as pages/AddressForm.jsx, so the backend accepts them.
-
-  onSave(values) must return a promise that REJECTS with a message string on failure.
-*/
-
 const ADDRESS_TYPES = ["Home", "Work", "Other"];
 
 const EMPTY = {
@@ -43,7 +36,6 @@ const validate = (v) => {
   else if (name.length < 3 || name.length > 25)
     e.name = "Name must be 3 to 25 characters.";
 
-  // libphonenumber-js check, same as the server (the input already limits typing to 10 digits)
   const phoneError = validateRequiredPhone(v.phoneNumber);
   if (phoneError) e.phoneNumber = phoneError;
 
@@ -95,7 +87,6 @@ function Field({ label, htmlFor, error, children, className = "" }) {
 
 function CheckoutAddressForm({ address, onSave, onCancel, canCancel = true }) {
   const isEdit = Boolean(address);
-  // the current default can only be replaced by choosing another default
   const lockedDefault = isEdit && Boolean(address.isDefault);
 
   const [values, setValues] = useState(address ? fromAddress(address) : EMPTY);
@@ -123,7 +114,6 @@ function CheckoutAddressForm({ address, onSave, onCancel, canCancel = true }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // reveal every error on a submit attempt
     setTouched(Object.keys(values).reduce((acc, k) => ({ ...acc, [k]: true }), {}));
     if (Object.keys(errors).length > 0) return;
 
@@ -147,7 +137,6 @@ function CheckoutAddressForm({ address, onSave, onCancel, canCancel = true }) {
       );
       setSaving(false);
     }
-    // on success the parent closes the form, so no need to reset `saving`
   };
 
   return (

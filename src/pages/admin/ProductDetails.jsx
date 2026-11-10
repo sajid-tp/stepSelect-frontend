@@ -26,11 +26,6 @@ function ProductDetails() {
   );
 
 
-  // ===================================================
-  // IMAGE VIEWER
-  // ===================================================
-
-  // null = closed, otherwise { images: [...], index: number }
   const [viewer, setViewer] = useState(null);
 
   const openViewer = (images, index) => setViewer({ images, index });
@@ -39,10 +34,6 @@ function ProductDetails() {
 
   
 
-
-  // ===================================================
-  // GET PRODUCT
-  // ===================================================
 
   useEffect(() => {
 
@@ -54,17 +45,6 @@ function ProductDetails() {
 
   }, [dispatch, productId]);
 
-
-  // ===================================================
-  // KEYBOARD CONTROLS FOR VIEWER
-  // ===================================================
-
-
-
-
-  // ===================================================
-  // CALCULATE STOCK
-  // ===================================================
 
   const totalStock =
     selectedProduct?.variants?.reduce((total, variant) => {
@@ -79,10 +59,6 @@ function ProductDetails() {
 
     }, 0) || 0;
 
-
-  // ===================================================
-  // PRICE RANGE
-  // ===================================================
 
   const prices =
     selectedProduct?.variants
@@ -100,10 +76,6 @@ function ProductDetails() {
         ? `₹${lowestPrice}`
         : `₹${lowestPrice} - ₹${highestPrice}`;
 
-
-  // ===================================================
-  // LOADING
-  // ===================================================
 
   if (status === "loading" && !selectedProduct) {
 
@@ -126,10 +98,6 @@ function ProductDetails() {
     );
   }
 
-
-  // ===================================================
-  // ERROR
-  // ===================================================
 
   if (error && !selectedProduct) {
 
@@ -166,10 +134,6 @@ function ProductDetails() {
   }
 
 
-  // ===================================================
-  // RENDER
-  // ===================================================
-
   return (
 
     <div className="min-h-screen bg-[#f8fafc]">
@@ -177,8 +141,6 @@ function ProductDetails() {
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-
-        {/* HEADER */}
 
         <header className="border-b border-gray-200 bg-white px-12 py-7">
 
@@ -205,11 +167,7 @@ function ProductDetails() {
         </header>
 
 
-        {/* CONTENT */}
-
         <section className="px-12 py-10">
-
-          {/* PRODUCT INFO */}
 
           <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
 
@@ -240,8 +198,6 @@ function ProductDetails() {
             </div>
 
 
-            {/* INFO GRID */}
-
             <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
 
               <div>
@@ -268,8 +224,6 @@ function ProductDetails() {
             </div>
 
 
-            {/* PRICE */}
-
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
 
               <div>
@@ -289,8 +243,6 @@ function ProductDetails() {
             </div>
 
 
-            {/* DESCRIPTION */}
-
             <div className="mt-8 border-t border-gray-100 pt-6">
 
               <p className="text-xs text-gray-400">Description</p>
@@ -303,8 +255,6 @@ function ProductDetails() {
 
           </div>
 
-
-          {/* VARIANTS */}
 
           <div className="mt-10">
 
@@ -329,8 +279,6 @@ function ProductDetails() {
                   key={variant.id}
                   className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                 >
-
-                  {/* VARIANT HEADER */}
 
                   <div className="flex items-start justify-between">
 
@@ -359,8 +307,6 @@ function ProductDetails() {
                   </div>
 
 
-                  {/* PRICE */}
-
                   <div className="mt-5">
 
                     <p className="text-xs text-gray-400">Price</p>
@@ -371,8 +317,6 @@ function ProductDetails() {
 
                   </div>
 
-
-                  {/* IMAGES */}
 
                   <div className="mt-5">
 
@@ -402,8 +346,6 @@ function ProductDetails() {
 
                   </div>
 
-
-                  {/* SIZES */}
 
                   <div className="mt-5">
 
@@ -446,8 +388,6 @@ function ProductDetails() {
 
       </main>
 
-
-      {/* IMAGE VIEWER */}
 
                 {viewer && (
   <ImageViewer

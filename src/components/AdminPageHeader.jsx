@@ -1,14 +1,3 @@
-/*
-  The top bar every admin management page uses, so they all look the same.
-
-    <AdminPageHeader
-      eyebrow="Catalog"              small grey label above the title
-      title="Product"                first part of the title ...
-      highlight="Management"         ... and the orange part (defaults to "Management")
-      actionLabel="Add New Product"  optional button on the right (leave out for none)
-      onAction={handleAdd}
-    />
-*/
 function AdminPageHeader({
   eyebrow,
   title,

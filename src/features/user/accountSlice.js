@@ -32,10 +32,8 @@ export const uploadProfileImage = createAsyncThunk(
       const formData = new FormData();
       formData.append('profileImage', imageFile);
 
-      // Let axios set the multipart Content-Type (it must include the boundary)
       const res = await axiosInstance.post('/account/profile-image', formData);
 
-      // Backend responds with { message, data: updatedUser }
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Failed to upload photo');
@@ -48,7 +46,6 @@ export const removeProfileImage = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.delete('/account/profile-image');
-      // Backend responds with { message, data: updatedUser }
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || 'Failed to remove photo');
@@ -77,7 +74,7 @@ export const requestEmailChange = createAsyncThunk(
   async ({ newEmail }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post('/account/change-email', { newEmail });
-      return res.data; // { message, expiresAt }
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -89,7 +86,6 @@ export const confirmEmailChange = createAsyncThunk(
   async ({ otp }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post('/account/verify-change-email-otp', { otp });
-      // Backend responds with { message, data: updatedUser }
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

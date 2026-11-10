@@ -1,8 +1,7 @@
-// components/OtpCard.jsx
 import { useEffect, useRef, useState } from 'react';
 
 const RESEND_COOLDOWN_SECONDS = 60;
-const OTP_EXPIRY_SECONDS = 5 * 60; // must match the backend OTP lifetime
+const OTP_EXPIRY_SECONDS = 5 * 60;
 
 function OtpVerificationCard({
   title = 'Verify',
@@ -15,13 +14,11 @@ function OtpVerificationCard({
   onResend,
   submitLabel = 'Verify & continue',
   resendCooldown = RESEND_COOLDOWN_SECONDS,
-  expiresAt, // ISO string from the backend: the single source of truth
+  expiresAt,
   expiryDuration = OTP_EXPIRY_SECONDS,
 }) {
   const inputsRef = useRef([]);
 
-  // ONE ticker. Everything else is calculated from `expiresAt`, so nothing
-  // lives in component state that a refresh could reset.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -29,7 +26,7 @@ function OtpVerificationCard({
   }, []);
 
   const endTime = expiresAt ? new Date(expiresAt).getTime() : 0;
-  const sentAt = endTime - expiryDuration * 1000; // when this code was sent
+  const sentAt = endTime - expiryDuration * 1000;
   const secondsUntil = (t) => Math.max(0, Math.ceil((t - now) / 1000));
 
   const expirySecondsLeft = secondsUntil(endTime);
@@ -75,11 +72,8 @@ function OtpVerificationCard({
   const handleResendClick = async () => {
     inputsRef.current.forEach((input) => { if (input) input.value = ''; });
 
-    // If this succeeds the parent passes a new `expiresAt`, which restarts the
-    // countdown and the resend lock automatically. If it fails, nothing changes.
     await onResend();
 
-    // Focus after the re-render, because the boxes are disabled while expired
     setTimeout(() => inputsRef.current[0]?.focus(), 0);
   };
 
@@ -103,7 +97,6 @@ function OtpVerificationCard({
       </h1>
       <p className="mb-2 text-sm text-muted">{description}</p>
 
-      {/* The only visible timer */}
       <div className="mb-4">
         {isExpired ? (
           <p className="mt-1 text-sm font-semibold text-[#f4511e]">
@@ -153,7 +146,6 @@ function OtpVerificationCard({
         </button>
       </form>
 
-      {/* Resend: locked for the first `resendCooldown` seconds, no second countdown shown */}
       <p className="mt-6 text-sm text-muted">
         Didn&apos;t receive a code?{' '}
         <button

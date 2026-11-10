@@ -7,16 +7,6 @@ import { TRACKABLE_ITEM_STATUSES } from "../utils/orderFormat";
 const primaryBtn =
   "rounded bg-[#b13600] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:opacity-50";
 
-/*
-  One product line on the Order Details page.
-  Which buttons show depends on the ITEM status (the server also sends canCancel / canReturn):
-
-    pending (still processing)    -> Cancel item  (even if another item of the order has shipped)
-    shipped / out for delivery    -> Track Item   (no Cancel any more)
-    delivered                     -> Track Item, Return
-    return requested              -> Track Item
-    cancelled / returned          -> no buttons
-*/
 function OrderItemRow({
   item,
   orderStatus,
@@ -39,13 +29,11 @@ function OrderItemRow({
     .filter(Boolean)
     .join(" | ");
 
-  // The order badge already says "Delivered" etc., so only show the item badge when it differs
   const showItemBadge = item.status !== orderStatus;
 
   return (
     <div className="flex flex-col gap-4 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-4">
-        {/* IMAGE */}
         <Link
           to={item.productId ? `/products/${item.productId}` : "#"}
           className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-line bg-[#f7f7f7]"
@@ -65,7 +53,6 @@ function OrderItemRow({
           )}
         </Link>
 
-        {/* TEXT + BUTTONS */}
         <div className="min-w-0">
           <Link
             to={item.productId ? `/products/${item.productId}` : "#"}
@@ -137,7 +124,6 @@ function OrderItemRow({
         </div>
       </div>
 
-      {/* PRICE + QTY */}
       <div className="shrink-0 text-left sm:text-right">
         <p
           className={`text-sm font-bold ${

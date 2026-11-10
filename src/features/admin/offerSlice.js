@@ -1,19 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Admin offers  (product offers, category offers, referral programme)
-|--------------------------------------------------------------------------
-| GET    /admin/offers?type&search&status&page&limit&sort -> { data: { offers[], pagination } }
-| GET    /admin/offers/options?search                     -> { data: { categories[], products[] } }
-| POST   /admin/offers                                    -> { data: offer }
-| PATCH  /admin/offers/:offerId                           -> { data: offer }
-| PATCH  /admin/offers/:offerId/status                    -> { data: { id, isActive, status } }
-| DELETE /admin/offers/:offerId                           -> { data: { id } }
-| GET    /admin/offers/referral                           -> { data: { program, stats } }
-| PUT    /admin/offers/referral                           -> { data: { program, stats } }
-*/
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
@@ -133,7 +120,7 @@ const initialState = {
   options: { categories: [], products: [] },
   optionsStatus: "idle",
 
-  referral: null, // { program, stats }
+  referral: null,
   referralStatus: "idle",
   referralError: null,
 };

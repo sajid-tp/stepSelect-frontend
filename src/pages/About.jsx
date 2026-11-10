@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Static "About us" page (no API calls). Edit the text / numbers below freely.
 const STATS = [
   { value: '50K+', label: 'Happy customers' },
   { value: '99%', label: 'Authenticity guaranteed' },
@@ -32,7 +31,6 @@ function About() {
       <Navbar />
 
       <main className="w-full flex-1">
-        {/* HERO */}
         <section className="px-4 pb-12 pt-10 text-center sm:px-6 sm:pb-16 sm:pt-14 lg:px-10">
           <nav className="mb-6 text-xs uppercase tracking-wide">
             <Link to="/" className="text-muted transition hover:text-ink">Home</Link>
@@ -55,10 +53,8 @@ function About() {
           </p>
         </section>
 
-        {/* WHO WE ARE */}
         <section className="px-4 py-6 sm:px-6 sm:py-10 lg:px-10">
           <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-2 md:gap-14">
-            {/* Image placeholder: drop a real photo at /public/images/about/store.jpg to replace it */}
             <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#2b2b2b]">
               <img
                 src="/images/about/store.jpg"
@@ -99,7 +95,6 @@ function About() {
           </div>
         </section>
 
-        {/* OUR VALUES */}
         <section className="px-4 py-10 sm:px-6 sm:py-16 lg:px-10">
           <h2 className="text-center text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Our Values</h2>
 

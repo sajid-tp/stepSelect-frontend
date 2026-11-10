@@ -11,12 +11,6 @@ import {
   resetCouponFormState,
 } from "../../features/admin/couponSlice";
 
-/*
-|--------------------------------------------------------------------------
-| VALIDATION RULES  (kept in line with models/coupon.js + adminCouponServices)
-|--------------------------------------------------------------------------
-*/
-// Same numbers as COUPON_LIMITS in server/src/constants/couponConstants.js - change both together.
 const RULES = {
   CODE_MIN: 3,
   CODE_MAX: 20,
@@ -35,14 +29,6 @@ const formatINR = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 
 const CODE_REGEX = /^[A-Z0-9_-]+$/;
 
-/*
-|--------------------------------------------------------------------------
-| DATE HELPERS
-| <input type="date"> gives "YYYY-MM-DD". We convert using LOCAL time so the
-| coupon starts at 00:00 and expires at 23:59:59 of the chosen day (sending the
-| bare date would make it expire at the *start* of the expiry day).
-|--------------------------------------------------------------------------
-*/
 const pad = (n) => String(n).padStart(2, "0");
 
 const toDateInput = (value) => {
@@ -64,11 +50,6 @@ const endOfDayISO = (dateStr) => {
   return new Date(y, m - 1, d, 23, 59, 59, 999).toISOString();
 };
 
-/*
-|--------------------------------------------------------------------------
-| FORM <-> API MAPPING
-|--------------------------------------------------------------------------
-*/
 const EMPTY_FORM = {
   couponCode: "",
   discountType: "percentage",
@@ -107,7 +88,6 @@ const buildPayload = (f) => {
     description: f.description.trim(),
     discountType: f.discountType,
     discountValue: Number(f.discountValue),
-    // flat coupons must send null — the backend rejects a maximumDiscount on them
     maximumDiscount:
       isPercentage && !isBlank(f.maximumDiscount) ? Number(f.maximumDiscount) : null,
     minimumPurchase: isBlank(f.minimumPurchase) ? 0 : Number(f.minimumPurchase),
@@ -119,13 +99,7 @@ const buildPayload = (f) => {
   };
 };
 
-/*
-|--------------------------------------------------------------------------
-| VALIDATORS   (data, ctx) => "" | "error message"
-|--------------------------------------------------------------------------
-*/
 const isWholeNumber = (v) => /^\d+$/.test(String(v).trim());
-// 12, 12.5 and 12.55 are fine; 12.555 is not (max 2 decimal places)
 const hasMaxTwoDecimals = (v) => /^(\d+\.?\d{0,2}|\.\d{1,2})$/.test(String(v).trim());
 
 const VALIDATORS = {
@@ -147,7 +121,6 @@ const VALIDATORS = {
     if (!Number.isFinite(value) || value <= 0)
       return "Discount value must be greater than 0.";
     if (d.discountType === "percentage") {
-      // percentage coupons take off a whole number of percent
       if (
         !isWholeNumber(d.discountValue) ||
         value < RULES.MIN_PERCENT ||
@@ -174,7 +147,6 @@ const VALIDATORS = {
     return "";
   },
 
-  // Empty (= none) or any amount from ₹0 upwards.
   minimumPurchase: (d) => {
     if (isBlank(d.minimumPurchase)) return "";
     const value = Number(d.minimumPurchase);
@@ -226,11 +198,6 @@ const VALIDATORS = {
       : "",
 };
 
-/*
-|--------------------------------------------------------------------------
-| STYLES + SMALL COMPONENTS
-|--------------------------------------------------------------------------
-*/
 const inputClass = (hasError, extra = "") => `
   w-full rounded-md border bg-[#f3f4f6] px-4 py-3 text-sm text-gray-900
   outline-none transition placeholder:text-gray-400
@@ -272,11 +239,6 @@ function Adornment({ children }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function CouponForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -305,12 +267,10 @@ function CouponForm() {
   const serverError = isEditMode ? updateError : createError;
   const isPercentage = formData.discountType === "percentage";
 
-  /* ---------- reset slice state on mount ---------- */
   useEffect(() => {
     dispatch(resetCouponFormState());
   }, [dispatch]);
 
-  /* ---------- EDIT: fill from router state, otherwise fetch by id ---------- */
   useEffect(() => {
     if (!isEditMode) return;
 
@@ -331,7 +291,6 @@ function CouponForm() {
     }
   }, [isEditMode, couponFromState, current, couponId]);
 
-  /* ---------- helpers ---------- */
   const ctx = { isEditMode, usedCount };
 
   const setField = (name, value) => {
@@ -343,7 +302,6 @@ function CouponForm() {
     const { name, value } = e.target;
 
     if (name === "couponCode") {
-      // codes are stored upper-case with no spaces
       setField(name, value.toUpperCase().replace(/\s/g, ""));
       return;
     }
@@ -363,7 +321,6 @@ function CouponForm() {
     setFormData((prev) => ({
       ...prev,
       discountType,
-      // a flat coupon can't have a cap
       maximumDiscount: discountType === "flat" ? "" : prev.maximumDiscount,
     }));
     setErrors((prev) => ({ ...prev, discountValue: "", maximumDiscount: "" }));
@@ -379,7 +336,6 @@ function CouponForm() {
     return Object.keys(next).length === 0;
   };
 
-  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -395,14 +351,12 @@ function CouponForm() {
       navigate("/admin/coupons");
     } catch (err) {
       const message = typeof err === "string" ? err : err?.message || "";
-      // surface duplicate-code errors right on the field as well
       if (/already exists/i.test(message)) {
         setErrors((prev) => ({ ...prev, couponCode: message }));
       }
     }
   };
 
-  /* ---------- EDIT: loading / failed states ---------- */
   if (isEditMode && !loaded) {
     return (
       <div className="min-h-screen bg-[#f7f9fc]">
@@ -430,14 +384,12 @@ function CouponForm() {
     );
   }
 
-  /* ---------- RENDER ---------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen px-10 py-10">
         <div className="mx-auto w-full max-w-3xl">
-          {/* HEADER */}
           <button
             type="button"
             onClick={() => navigate("/admin/coupons")}
@@ -454,7 +406,6 @@ function CouponForm() {
             <span className="text-[#ff5722]">Coupon</span>
           </h1>
 
-          {/* FORM CARD */}
           <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
             {serverError && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -464,7 +415,6 @@ function CouponForm() {
 
             <form onSubmit={handleSubmit} noValidate>
               <div className="grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2">
-                {/* CODE */}
                 <Field
                   label="Coupon Code"
                   htmlFor="couponCode"
@@ -487,7 +437,6 @@ function CouponForm() {
                   />
                 </Field>
 
-                {/* DISCOUNT TYPE */}
                 <Field label="Discount Type" htmlFor="discountType" required>
                   <div className="relative">
                     <select
@@ -505,7 +454,6 @@ function CouponForm() {
                   </div>
                 </Field>
 
-                {/* DISCOUNT VALUE */}
                 <Field
                   label="Discount Value"
                   htmlFor="discountValue"
@@ -537,7 +485,6 @@ function CouponForm() {
                   </div>
                 </Field>
 
-                {/* MAX DISCOUNT */}
                 <Field
                   label="Max Discount"
                   htmlFor="maximumDiscount"
@@ -567,7 +514,6 @@ function CouponForm() {
                   </div>
                 </Field>
 
-                {/* MIN PURCHASE */}
                 <Field
                   label="Min Purchase"
                   htmlFor="minimumPurchase"
@@ -593,7 +539,6 @@ function CouponForm() {
                   </div>
                 </Field>
 
-                {/* REDEMPTIONS LIMIT */}
                 <Field
                   label="Redemptions Limit"
                   htmlFor="redemptionLimit"
@@ -620,7 +565,6 @@ function CouponForm() {
                   />
                 </Field>
 
-                {/* START DATE  (extra field) */}
                 <Field
                   label="Start Date"
                   htmlFor="startDate"
@@ -640,7 +584,6 @@ function CouponForm() {
                   />
                 </Field>
 
-                {/* EXPIRY DATE */}
                 <Field
                   label="Expiry Date"
                   htmlFor="expiryDate"
@@ -660,7 +603,6 @@ function CouponForm() {
                   />
                 </Field>
 
-                {/* PER-USER LIMIT  (extra field) */}
                 <Field
                   label="Uses Per Customer"
                   htmlFor="usageLimitPerUser"
@@ -686,7 +628,6 @@ function CouponForm() {
                 </Field>
               </div>
 
-              {/* DESCRIPTION */}
               <div className="mt-6">
                 <Field
                   label="Campaign Description"
@@ -711,7 +652,6 @@ function CouponForm() {
                 </Field>
               </div>
 
-              {/* ACTIVE TOGGLE */}
               <div className="mt-6 flex items-center justify-between rounded-lg bg-[#f3f4f6] px-5 py-4">
                 <div>
                   <p className="text-sm font-bold text-gray-900">
@@ -743,7 +683,6 @@ function CouponForm() {
                 </button>
               </div>
 
-              {/* ACTIONS */}
               <button
                 type="submit"
                 disabled={isSubmitting}

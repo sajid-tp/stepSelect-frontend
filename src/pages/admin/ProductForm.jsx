@@ -13,7 +13,7 @@ import {
 
 import AdminSidebar from "../../components/AdminSideBar";
 import ImageCropper from "../../components/ImageCropper";
-import Modal from "../../components/Modals"; // same path as in Products.jsx
+import Modal from "../../components/Modals";
 import ImageViewer from "../../components/ImageViewer";
 import {
   createProduct,
@@ -37,10 +37,6 @@ import {
   getBrands,
 } from "../../features/admin/brandSlice";
 
-
-// ==================================================
-// COLOR OPTIONS
-// ==================================================
 
 const COLOR_OPTIONS = [
   "Black",
@@ -70,13 +66,8 @@ const GENDER_OPTIONS = [
   { label: "Unisex", value: "unisex" },
 ];
 
-// Must match the backend GENDERS array
 const VALID_GENDERS = GENDER_OPTIONS.map((g) => g.value);
 
-
-// ==================================================
-// SIZE OPTIONS
-// ==================================================
 
 const SIZE_OPTIONS = [
   "UK 6",
@@ -89,10 +80,6 @@ const SIZE_OPTIONS = [
 ];
 
 
-// ==================================================
-// VALIDATION RULES
-// ==================================================
-
 const RULES = {
   NAME_MIN: 3,
   NAME_MAX: 100,
@@ -102,18 +89,15 @@ const RULES = {
 
   STOCK_MAX: 100000,
 
-  MIN_IMAGES: 3, // backend: "A variant must have minimum 3 images."
+  MIN_IMAGES: 3,
   MAX_IMAGES: 10,
   MAX_IMAGE_SIZE_MB: 5,
 };
 
-// Starts with a letter/number; allows letters, numbers, spaces and  - ' . , & ( ) / +
 const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s\-'.,&()/+]*$/;
 
-// ObjectId-like (24 hex chars) - same idea as mongoose.Types.ObjectId.isValid
 const OBJECT_ID_REGEX = /^[a-fA-F0-9]{24}$/;
 
-// Collapses repeated spaces: "Air   Zoom  41 " -> "Air Zoom 41"
 const normalizeSpaces = (value) =>
   String(value || "").trim().replace(/\s+/g, " ");
 
@@ -244,7 +228,6 @@ const validatePrice = (value) => {
     return "Price must be greater than 0.";
   }
 
-  // Maximum 2 decimal places
   if (!/^\d+(\.\d{1,2})?$/.test(String(value).trim())) {
     return "Price can have at most 2 decimal places.";
   }
@@ -291,14 +274,12 @@ const validateStock = (value) => {
 };
 
 
-// Blocks characters that make no sense in a whole-number input
 const blockInvalidIntegerKeys = (e) => {
   if (["e", "E", "+", "-", "."].includes(e.key)) {
     e.preventDefault();
   }
 };
 
-// Price may have decimals but never e / + / -
 const blockInvalidPriceKeys = (e) => {
   if (["e", "E", "+", "-"].includes(e.key)) {
     e.preventDefault();
@@ -306,7 +287,6 @@ const blockInvalidPriceKeys = (e) => {
 };
 
 
-// Small helpers for consistent styling
 const inputClass = (hasError) =>
   `w-full h-11 border rounded-lg px-4 text-sm outline-none bg-white focus:ring-1 ${
     hasError
@@ -327,18 +307,10 @@ const ProductForm = () => {
   const location = useLocation();
 
 
-  // ==================================================
-  // EXISTING PRODUCT
-  // ==================================================
-
   const existingProduct = location.state?.product || null;
 
   const isEditMode = Boolean(existingProduct);
 
-
-  // ==================================================
-  // REDUX STATE
-  // ==================================================
 
   const {
     createStatus,
@@ -382,10 +354,6 @@ const ProductForm = () => {
   );
 
 
-  // ==================================================
-  // PRODUCT DETAILS
-  // ==================================================
-
   const [productName, setProductName] = useState(
     existingProduct?.productName || ""
   );
@@ -407,10 +375,6 @@ const ProductForm = () => {
   );
 
 
-  // ==================================================
-  // VARIANT FORM
-  // ==================================================
-
   const [color, setColor] = useState("");
 
   const [price, setPrice] = useState("");
@@ -422,25 +386,8 @@ const ProductForm = () => {
     },
   ]);
 
-  /*
-   * Ref on the Add / Edit Variant section so that
-   * clicking "Edit" can scroll straight to the form.
-   */
-
   const variantFormRef = useRef(null);
 
-
-  // ==================================================
-  // IMAGE STATE
-  // ==================================================
-
-  /*
-   * Each selected image is stored as:
-   * { file, preview, cropped }
-   *
-   * Existing Cloudinary URLs are stored separately
-   * in existingImageUrls.
-   */
 
   const [imageItems, setImageItems] = useState([]);
 
@@ -449,20 +396,11 @@ const ProductForm = () => {
   const fileInputRef = useRef(null);
 
 
-  // ==================================================
-  // IMAGE CROPPING
-  // ==================================================
-
   const [cropImageIndex, setCropImageIndex] = useState(null);
 
   const [isCropping, setIsCropping] = useState(false);
 
 
-  // ==================================================
-  // IMAGE VIEWER
-  // ==================================================
-
-  // null = closed, otherwise { images: [...], index: number }
   const [viewer, setViewer] = useState(null);
 
   const openViewer = (images, index) => {
@@ -472,50 +410,22 @@ const ProductForm = () => {
   const closeViewer = () => setViewer(null);
 
 
-  // ==================================================
-  // VARIANTS
-  // ==================================================
-
   const [variants, setVariants] = useState(
     existingProduct?.variants || []
   );
 
-  /*
-   * When editing an existing variant this will contain
-   * the variant currently being edited.
-   */
-
   const [editingVariant, setEditingVariant] = useState(null);
-
-  /*
-   * Variant waiting for delete confirmation:
-   * { variant, index } or null
-   */
 
   const [variantToDelete, setVariantToDelete] = useState(null);
 
 
-  // ==================================================
-  // ERRORS
-  // ==================================================
-
-  // General (banner) error
   const [formError, setFormError] = useState("");
 
-  // Modal shown when a new product has no variants
   const [showVariantRequiredModal, setShowVariantRequiredModal] =
     useState(false);
 
-  /*
-   * Field-level errors for the Product Details section:
-   * { productName, brandId, categoryId, gender, description }
-   */
   const [detailErrors, setDetailErrors] = useState({});
 
-  /*
-   * Field-level errors for the Variant form:
-   * { color, price, images, sizeList, sizes: { [index]: { size, stock } } }
-   */
   const [variantErrors, setVariantErrors] = useState({});
 
   const clearDetailError = (field) => {
@@ -555,16 +465,8 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // DETAILS SAVED
-  // ==================================================
-
   const [detailsSaved, setDetailsSaved] = useState(false);
 
-
-  // ==================================================
-  // FETCH CATEGORIES
-  // ==================================================
 
   useEffect(() => {
 
@@ -573,16 +475,12 @@ const ProductForm = () => {
         search: "",
         page: 1,
         limit: 100,
-        status: "active", // blocked categories must not be selectable
+        status: "active",
       })
     );
 
   }, [dispatch]);
 
-
-  // ==================================================
-  // FETCH BRANDS
-  // ==================================================
 
   useEffect(() => {
 
@@ -591,16 +489,12 @@ const ProductForm = () => {
         search: "",
         page: 1,
         limit: 100,
-        status: "active", // blocked brands must not be selectable
+        status: "active",
       })
     );
 
   }, [dispatch]);
 
-
-  // ==================================================
-  // FETCH EXISTING VARIANTS
-  // ==================================================
 
   useEffect(() => {
 
@@ -627,10 +521,6 @@ const ProductForm = () => {
   ]);
 
 
-  // ==================================================
-  // SYNC BACKEND VARIANTS
-  // ==================================================
-
   useEffect(() => {
 
     if (!isEditMode) {
@@ -645,10 +535,6 @@ const ProductForm = () => {
   ]);
 
 
-  // ==================================================
-  // CLEAR OLD REDUX ERRORS WHEN PAGE OPENS
-  // ==================================================
-
   useEffect(() => {
 
     dispatch(clearProductErrors());
@@ -657,10 +543,6 @@ const ProductForm = () => {
 
   }, [dispatch]);
 
-
-  // ==================================================
-  // VALIDATE PRODUCT
-  // ==================================================
 
   const validateProductDetails = () => {
 
@@ -693,10 +575,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // SAVE PRODUCT DETAILS
-  // ==================================================
-
   const handleSaveDetails = async () => {
 
     setFormError("");
@@ -705,10 +583,6 @@ const ProductForm = () => {
       return;
     }
 
-
-    // -----------------------------------------------
-    // EDIT MODE
-    // -----------------------------------------------
 
     if (isEditMode) {
 
@@ -746,24 +620,10 @@ const ProductForm = () => {
     }
 
 
-    // -----------------------------------------------
-    // ADD MODE
-    // -----------------------------------------------
-
-    /*
-     * Product doesn't exist yet.
-     * Therefore we only keep the details in React state.
-     * FINISH will create the actual product.
-     */
-
     setDetailsSaved(true);
     setFormError("");
   };
 
-
-  // ==================================================
-  // IMAGE SELECTION
-  // ==================================================
 
   const handleImageChange = (e) => {
 
@@ -847,19 +707,11 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // OPEN IMAGE CROPPER
-  // ==================================================
-
   const handleOpenCropper = (index) => {
     setFormError("");
     setCropImageIndex(index);
   };
 
-
-  // ==================================================
-  // APPLY CROP + RESIZE
-  // ==================================================
 
   const handleApplyCrop = async (croppedFile) => {
 
@@ -919,10 +771,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // REMOVE IMAGE
-  // ==================================================
-
   const handleRemoveExistingImage = (index) => {
 
     setExistingImageUrls((previous) =>
@@ -956,10 +804,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // ADD SIZE
-  // ==================================================
-
   const handleAddSize = () => {
 
     setSizes((previous) => [
@@ -972,10 +816,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // REMOVE SIZE
-  // ==================================================
-
   const handleRemoveSize = (index) => {
 
     if (sizes.length === 1) {
@@ -986,7 +826,6 @@ const ProductForm = () => {
       previous.filter((_, i) => i !== index)
     );
 
-    // Row indexes shift after removal, so drop stale row errors
     setVariantErrors((previous) => {
       const next = { ...previous };
       delete next.sizes;
@@ -995,10 +834,6 @@ const ProductForm = () => {
     });
   };
 
-
-  // ==================================================
-  // CHANGE SIZE
-  // ==================================================
 
   const handleSizeChange = (index, field, value) => {
 
@@ -1022,15 +857,9 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // VALIDATE VARIANT
-  // ==================================================
-
   const validateVariant = () => {
 
     const errors = {};
-
-    // ---------- COLOR ----------
 
     const colorError = validateColor(color);
 
@@ -1040,7 +869,6 @@ const ProductForm = () => {
 
     } else {
 
-      // Each color can only be added once per product
       const colorAlreadyUsed = variants.some(
         (variant) =>
           variant.color?.trim().toLowerCase() ===
@@ -1057,21 +885,12 @@ const ProductForm = () => {
     }
 
 
-    // ---------- PRICE ----------
-
     const priceError = validatePrice(price);
 
     if (priceError) {
       errors.price = priceError;
     }
 
-
-    // ---------- IMAGES ----------
-
-    /*
-     * Existing images + newly selected images
-     * must be at least 3 and at most 10.
-     */
 
     const totalImages =
       existingImageUrls.length + imageItems.length;
@@ -1089,8 +908,6 @@ const ProductForm = () => {
       errors.images = `You can use a maximum of ${RULES.MAX_IMAGES} images.`;
     }
 
-
-    // ---------- SIZES ----------
 
     if (sizes.length === 0) {
 
@@ -1112,7 +929,6 @@ const ProductForm = () => {
         }
       });
 
-      // Each size can only be added once
       const seen = new Set();
 
       sizes.forEach((item, index) => {
@@ -1146,10 +962,6 @@ const ProductForm = () => {
     return true;
   };
 
-
-  // ==================================================
-  // RESET VARIANT FORM
-  // ==================================================
 
   const resetVariantForm = () => {
 
@@ -1188,10 +1000,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // UPLOAD IMAGES
-  // ==================================================
-
   const uploadNewImages = async () => {
 
     if (imageItems.length === 0) {
@@ -1207,10 +1015,6 @@ const ProductForm = () => {
     return uploadedUrls;
   };
 
-
-  // ==================================================
-  // BUILD VARIANT DATA
-  // ==================================================
 
   const buildVariantData = (imageUrls) => {
 
@@ -1229,10 +1033,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // ADD / UPDATE VARIANT
-  // ==================================================
-
   const handleSaveVariant = async () => {
 
     setFormError("");
@@ -1243,19 +1043,7 @@ const ProductForm = () => {
 
     try {
 
-      /*
-       * =================================================
-       * EXISTING VARIANT EDIT
-       * =================================================
-       */
-
       if (editingVariant) {
-
-        /*
-         * If the user selected new images, upload them first.
-         * Existing Cloudinary images remain unless
-         * the user removed them.
-         */
 
         const uploadedUrls = await uploadNewImages();
 
@@ -1282,7 +1070,6 @@ const ProductForm = () => {
           })
         ).unwrap();
 
-        // Refresh from backend
         await dispatch(
           getVariants({
             productId: existingProduct.id,
@@ -1297,18 +1084,7 @@ const ProductForm = () => {
       }
 
 
-      /*
-       * =================================================
-       * EDIT PRODUCT -> ADD NEW VARIANT
-       * =================================================
-       */
-
       if (isEditMode) {
-
-        /*
-         * Product already exists, so the variant
-         * can immediately be sent to the backend.
-         */
 
         const uploadedUrls = await uploadNewImages();
 
@@ -1321,11 +1097,6 @@ const ProductForm = () => {
           })
         ).unwrap();
 
-        /*
-         * IMPORTANT: do NOT manually add a fake/local variant.
-         * Fetch the actual backend data again.
-         */
-
         await dispatch(
           getVariants({
             productId: existingProduct.id,
@@ -1339,21 +1110,6 @@ const ProductForm = () => {
         return;
       }
 
-
-      /*
-       * =================================================
-       * NEW PRODUCT -> LOCAL VARIANT
-       * =================================================
-       */
-
-      /*
-       * The product does not exist yet, so we cannot call
-       * POST /admin/variants/products/:productId/variants
-       * because there is no productId yet.
-       *
-       * Upload the images now and keep the resulting
-       * Cloudinary URLs in local React state.
-       */
 
       const uploadedUrls = await uploadNewImages();
 
@@ -1379,10 +1135,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // EDIT EXISTING VARIANT
-  // ==================================================
-
   const handleEditVariant = (variant) => {
 
     setEditingVariant(variant);
@@ -1406,10 +1158,8 @@ const ProductForm = () => {
       }))
     );
 
-    // Existing Cloudinary URLs
     setExistingImageUrls(variant.images || []);
 
-    // New files are cleared
     imageItems.forEach((item) => {
 
       if (item.preview) {
@@ -1422,17 +1172,12 @@ const ProductForm = () => {
     setVariantErrors({});
     setFormError("");
 
-    // Scroll to the Edit Variant form (not the top of the page)
     variantFormRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   };
 
-
-  // ==================================================
-  // REMOVE LOCAL VARIANT
-  // ==================================================
 
   const handleRemoveLocalVariant = (index) => {
 
@@ -1444,11 +1189,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // DELETE VARIANT (WITH CONFIRMATION MODAL)
-  // ==================================================
-
-  // Only opens the modal
   const handleDeleteVariantClick = (variant, index) => {
     setVariantToDelete({ variant, index });
   };
@@ -1470,7 +1210,6 @@ const ProductForm = () => {
 
     const { variant, index } = variantToDelete;
 
-    // Variant that isn't saved on the backend yet
     if (!variant.id) {
 
       handleRemoveLocalVariant(index);
@@ -1486,7 +1225,6 @@ const ProductForm = () => {
 
       await dispatch(deleteVariant(variant.id)).unwrap();
 
-      // Refresh actual backend state
       await dispatch(
         getVariants({
           productId: existingProduct.id,
@@ -1495,7 +1233,6 @@ const ProductForm = () => {
         })
       ).unwrap();
 
-      // If the deleted variant was open in the form, clear the form
       if (editingVariant?.id === variant.id) {
         resetVariantForm();
       }
@@ -1517,10 +1254,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // FINISH
-  // ==================================================
-
   const handleFinish = async () => {
 
     setFormError("");
@@ -1529,20 +1262,10 @@ const ProductForm = () => {
       return;
     }
 
-    /*
-     * New product must have at least one variant.
-     * (Backend: "At least one variant is required.")
-     */
-
     if (!isEditMode && variants.length === 0) {
       setShowVariantRequiredModal(true);
       return;
     }
-
-    /*
-     * Safety net: every variant must satisfy the backend rules
-     * (3+ images, at least one size, valid price...).
-     */
 
     for (const variant of variants) {
 
@@ -1569,19 +1292,7 @@ const ProductForm = () => {
 
     try {
 
-      /*
-       * =================================================
-       * EDIT PRODUCT
-       * =================================================
-       */
-
       if (isEditMode) {
-
-        /*
-         * Product details are already handled by Save Details,
-         * but we update once more here so that Finish
-         * is always safe.
-         */
 
         await dispatch(
           updateProduct({
@@ -1602,17 +1313,6 @@ const ProductForm = () => {
         return;
       }
 
-
-      /*
-       * =================================================
-       * CREATE PRODUCT
-       * =================================================
-       */
-
-      /*
-       * At this point every variant already contains
-       * permanent Cloudinary URLs.
-       */
 
       await dispatch(
         createProduct({
@@ -1642,18 +1342,10 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // CANCEL
-  // ==================================================
-
   const handleCancel = () => {
     navigate("/admin/products");
   };
 
-
-  // ==================================================
-  // LOADING
-  // ==================================================
 
   const isSaving =
     createStatus === "loading" ||
@@ -1674,10 +1366,6 @@ const ProductForm = () => {
     isCropping;
 
 
-  // ==================================================
-  // ALL ERRORS
-  // ==================================================
-
   const reduxError =
     createError ||
     updateError ||
@@ -1687,10 +1375,6 @@ const ProductForm = () => {
     variantDeleteError ||
     variantsError;
 
-
-  // ==================================================
-  // RENDER VARIANT CARD
-  // ==================================================
 
   const renderVariantCard = (variant, index) => {
 
@@ -1702,8 +1386,6 @@ const ProductForm = () => {
         key={variant.id || `new-${index}`}
         className="border border-slate-200 rounded-lg p-5"
       >
-
-        {/* HEADER */}
 
         <div className="flex justify-between items-start">
 
@@ -1746,8 +1428,6 @@ const ProductForm = () => {
         </div>
 
 
-        {/* COLOR / PRICE */}
-
         <div className="grid grid-cols-2 gap-6 mt-5">
 
           <div>
@@ -1777,8 +1457,6 @@ const ProductForm = () => {
 
         </div>
 
-
-        {/* IMAGES */}
 
         {variant.images?.length > 0 && (
 
@@ -1816,8 +1494,6 @@ const ProductForm = () => {
 
         )}
 
-
-        {/* SIZES */}
 
         <div className="mt-5">
 
@@ -1859,10 +1535,6 @@ const ProductForm = () => {
   };
 
 
-  // ==================================================
-  // JSX
-  // ==================================================
-
   return (
 
     <div className="min-h-screen bg-[#f8fafc]">
@@ -1871,10 +1543,6 @@ const ProductForm = () => {
 
 
       <main className="ml-[214px] px-12 py-10">
-
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
 
         <div className="mb-8">
 
@@ -1895,10 +1563,6 @@ const ProductForm = () => {
         </div>
 
 
-        {/* ================================================= */}
-        {/* ERROR */}
-        {/* ================================================= */}
-
         {(formError || reduxError) && (
 
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -1907,10 +1571,6 @@ const ProductForm = () => {
 
         )}
 
-
-        {/* ================================================= */}
-        {/* PRODUCT DETAILS */}
-        {/* ================================================= */}
 
         <section className="bg-white border border-slate-200 rounded-xl shadow-sm mb-8">
 
@@ -1926,8 +1586,6 @@ const ProductForm = () => {
 
 
             <div className="grid grid-cols-2 gap-6 mt-8">
-
-              {/* PRODUCT NAME */}
 
               <div>
 
@@ -1971,8 +1629,6 @@ const ProductForm = () => {
               </div>
 
 
-              {/* BRAND */}
-
               <div>
 
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -2002,8 +1658,6 @@ const ProductForm = () => {
 
                   ))}
 
-                  {/* Edit mode: keep the product's current brand visible even if it was blocked
-                      later; the server still rejects saving it, so the admin must pick an active one. */}
                   {existingProduct?.brand?.id &&
                     !brands?.some(
                       (brand) =>
@@ -2021,8 +1675,6 @@ const ProductForm = () => {
 
               </div>
 
-
-              {/* CATEGORY */}
 
               <div>
 
@@ -2053,9 +1705,6 @@ const ProductForm = () => {
 
                   ))}
 
-                  {/* Edit mode: the product's current category may have been blocked after it was
-                      assigned. Keep it visible (labelled) so the select doesn't look empty; the
-                      server still rejects saving it, so the admin must pick an active one. */}
                   {existingProduct?.category?.id &&
                     !categories?.some(
                       (category) =>
@@ -2073,8 +1722,6 @@ const ProductForm = () => {
 
               </div>
 
-
-              {/* GENDER */}
 
               <div>
 
@@ -2113,8 +1760,6 @@ const ProductForm = () => {
 
             </div>
 
-
-            {/* DESCRIPTION */}
 
             <div className="mt-6">
 
@@ -2162,8 +1807,6 @@ const ProductForm = () => {
             </div>
 
 
-            {/* SAVE DETAILS */}
-
             <div className="flex items-center justify-end gap-4 mt-8">
 
               {detailsSaved && (
@@ -2191,11 +1834,6 @@ const ProductForm = () => {
 
         </section>
 
-
-        {/* ================================================= */}
-        {/* ADD / UPDATE VARIANT */}
-        {/* IMPORTANT: THIS IS ABOVE EXISTING VARIANTS */}
-        {/* ================================================= */}
 
         <section
           ref={variantFormRef}
@@ -2242,11 +1880,7 @@ const ProductForm = () => {
             </div>
 
 
-            {/* COLOR + PRICE */}
-
             <div className="grid grid-cols-2 gap-6 mt-8">
-
-              {/* COLOR DROPDOWN */}
 
               <div>
 
@@ -2268,7 +1902,6 @@ const ProductForm = () => {
                     Select Color
                   </option>
 
-                  {/* keeps an old custom color (like "Black / Volt") visible when editing */}
                   {color && !COLOR_OPTIONS.includes(color) && (
 
                     <option value={color}>
@@ -2291,8 +1924,6 @@ const ProductForm = () => {
 
               </div>
 
-
-              {/* PRICE */}
 
               <div>
 
@@ -2321,8 +1952,6 @@ const ProductForm = () => {
 
             </div>
 
-
-            {/* IMAGES */}
 
             <div className="mt-7">
 
@@ -2367,8 +1996,6 @@ const ProductForm = () => {
 
               <FieldError message={variantErrors.images} />
 
-
-              {/* EXISTING IMAGES */}
 
               {existingImageUrls.length > 0 && (
 
@@ -2420,8 +2047,6 @@ const ProductForm = () => {
 
               )}
 
-
-              {/* NEW IMAGE PREVIEWS */}
 
               {imageItems.length > 0 && (
 
@@ -2498,8 +2123,6 @@ const ProductForm = () => {
             </div>
 
 
-            {/* SIZES & STOCK */}
-
             <div className="mt-8">
 
               <div className="flex items-center justify-between mb-3">
@@ -2535,8 +2158,6 @@ const ProductForm = () => {
                       className="flex gap-3 items-start"
                     >
 
-                      {/* SIZE DROPDOWN */}
-
                       <div className="flex-1">
 
                         <select
@@ -2551,7 +2172,6 @@ const ProductForm = () => {
                             Select Size
                           </option>
 
-                          {/* keeps an old custom size (like "uk89") visible when editing */}
                           {item.size && !SIZE_OPTIONS.includes(item.size) && (
 
                             <option value={item.size}>
@@ -2580,8 +2200,6 @@ const ProductForm = () => {
 
                       </div>
 
-
-                      {/* STOCK */}
 
                       <div className="w-40">
 
@@ -2625,8 +2243,6 @@ const ProductForm = () => {
             </div>
 
 
-            {/* ADD / UPDATE BUTTON */}
-
             <div className="flex justify-end mt-8">
 
               <button
@@ -2652,10 +2268,6 @@ const ProductForm = () => {
 
         </section>
 
-
-        {/* ================================================= */}
-        {/* EXISTING / ADDED VARIANTS */}
-        {/* ================================================= */}
 
         {variants.length > 0 && (
 
@@ -2686,13 +2298,7 @@ const ProductForm = () => {
         )}
 
 
-        {/* ================================================= */}
-        {/* BOTTOM ACTIONS */}
-        {/* ================================================= */}
-
         <div className="flex justify-end gap-3 mt-8 pb-10">
-
-          {/* CANCEL */}
 
           <button
             type="button"
@@ -2703,8 +2309,6 @@ const ProductForm = () => {
             Cancel
           </button>
 
-
-          {/* FINISH */}
 
           <button
             type="button"
@@ -2720,10 +2324,6 @@ const ProductForm = () => {
       </main>
 
 
-      {/* ================================================= */}
-      {/* IMAGE CROPPER */}
-      {/* ================================================= */}
-
       {cropImageIndex !== null &&
         imageItems[cropImageIndex] && (
 
@@ -2737,10 +2337,6 @@ const ProductForm = () => {
         )}
 
 
-      {/* ================================================= */}
-      {/* IMAGE VIEWER */}
-      {/* ================================================= */}
-
       {viewer && (
         <ImageViewer
           images={viewer.images}
@@ -2751,10 +2347,6 @@ const ProductForm = () => {
           }
         />
       )}
-
-      {/* ================================================= */}
-      {/* VARIANT REQUIRED MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={showVariantRequiredModal}
@@ -2774,10 +2366,6 @@ const ProductForm = () => {
           }, 100);
         }}
       />
-
-      {/* ================================================= */}
-      {/* DELETE VARIANT MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={!!variantToDelete}

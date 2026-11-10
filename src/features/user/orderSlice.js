@@ -3,23 +3,6 @@ import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
 import { downloadBlob } from "../../utils/downloadFile";
 
-/*
-  Backend endpoints used by the order pages (all under /api/orders)
-
-  GET  /orders?page=&limit=                    -> data { orders[], pagination }
-  GET  /orders/reasons                         -> data { cancelReasons[], returnReasons[] }
-  GET  /orders/:orderId                        -> data order   (orderId = _id or orderNumber)
-  POST /orders/:orderId/cancel                 body { reason? }
-  POST /orders/:orderId/items/:itemId/cancel   body { quantity, reason? }
-  POST /orders/:orderId/return                 body { reason, description? }
-  POST /orders/:orderId/items/:itemId/return   body { quantity, reason, description? }
-  GET  /orders/:orderId/invoice                -> PDF
-
-  Every cancel / return call answers with the UPDATED order, so the details page
-  just shows whatever the server sends back. This slice never calculates money.
-*/
-
-// The review API is not on the server yet (Week 5). Change this ONE line when it is.
 const reviewEndpoint = (productId) => `/products/${productId}/reviews`;
 
 const getErrorMessage = (error, fallback) =>
@@ -27,7 +10,6 @@ const getErrorMessage = (error, fallback) =>
   error?.response?.data?.message ||
   fallback;
 
-// Errors from a blob request (invoice) arrive as a Blob, so read the JSON out of it
 const getBlobErrorMessage = async (error, fallback) => {
   const data = error?.response?.data;
   if (data instanceof Blob) {
@@ -41,9 +23,6 @@ const getBlobErrorMessage = async (error, fallback) => {
   return getErrorMessage(error, fallback);
 };
 
-// =====================================================
-// ORDER HISTORY (paginated)
-// =====================================================
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
   async ({ page = 1, limit = 5 } = {}, { rejectWithValue }) => {
@@ -60,9 +39,6 @@ export const fetchOrders = createAsyncThunk(
   }
 );
 
-// =====================================================
-// ONE ORDER
-// =====================================================
 export const fetchOrder = createAsyncThunk(
   "orders/fetchOrder",
   async (orderRef, { rejectWithValue }) => {
@@ -79,9 +55,6 @@ export const fetchOrder = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CANCEL / RETURN REASONS (dropdown options)
-// =====================================================
 export const fetchReasons = createAsyncThunk(
   "orders/fetchReasons",
   async (_, { rejectWithValue }) => {
@@ -94,9 +67,6 @@ export const fetchReasons = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CANCEL WHOLE ORDER
-// =====================================================
 export const cancelOrder = createAsyncThunk(
   "orders/cancelOrder",
   async ({ orderId, reason }, { rejectWithValue }) => {
@@ -113,9 +83,6 @@ export const cancelOrder = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CANCEL ONE ITEM (some or all of its units)
-// =====================================================
 export const cancelOrderItem = createAsyncThunk(
   "orders/cancelOrderItem",
   async ({ orderId, itemId, quantity, reason }, { rejectWithValue }) => {
@@ -133,9 +100,6 @@ export const cancelOrderItem = createAsyncThunk(
   }
 );
 
-// =====================================================
-// RETURN WHOLE ORDER (every delivered item, full quantity)
-// =====================================================
 export const returnOrder = createAsyncThunk(
   "orders/returnOrder",
   async ({ orderId, reason, description }, { rejectWithValue }) => {
@@ -153,9 +117,6 @@ export const returnOrder = createAsyncThunk(
   }
 );
 
-// =====================================================
-// RETURN ONE ITEM (some or all of its units)
-// =====================================================
 export const returnOrderItem = createAsyncThunk(
   "orders/returnOrderItem",
   async (
@@ -176,9 +137,6 @@ export const returnOrderItem = createAsyncThunk(
   }
 );
 
-// =====================================================
-// INVOICE PDF
-// =====================================================
 export const downloadInvoice = createAsyncThunk(
   "orders/downloadInvoice",
   async ({ orderId, orderNumber }, { rejectWithValue }) => {
@@ -199,9 +157,6 @@ export const downloadInvoice = createAsyncThunk(
   }
 );
 
-// =====================================================
-// REVIEW  (needs the review API, see reviewEndpoint above)
-// =====================================================
 export const submitReview = createAsyncThunk(
   "orders/submitReview",
   async ({ productId, orderId, rating, comment }, { rejectWithValue }) => {
@@ -220,25 +175,19 @@ export const submitReview = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SLICE
-// =====================================================
 const emptyPagination = { page: 1, limit: 5, totalItems: 0, totalPages: 0 };
 
 const initialState = {
-  // order history
   list: [],
   pagination: emptyPagination,
-  listStatus: "idle", // idle | loading | succeeded | failed
+  listStatus: "idle",
   listError: null,
 
-  // order details
   current: null,
   currentStatus: "idle",
   currentError: null,
 
-  // cancel / return dropdown options
-  reasons: null, // { cancelReasons[], returnReasons[] }
+  reasons: null,
 };
 
 const orderSlice = createSlice({
@@ -256,9 +205,7 @@ const orderSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // ----- history -----
       .addCase(fetchOrders.pending, (state) => {
-        // keep showing the old page while the next one loads
         if (state.listStatus !== "succeeded") state.listStatus = "loading";
         state.listError = null;
       })
@@ -272,7 +219,6 @@ const orderSlice = createSlice({
         state.listError = action.payload || "We couldn't load your orders.";
       })
 
-      // ----- details -----
       .addCase(fetchOrder.pending, (state) => {
         if (!state.current) state.currentStatus = "loading";
         state.currentError = null;
@@ -286,12 +232,10 @@ const orderSlice = createSlice({
         state.currentError = action.payload || "We couldn't load this order.";
       })
 
-      // ----- reasons -----
       .addCase(fetchReasons.fulfilled, (state, action) => {
         state.reasons = action.payload;
       })
 
-      // ----- cancel / return: the server sends back the updated order -----
       .addMatcher(
         isAnyOf(
           cancelOrder.fulfilled,
@@ -303,14 +247,12 @@ const orderSlice = createSlice({
           const updated = action.payload.order;
           state.current = updated;
           state.currentStatus = "succeeded";
-          // keep the history list in step, in case it is shown again
           state.list = state.list.map((o) =>
             o.id === updated.id ? updated : o
           );
         }
       )
 
-      // ----- clear on logout -----
       .addMatcher(
         isAnyOf(logoutUser.fulfilled, logoutUser.rejected),
         () => initialState

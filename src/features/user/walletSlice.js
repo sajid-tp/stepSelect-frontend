@@ -2,24 +2,11 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
 
-/*
-  Backend endpoints used by the wallet
-
-  GET  /wallet?type=credit|debit&page=1&limit=10   -> data { balance, transactions[], pagination, topUpEnabled, razorpayDemo, limits }
-  POST /wallet/top-up/initiate { amount }           -> data { razorpayOrderId, amount(paise), key, currency, demo? }  (opens Razorpay)
-  POST /wallet/top-up/verify   { razorpay_* }       -> data { balance, transaction, amount }   (money is added here)
-  POST /payments/wallet/pay    { addressId }        -> data { orderNumber, paymentStatus, ... }  (pay an order from the wallet)
-
-  Money goes in ONLY through Razorpay and can never be taken back out (no withdraw endpoint exists).
-  The server keeps the balance and decides everything; this slice only passes things along.
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   fallback;
 
-// Balance + history (one page of it)
 export const fetchWallet = createAsyncThunk(
   "wallet/fetch",
   async ({ type, page = 1, limit = 10 } = {}, { rejectWithValue }) => {
@@ -34,7 +21,6 @@ export const fetchWallet = createAsyncThunk(
   }
 );
 
-// Add money, step 1: the server checks the amount and creates the Razorpay order
 export const initiateTopUp = createAsyncThunk(
   "wallet/initiateTopUp",
   async (amount, { rejectWithValue }) => {
@@ -47,7 +33,6 @@ export const initiateTopUp = createAsyncThunk(
   }
 );
 
-// Add money, step 2: after paying, the server checks the payment and adds the money
 export const verifyTopUp = createAsyncThunk(
   "wallet/verifyTopUp",
   async (payload, { rejectWithValue }) => {
@@ -60,7 +45,6 @@ export const verifyTopUp = createAsyncThunk(
   }
 );
 
-// Checkout: pay the whole order from the wallet
 export const payWithWallet = createAsyncThunk(
   "wallet/payOrder",
   async ({ addressId }, { rejectWithValue }) => {
@@ -80,7 +64,7 @@ const initialState = {
   topUpEnabled: true,
   razorpayDemo: false,
   limits: null,
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 

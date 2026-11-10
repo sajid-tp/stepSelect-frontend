@@ -4,16 +4,6 @@ import useReferralOffer from "../hooks/useReferralOffer";
 
 const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
-/*
-|--------------------------------------------------------------------------
-| Referral offer note
-|--------------------------------------------------------------------------
-| variant="compact" -> one small line under the price on a product card
-| variant="full"    -> a box on the product page
-|
-| * A customer who signed up through a referral (and has not ordered yet) sees THEIR offer.
-| * Everybody else (product page only) sees an invitation to refer friends.
-*/
 function ReferralOfferNote({ variant = "full" }) {
   const { program, eligible, discount, minOrderAmount } = useReferralOffer();
   const loggedIn = Boolean(useSelector((state) => state.auth?.user));

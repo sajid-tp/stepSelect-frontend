@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import StaticImage from './StaticImage';
 
-// Pictures are fixed files in /public/images/home/types (see the README in that folder)
 const types = [
   { label: 'Sneakers', color: '#dce8f0', img: '/images/home/types/sneakers.jpg' },
   { label: 'Running', color: '#f6dde0', img: '/images/home/types/running.jpg' },
@@ -17,7 +16,6 @@ function ShopByType() {
         <h2 className="mb-6 text-lg sm:mb-8 sm:text-xl">Shop by type</h2>
         <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:grid-cols-5">
           {types.map((type) => (
-            // /shop?category=sneakers opens Shop with the "Sneakers" category ticked
             <Link
               to={`/shop?category=${encodeURIComponent(type.label.toLowerCase())}`}
               className="group flex flex-col items-center gap-2 sm:gap-3"

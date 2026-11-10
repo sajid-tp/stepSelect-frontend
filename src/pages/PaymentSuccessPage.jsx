@@ -7,11 +7,6 @@ import Footer from "../components/Footer";
 import PaymentSuccess from "../components/PaymentSuccess";
 import { fetchPaymentStatus, resetPayment } from "../features/user/paymentSlice";
 
-/*
-  /payment-success/:orderNumber
-  Asks the server for the real payment status (never trusts the URL), then shows the
-  PaymentSuccess card. An order that is not paid is sent to the failed page instead.
-*/
 function PaymentSuccessPage() {
   const { orderNumber } = useParams();
   const dispatch = useDispatch();
@@ -28,7 +23,6 @@ function PaymentSuccessPage() {
     result?.orderNumber === orderNumber &&
     ["paid", "refunded"].includes(result.paymentStatus);
 
-  // Not paid (yet): the right place for this order is the failed page
   useEffect(() => {
     if (status === "succeeded" && result?.orderNumber === orderNumber && !isPaid) {
       navigate(`/payment-failed/${orderNumber}`, { replace: true });

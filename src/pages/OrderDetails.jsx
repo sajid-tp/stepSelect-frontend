@@ -36,24 +36,6 @@ import {
 const sectionLabel =
   "text-[11px] font-bold uppercase tracking-wider text-gray-400";
 
-/*
-  Order Details  (/orders/:orderNumber)
-
-  Buttons follow the status (the server also sends canCancel / canReturn flags):
-
-    Pending (processing)          item: Cancel item        bottom: Cancel order, Download invoice
-    Shipped / Out for delivery    item: Track item         bottom: Download invoice (no cancel any more, the server also refuses it)
-    Delivered                     item: Track, Return
-                                  bottom: Return order, Download invoice
-    Cancelled                     bottom: Download invoice only
-
-  The invoice is available from the moment the order is placed, and stays available after a cancel.
-  The server decides through canDownloadInvoice: only an online order that is not paid yet has none.
-
-  Cancel item: for every item that is still processing.
-  Cancel order: only while ALL items are still processing (before ANY item has shipped).
-  Shipped items can only be returned, once they are delivered.
-*/
 function OrderDetails() {
   const { orderNumber } = useParams();
   const { state } = useLocation();
@@ -65,14 +47,12 @@ function OrderDetails() {
     (s) => s.orders
   );
 
-  // Only use the stored order if it is the one in the URL
   const order =
     current &&
     (current.orderNumber === orderNumber || current.id === orderNumber)
       ? current
       : null;
 
-  // modal = { type: "cancelOrder" | "cancelItem" | "returnOrder" | "returnItem" | "track", item? }
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -111,7 +91,6 @@ function OrderDetails() {
     setModalError("");
   };
 
-  /* ---------- cancel / return ---------- */
   const handleConfirm = async ({ reason, quantity, description }) => {
     if (!order || !modal) return;
 
@@ -171,7 +150,6 @@ function OrderDetails() {
     }
   };
 
-  /* ---------- invoice ---------- */
   const handleInvoice = async () => {
     if (!order || downloading) return;
 
@@ -192,11 +170,8 @@ function OrderDetails() {
     }
   };
 
-  /* ---------- payment retry (an order that is not paid yet) ---------- */
   const reloadOrder = () => dispatch(fetchOrder(orderNumber));
 
-  // Same rules as the payment-failure modal: 30 minute hold, 4 attempts, cool-down before the final one.
-  // A failed attempt opens the payment-failure modal; a paid one opens the success page.
   const handleRetryPayment = async () => {
     if (!order) return;
     setRetrying(true);
@@ -214,13 +189,11 @@ function OrderDetails() {
   const handleCancelPayment = async () => {
     if (!order) return;
     setRetrying(true);
-    await dispatch(abandonPayment(order.orderNumber)); // gives the held items back
+    await dispatch(abandonPayment(order.orderNumber));
     setRetrying(false);
     navigate("/cart");
   };
 
-  /* ---------- what to show ---------- */
-  // Nothing to show yet and no error either -> still loading
   const isLoading = !order && currentStatus !== "failed";
   const backTo = state?.from || "/orders";
 
@@ -229,16 +202,12 @@ function OrderDetails() {
   const isPaymentFailed = displayStatus === "payment_failed";
   const isCancelled = order?.status === "cancelled" && !isPaymentFailed;
 
-  // Has any item left processing? (shipped, out for delivery, delivered or in the return flow)
-  // The order badge follows the slowest item, so look at the items themselves: an order can still say
-  // "Processing" while one of its pairs is already on the way.
   const leftProcessing = (order?.items || []).some(
     (item) => item.status !== "pending" && item.status !== "cancelled"
   );
   const inTransit = leftProcessing && !isDelivered && !isCancelled;
   const anyItemCancellable = (order?.items || []).some((item) => item.canCancel);
 
-  // Cancel order only while everything is still processing; a still-processing item keeps its own Cancel item
   const showCancelOrder = Boolean(order?.canCancel) && !leftProcessing;
   const showReturnOrder = Boolean(order?.canReturn);
   const showInvoice = Boolean(order?.canDownloadInvoice);
@@ -248,7 +217,6 @@ function OrderDetails() {
   const pay = order ? paymentState(order) : null;
   const addr = order?.shippingAddress;
 
-  // Settings for the shared cancel / return modal
   const actionModal = (() => {
     if (!order || !modal) return null;
 
@@ -309,7 +277,6 @@ function OrderDetails() {
       <Navbar />
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-        {/* BREADCRUMB */}
         <nav className="mb-4 text-xs uppercase tracking-wide">
           <Link to="/" className="text-muted transition hover:text-ink">
             Home
@@ -322,7 +289,6 @@ function OrderDetails() {
           <span className="font-semibold text-ink">#{orderNumber}</span>
         </nav>
 
-        {/* NOTICE */}
         {notice && (
           <div
             role={notice.type === "error" ? "alert" : "status"}
@@ -343,7 +309,6 @@ function OrderDetails() {
           </div>
         )}
 
-        {/* LOADING */}
         {isLoading && (
           <div className="animate-pulse rounded-2xl bg-white p-8 shadow-sm">
             <div className="h-8 w-2/3 rounded bg-gray-100" />
@@ -357,7 +322,6 @@ function OrderDetails() {
           </div>
         )}
 
-        {/* LOAD ERROR */}
         {!isLoading && !order && currentStatus === "failed" && (
           <div className="flex min-h-[280px] flex-col items-center justify-center rounded-2xl border border-red-100 bg-red-50 px-6 text-center">
             <h2 className="text-base font-semibold text-red-700">
@@ -383,10 +347,8 @@ function OrderDetails() {
           </div>
         )}
 
-        {/* ORDER */}
         {order && (
           <article className="overflow-hidden rounded-2xl bg-white shadow-sm">
-            {/* HEADER */}
             <header className="flex flex-col gap-3 border-b border-line px-6 py-6 sm:flex-row sm:items-start sm:justify-between sm:px-8">
               <div className="min-w-0">
                 <h1 className="break-words text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
@@ -428,7 +390,6 @@ function OrderDetails() {
               />
             </header>
 
-            {/* PAYMENT NOT FINISHED / PAYMENT FAILED */}
             <PaymentRetryPanel
               order={order}
               retrying={retrying}
@@ -438,9 +399,7 @@ function OrderDetails() {
               onRefresh={reloadOrder}
             />
 
-            {/* ADDRESS / PAYMENT / SUMMARY */}
             <section className="grid gap-8 border-b border-line px-6 py-6 sm:px-8 md:grid-cols-3">
-              {/* shipping address */}
               <div>
                 <h2 className={sectionLabel}>Shipping address</h2>
                 {addr ? (
@@ -457,7 +416,6 @@ function OrderDetails() {
                 )}
               </div>
 
-              {/* payment */}
               <div>
                 <h2 className={sectionLabel}>Payment method</h2>
                 <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-ink">
@@ -477,7 +435,6 @@ function OrderDetails() {
                 )}
               </div>
 
-              {/* summary */}
               <div>
                 <h2 className={sectionLabel}>Order summary</h2>
 
@@ -546,7 +503,6 @@ function OrderDetails() {
               </div>
             </section>
 
-            {/* ITEMS */}
             <section className="px-6 py-6 sm:px-8">
               <h2 className="text-lg font-bold text-ink">Items in this order</h2>
 
@@ -575,7 +531,6 @@ function OrderDetails() {
               )}
             </section>
 
-            {/* ORDER-LEVEL BUTTONS */}
             {hasBottomActions && (
               <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-line px-6 py-6 sm:px-8">
                 {showCancelOrder && (
@@ -621,7 +576,6 @@ function OrderDetails() {
 
       <Footer />
 
-      {/* MODALS (mounted only while open so their fields reset each time) */}
       {actionModal && (
         <OrderActionModal
           {...actionModal}

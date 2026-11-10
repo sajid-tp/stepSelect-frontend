@@ -44,7 +44,6 @@ function CartItem({ item, maxPerItem, disabled, onIncrease, onDecrease, onRemove
         isAvailable ? "border-gray-200" : "border-amber-200 bg-amber-50/40"
       }`}
     >
-      {/* IMAGE */}
       <Link
         to={productId ? `/products/${productId}` : "#"}
         className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-[#f3f3f3] sm:h-28 sm:w-28"
@@ -62,7 +61,6 @@ function CartItem({ item, maxPerItem, disabled, onIncrease, onDecrease, onRemove
         )}
       </Link>
 
-      {/* DETAILS */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -103,7 +101,6 @@ function CartItem({ item, maxPerItem, disabled, onIncrease, onDecrease, onRemove
           </button>
         </div>
 
-        {/* PRICE + QUANTITY */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3">
           <div>
             <p className="flex flex-wrap items-baseline gap-x-2 text-lg font-extrabold text-gray-900 sm:text-xl">

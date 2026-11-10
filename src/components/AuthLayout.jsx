@@ -2,10 +2,6 @@ import { useState } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-// Shared split-screen shell for Signup / Login / Forgot Password / Update
-// Password — image + overlay caption on the left, form content (passed as
-// children) on the right.
-
 function AuthLayout({ imageSrc, overlayTitle, children }) {
   const [imageFailed, setImageFailed] = useState(false);
 

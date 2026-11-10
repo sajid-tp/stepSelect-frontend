@@ -3,10 +3,6 @@ import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
 import { addToCart, quickAddToCart } from "./cartSlice";
 
-// =====================================================
-// HELPER FUNCTIONS
-// =====================================================
-
 const getErrorMessage = (error, fallback) =>
   error.response?.data?.error?.message ||
   error.response?.data?.message ||
@@ -15,10 +11,6 @@ const getErrorMessage = (error, fallback) =>
 const sameLine = (a, variantId, size) =>
   String(a.variantId) === String(variantId) &&
   String(a.size) === String(size);
-
-// =====================================================
-// GET WISHLIST
-// =====================================================
 
 export const getWishlist = createAsyncThunk(
   "wishlist/getWishlist",
@@ -37,10 +29,6 @@ export const getWishlist = createAsyncThunk(
   }
 );
 
-// =====================================================
-// GET WISHLIST IDS
-// =====================================================
-
 export const getWishlistIds = createAsyncThunk(
   "wishlist/getWishlistIds",
   async (_, { rejectWithValue }) => {
@@ -54,10 +42,6 @@ export const getWishlistIds = createAsyncThunk(
     }
   }
 );
-
-// =====================================================
-// ADD TO WISHLIST
-// =====================================================
 
 export const addToWishlist = createAsyncThunk(
   "wishlist/addToWishlist",
@@ -80,10 +64,6 @@ export const addToWishlist = createAsyncThunk(
     }
   }
 );
-
-// =====================================================
-// QUICK ADD TO WISHLIST
-// =====================================================
 
 export const quickAddToWishlist = createAsyncThunk(
   "wishlist/quickAddToWishlist",
@@ -142,10 +122,6 @@ export const quickAddToWishlist = createAsyncThunk(
   }
 );
 
-// =====================================================
-// REMOVE ONE WISHLIST LINE
-// =====================================================
-
 export const removeFromWishlist = createAsyncThunk(
   "wishlist/removeFromWishlist",
   async ({ variantId, size }, { rejectWithValue }) => {
@@ -168,10 +144,6 @@ export const removeFromWishlist = createAsyncThunk(
     }
   }
 );
-
-// =====================================================
-// REMOVE WHOLE PRODUCT FROM WISHLIST
-// =====================================================
 
 export const removeProductFromWishlist = createAsyncThunk(
   "wishlist/removeProductFromWishlist",
@@ -206,10 +178,6 @@ export const removeProductFromWishlist = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CLEAR WISHLIST
-// =====================================================
-
 export const clearWishlist = createAsyncThunk(
   "wishlist/clearWishlist",
   async (_, { rejectWithValue }) => {
@@ -227,10 +195,6 @@ export const clearWishlist = createAsyncThunk(
     }
   }
 );
-
-// =====================================================
-// INITIAL STATE
-// =====================================================
 
 const emptyPagination = {
   page: 1,
@@ -251,10 +215,6 @@ const initialState = {
   wishlistCount: 0,
 };
 
-// =====================================================
-// ADD LINE HELPER
-// =====================================================
-
 const addLine = (
   state,
   { productId, variantId, size, totalItems }
@@ -274,10 +234,6 @@ const addLine = (
   state.wishlistCount = totalItems ?? state.ids.length;
 };
 
-// =====================================================
-// WISHLIST SLICE
-// =====================================================
-
 const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
@@ -288,7 +244,6 @@ const wishlistSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // GET WISHLIST
       .addCase(getWishlist.pending, (state) => {
         if (state.status !== "succeeded") {
           state.status = "loading";
@@ -310,7 +265,6 @@ const wishlistSlice = createSlice({
           action.payload || "Failed to load your wishlist";
       })
 
-      // GET WISHLIST IDS
       .addCase(getWishlistIds.pending, (state) => {
         state.idsStatus = "loading";
       })
@@ -325,7 +279,6 @@ const wishlistSlice = createSlice({
         state.idsStatus = "failed";
       })
 
-      // REMOVE ONE WISHLIST LINE
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         const { variantId, size, totalItems } = action.payload;
 
@@ -341,7 +294,6 @@ const wishlistSlice = createSlice({
         state.pagination.totalItems = state.wishlistCount;
       })
 
-      // REMOVE WHOLE PRODUCT
       .addCase(
         removeProductFromWishlist.fulfilled,
         (state, action) => {
@@ -362,7 +314,6 @@ const wishlistSlice = createSlice({
         }
       )
 
-      // CLEAR WISHLIST
       .addCase(clearWishlist.fulfilled, (state) => {
         state.ids = [];
         state.items = [];
@@ -377,11 +328,9 @@ const wishlistSlice = createSlice({
         state.wishlistCount = 0;
       })
 
-      // RESET WISHLIST ON LOGOUT
       .addCase(logoutUser.fulfilled, () => initialState)
       .addCase(logoutUser.rejected, () => initialState)
 
-      // ADD TO WISHLIST
       .addMatcher(
         isAnyOf(
           addToWishlist.fulfilled,
@@ -392,9 +341,6 @@ const wishlistSlice = createSlice({
         }
       )
 
-      // ADDED TO CART
-      // The server takes that colour + size off the wishlist when it goes into the cart,
-      // so drop the line here too. This is what turns the red heart back to empty in the shop.
       .addMatcher(
         isAnyOf(addToCart.fulfilled, quickAddToCart.fulfilled),
         (state, action) => {
@@ -415,10 +361,6 @@ const wishlistSlice = createSlice({
       );
   },
 });
-
-// =====================================================
-// EXPORTS
-// =====================================================
 
 export const { resetWishlist } = wishlistSlice.actions;
 

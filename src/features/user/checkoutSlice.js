@@ -1,34 +1,16 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-  Backend endpoints used by the checkout page
-
-  GET    /checkout              -> data { addresses[], defaultAddressId, items[], pricing, coupon, couponMessage,
-                                          paymentMethods[], canPlaceOrder }
-  GET    /coupons               -> data { coupons[] }
-  POST   /cart/apply-coupon     body { couponCode }
-  DELETE /cart/coupon
-  POST   /checkout/place-order  body { addressId, paymentMethod } -> data { orderId, orderNumber, totalAmount, ... }
-
-  The server stores the applied coupon on the cart and recalculates every price,
-  so this slice never calculates money. It only stores what the server sends.
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   fallback;
 
-// Mongo sends `_id`; the rest of the UI uses `id`
 const normalizeAddress = (address) => ({
   ...address,
   id: address._id ?? address.id,
 });
 
-// =====================================================
-// GET CHECKOUT SUMMARY
-// =====================================================
 export const fetchCheckout = createAsyncThunk(
   "checkout/fetchCheckout",
   async (_, { rejectWithValue }) => {
@@ -45,9 +27,6 @@ export const fetchCheckout = createAsyncThunk(
   }
 );
 
-// =====================================================
-// AVAILABLE COUPONS (dropdown)
-// =====================================================
 export const fetchAvailableCoupons = createAsyncThunk(
   "checkout/fetchAvailableCoupons",
   async (_, { rejectWithValue }) => {
@@ -62,9 +41,6 @@ export const fetchAvailableCoupons = createAsyncThunk(
   }
 );
 
-// =====================================================
-// APPLY / REMOVE COUPON  (then reload the summary so totals stay correct)
-// =====================================================
 export const applyCoupon = createAsyncThunk(
   "checkout/applyCoupon",
   async (couponCode, { dispatch, rejectWithValue }) => {
@@ -95,9 +71,6 @@ export const removeCoupon = createAsyncThunk(
   }
 );
 
-// =====================================================
-// PLACE ORDER (COD)
-// =====================================================
 export const placeOrder = createAsyncThunk(
   "checkout/placeOrder",
   async ({ addressId, paymentMethod = "COD" }, { rejectWithValue }) => {
@@ -116,9 +89,9 @@ export const placeOrder = createAsyncThunk(
 );
 
 const initialState = {
-  data: null, // the checkout summary
-  status: "idle", // idle | loading | succeeded | failed
-  refreshing: false, // reloading in the background (data already on screen)
+  data: null,
+  status: "idle",
+  refreshing: false,
   error: null,
 
   coupons: [],

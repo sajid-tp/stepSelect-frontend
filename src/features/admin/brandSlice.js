@@ -1,12 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| GET BRANDS
-|--------------------------------------------------------------------------
-*/
-
 export const getBrands = createAsyncThunk(
   "adminBrands/getBrands",
   async ({ search = "", page = 1, sort, status, limit } = {}, { rejectWithValue }) => {
@@ -31,12 +25,6 @@ export const getBrands = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| CREATE BRAND
-|--------------------------------------------------------------------------
-*/
-
 export const createBrand = createAsyncThunk(
   "adminBrands/createBrand",
   async (brandData, { rejectWithValue }) => {
@@ -55,12 +43,6 @@ export const createBrand = createAsyncThunk(
     }
   }
 );
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE BRAND
-|--------------------------------------------------------------------------
-*/
 
 export const updateBrand = createAsyncThunk(
   "adminBrands/updateBrand",
@@ -81,12 +63,6 @@ export const updateBrand = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| TOGGLE BRAND STATUS
-|--------------------------------------------------------------------------
-*/
-
 export const toggleBrandStatus = createAsyncThunk(
   "adminBrands/toggleBrandStatus",
   async (brandId, { rejectWithValue }) => {
@@ -105,12 +81,6 @@ export const toggleBrandStatus = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| DELETE BRAND
-|--------------------------------------------------------------------------
-*/
-
 export const deleteBrand = createAsyncThunk(
   "adminBrands/deleteBrand",
   async (brandId, { rejectWithValue }) => {
@@ -128,12 +98,6 @@ export const deleteBrand = createAsyncThunk(
     }
   }
 );
-
-/*
-|--------------------------------------------------------------------------
-| INITIAL STATE
-|--------------------------------------------------------------------------
-*/
 
 const initialState = {
   brands: [],
@@ -158,12 +122,6 @@ const initialState = {
   deleteStatus: "idle",
   deleteError: null,
 };
-
-/*
-|--------------------------------------------------------------------------
-| SLICE
-|--------------------------------------------------------------------------
-*/
 
 const brandSlice = createSlice({
   name: "adminBrands",
@@ -191,12 +149,6 @@ const brandSlice = createSlice({
   },
 
   extraReducers: (builder) => {
-    /*
-    |--------------------------------------------------------------------------
-    | GET BRANDS
-    |--------------------------------------------------------------------------
-    */
-
     builder
       .addCase(getBrands.pending, (state) => {
         state.status = "loading";
@@ -219,12 +171,6 @@ const brandSlice = createSlice({
         state.error = action.payload;
       });
 
-    /*
-    |--------------------------------------------------------------------------
-    | CREATE BRAND
-    |--------------------------------------------------------------------------
-    */
-
     builder
       .addCase(createBrand.pending, (state) => {
         state.createStatus = "loading";
@@ -240,12 +186,6 @@ const brandSlice = createSlice({
         state.createStatus = "failed";
         state.createError = action.payload;
       });
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE BRAND
-    |--------------------------------------------------------------------------
-    */
 
     builder
       .addCase(updateBrand.pending, (state) => {
@@ -272,12 +212,6 @@ const brandSlice = createSlice({
         state.updateStatus = "failed";
         state.updateError = action.payload;
       });
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOGGLE BRAND STATUS
-    |--------------------------------------------------------------------------
-    */
 
     builder
       .addCase(toggleBrandStatus.pending, (state) => {
@@ -308,12 +242,6 @@ const brandSlice = createSlice({
         state.toggleStatus = "failed";
         state.toggleError = action.payload;
       });
-
-    /*
-    |--------------------------------------------------------------------------
-    | DELETE BRAND
-    |--------------------------------------------------------------------------
-    */
 
     builder
       .addCase(deleteBrand.pending, (state) => {

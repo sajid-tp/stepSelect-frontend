@@ -1,9 +1,3 @@
-// src/utils/validators.js
-// MIRROR of server/src/utils/validators.js - keep the rules AND messages identical.
-// Each validator returns an error message (string) or '' when the value is valid,
-// so it can be passed straight to <FormField error={...} />.
-
-// "mobile" metadata = Indian mobile numbers only. Same library + rules as the server.
 import { parsePhoneNumberFromString } from 'libphonenumber-js/mobile';
 
 const PHONE_COUNTRY = 'IN';
@@ -13,11 +7,10 @@ export const LIMITS = {
   USERNAME_MAX: 25,
   PASSWORD_MIN: 8,
   PASSWORD_MAX: 64,
-  PROFILE_IMAGE_MAX_BYTES: 3 * 1024 * 1024, // 3MB, same as the server
+  PROFILE_IMAGE_MAX_BYTES: 3 * 1024 * 1024,
 };
 
 export const EMAIL_REGEX =
-  // The HTML Standard's "valid email address" pattern (what <input type="email"> uses)
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 export const OTP_REGEX = /^\d{6}$/;
 const PASSWORD_COMPLEXITY_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])/;
@@ -44,7 +37,6 @@ export const MESSAGES = {
 export const normalizeEmail = (value) =>
   typeof value === 'string' ? value.trim().toLowerCase() : '';
 
-// `label` lets the profile screen say "Name" while signup says "Username"
 export const validateUsername = (value, label = 'Username') => {
   const v = typeof value === 'string' ? value.trim() : '';
   if (!v) return `${label} is required`;
@@ -57,10 +49,6 @@ export const validateUsername = (value, label = 'Username') => {
 export const validateEmail = (value) => {
   const v = normalizeEmail(value);
   if (!v) return MESSAGES.EMAIL_REQUIRED;
-  // Industry standard: HTML Standard pattern + RFC 5321 length limits
-  // (254 characters in total, at most 64 before the @)
-  // The domain part must also contain a dot ("user@localhost" is valid per the HTML
-  // pattern, but is never a real customer email)
   if (
     v.length > 254 ||
     v.indexOf('@') > 64 ||
@@ -90,9 +78,6 @@ export const validateConfirmPassword = (confirm, password) => {
   return '';
 };
 
-// Returns the 10-digit national number (e.g. "9876543210") when `value` is a valid
-// Indian mobile number, otherwise ''. Accepts "98765 43210", "09876543210" and
-// "+91 98765 43210" and normalises them all to the same 10 digits.
 export const normalizePhone = (value) => {
   const v = value === undefined || value === null ? '' : String(value).trim();
   if (!v) return '';
@@ -102,14 +87,12 @@ export const normalizePhone = (value) => {
     : '';
 };
 
-// Phone is optional here (profile): empty is valid, anything else must be a valid number
 export const validatePhone = (value) => {
   const v = value === undefined || value === null ? '' : String(value).trim();
   if (!v) return '';
   return normalizePhone(v) ? '' : MESSAGES.PHONE_INVALID;
 };
 
-// Phone is required here (addresses)
 export const validateRequiredPhone = (value) => {
   const v = value === undefined || value === null ? '' : String(value).trim();
   if (!v) return MESSAGES.PHONE_REQUIRED;

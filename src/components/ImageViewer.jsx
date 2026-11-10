@@ -16,8 +16,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
   const moved = useRef(false);
 
 
-  // ---------------- ZOOM ----------------
-
   const zoomBy = (delta) =>
     setZoom((prev) =>
       Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta))
@@ -28,24 +26,18 @@ function ImageViewer({ images, index, onClose, onChange }) {
     setOffset({ x: 0, y: 0 });
   };
 
-  // Back to the centre whenever zoom returns to 100%
   useEffect(() => {
     if (zoom === 1) setOffset({ x: 0, y: 0 });
   }, [zoom]);
 
-  // Reset zoom when moving to another image
   useEffect(() => {
     resetZoom();
   }, [index]);
 
 
-  // ---------------- NAVIGATION ----------------
-
   const showPrev = () => onChange((index - 1 + count) % count);
   const showNext = () => onChange((index + 1) % count);
 
-
-  // ---------------- KEYBOARD ----------------
 
   useEffect(() => {
 
@@ -64,7 +56,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
   }, [index, count]);
 
 
-  // Stop the page behind from scrolling while the viewer is open
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -73,8 +64,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
     };
   }, []);
 
-
-  // ---------------- DRAG TO PAN ----------------
 
   const handleMouseDown = (e) => {
     if (zoom === 1) return;
@@ -112,7 +101,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
       }}
     >
 
-      {/* CLOSE */}
       <button
         type="button"
         onClick={onClose}
@@ -122,12 +110,10 @@ function ImageViewer({ images, index, onClose, onChange }) {
         ×
       </button>
 
-      {/* COUNTER */}
       <p className="absolute top-7 left-1/2 -translate-x-1/2 text-sm text-white/80">
         {index + 1} / {count}
       </p>
 
-      {/* PREVIOUS */}
       {count > 1 && (
         <button
           type="button"
@@ -139,7 +125,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
         </button>
       )}
 
-      {/* IMAGE AREA */}
       <div
         className="flex h-[78vh] w-[90vw] max-w-4xl items-center justify-center overflow-hidden"
         onWheel={(e) => zoomBy(e.deltaY < 0 ? STEP : -STEP)}
@@ -163,7 +148,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
         />
       </div>
 
-      {/* NEXT */}
       {count > 1 && (
         <button
           type="button"
@@ -175,7 +159,6 @@ function ImageViewer({ images, index, onClose, onChange }) {
         </button>
       )}
 
-      {/* ZOOM TOOLBAR */}
       <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/40 p-2">
 
         <button

@@ -59,7 +59,6 @@ function Categories() {
   const [search, setSearch] =
     useState("");
 
-  // the list reloads after the admin pauses typing
   const debouncedSearch =
     useDebounce(search.trim(), 400);
 
@@ -85,7 +84,6 @@ function Categories() {
   const [selectedCategory, setSelectedCategory] =
     useState(null);
 
-  // The category waiting for the admin to confirm activate / deactivate
   const [statusConfirmTarget, setStatusConfirmTarget] =
     useState(null);
 
@@ -171,7 +169,6 @@ function Categories() {
 
     };
 
-  // STEP 1: the button was clicked -> only open the confirmation modal
   const handleToggleStatus =
     (category) => {
 
@@ -198,7 +195,6 @@ function Categories() {
     };
 
 
-  // STEP 2: the admin confirmed -> really change the status
   const handleConfirmToggleStatus =
     async () => {
 
@@ -667,8 +663,6 @@ function Categories() {
         }
       />
 
-
-      {/* ACTIVATE / DEACTIVATE MODAL */}
 
       <Modal
         open={

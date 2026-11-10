@@ -66,12 +66,10 @@ function App() {
     <DemoRazorpayHost />
     <PaymentFailureModal />
       <Routes>
-        {/* User routes */}
         <Route path="/" element={<Home />} />
           <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        {/* Guest-only: a signed-in user who hits Back to the OTP page is sent home */}
         <Route path="/verify-otp" element={<VerifyOtp />} />
          </Route>
         <Route path="/invite/:token" element={<InviteRedirect />} />
@@ -81,7 +79,6 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/shop" element={<Shop />} />
-        {/* Customer-only pages: redirect to /login when signed out */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<AccountOverview />} />
           <Route path="/profile/edit" element={<EditProfile />} />
@@ -107,7 +104,6 @@ function App() {
   element={<ProductDetailsPage />}
 />
  
-       {/* Admin routes */}
         <Route path="/admin/auth/login" element={<AdminLogin/>}/>
        <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
@@ -187,7 +183,3 @@ function App() {
 export default App;
 
 
-//this is my step select project 
-// feature branch testing 
-// I am now in main branch
-// new feature branch

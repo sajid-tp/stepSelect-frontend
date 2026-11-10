@@ -2,18 +2,9 @@ import { useEffect } from "react";
 import PaymentCountdown, { clock } from "./PaymentCountdown";
 import PaymentAttemptDots from "./PaymentAttemptDots";
 
-/*
-  Payment box on the Order Details page of an order that is not paid yet (or whose payment failed).
-  Uses order.paymentFlow, the same numbers the payment-failure modal shows:
-    - the items are held for 30 minutes from the moment the order was created
-    - 4 attempts in total; the 4th (final) one opens after a 2 minute cool-down
-    - when the 4th attempt fails or the 30 minutes end, the order is closed as "Payment failed"
-*/
 function PaymentRetryPanel({ order, retrying, error, onRetry, onCancelPayment, onRefresh }) {
   const flow = order?.paymentFlow;
 
-  // An attempt nobody finished is settled by the server after a few minutes: keep asking while one is
-  // running, so the Retry button unlocks by itself (no page reload needed)
   const waitingOnAttempt = Boolean(flow?.attemptInProgress) && (flow?.closedReason ?? null) === null;
   useEffect(() => {
     if (!waitingOnAttempt || !onRefresh) return undefined;

@@ -21,12 +21,10 @@ function Shop() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Links from the Home page: /shop?gender=men   /shop?category=sneakers
   const [searchParams] = useSearchParams();
   const urlGender = (searchParams.get("gender") || "").trim().toLowerCase();
   const urlCategory = (searchParams.get("category") || "").trim();
 
-  // ---------- redux ----------
   const {
     products,
     categories,
@@ -45,38 +43,29 @@ function Shop() {
   const cartItems = useSelector((state) => state.cart.items);
   const cartStatus = useSelector((state) => state.cart.status);
   
-  // ---------- local state ----------
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedGender, setSelectedGender] = useState(
     GENDER_VALUES.includes(urlGender) ? urlGender : ""
   );
-  // A category in the link is a NAME (sneakers); the filter works with ids, so products wait
-  // until the category list has loaded and the name is turned into the matching id
   const [categoryResolved, setCategoryResolved] = useState(!urlCategory);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
-  // typing a price ("2500") should load the products once, not after every digit
   const debouncedMinPrice = useDebounce(minPrice, 400);
   const debouncedMaxPrice = useDebounce(maxPrice, 400);
-  // ---------- categories + brands ----------
   useEffect(() => {
     if (categoryStatus === "idle") dispatch(getCategories());
     if (brandStatus === "idle") dispatch(getBrands());
   }, [dispatch, categoryStatus, brandStatus]);
 
-  // Coming from a link on Home (which is scrolled down), the router keeps the old scroll position:
-  // start at the top of Shop instead, also when the link changes while Shop is already open
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 });
   }, [urlGender, urlCategory]);
 
-  // ---------- link from Home: pre-select the gender / category ----------
-  // Runs again when the link changes while Shop is already open (e.g. Men -> Women).
   const firstUrlRun = useRef(true);
   useEffect(() => {
     if (firstUrlRun.current) {
@@ -95,7 +84,7 @@ function Shop() {
   useEffect(() => {
     if (categoryResolved) return;
     if (categoryStatus === "failed") {
-      setCategoryResolved(true); // no list to match against: show everything
+      setCategoryResolved(true);
       return;
     }
     if (categoryStatus !== "succeeded") return;
@@ -118,19 +107,14 @@ function Shop() {
     setCategoryResolved(true);
   }, [categoryResolved, categoryStatus, categories, urlCategory]);
 
-  // ---------- cart (to know which cards say "Added to Cart") ----------
-  // Shop is public: only load the cart for a logged-in user,
-  // otherwise the 401 would redirect visitors to /login.
   useEffect(() => {
     if (user && cartStatus === "idle") dispatch(getCart());
   }, [dispatch, user, cartStatus]);
 
   const productIdsInCart = new Set(cartItems.map((item) => String(item.productId)));
 
-  // ---------- wishlist (filled hearts) ----------
   const { productIdsInWishlist, toggleProduct } = useWishlist();
 
-  // ---------- products ----------
   const loadProducts = useCallback(() => {
     dispatch(
       getProducts({
@@ -157,11 +141,10 @@ function Shop() {
   ]);
 
   useEffect(() => {
-    if (!categoryResolved) return; // wait for the category from the link, so the first list is already filtered
+    if (!categoryResolved) return;
     loadProducts();
   }, [loadProducts, categoryResolved]);
 
-  // ---------- handlers ----------
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
     setPage(1);
@@ -214,7 +197,6 @@ function Shop() {
     setPage(1);
   };
 
-  // Rejects with the error text, the card shows it under the button.
   const handleAddToCart = async (product) => {
     if (!user) {
       navigate("/login");
@@ -231,20 +213,17 @@ console.log("Brands:", brands);
 console.log("Category status:", categoryStatus);
 console.log("Brand status:", brandStatus);
 
-  // ---------- render ----------
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white">
       <Navbar />
 
       <main className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
-        {/* BREADCRUMB */}
         <div className="mb-6 flex items-center gap-2 text-xs sm:mb-8 sm:text-sm">
           <span className="text-gray-400">Home</span>
           <span className="text-gray-400">/</span>
           <span className="font-medium text-gray-900">Shop</span>
         </div>
 
-        {/* HEADER */}
         <div className="mb-6 flex flex-col gap-5 sm:mb-8 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Shop</h1>
@@ -253,7 +232,6 @@ console.log("Brand status:", brandStatus);
             </p>
           </div>
 
-          {/* SEARCH */}
           <div className="w-full md:w-[340px] md:shrink-0">
             <div className="relative w-full">
               <svg
@@ -288,7 +266,6 @@ console.log("Brand status:", brandStatus);
           </div>
         </div>
 
-        {/* MOBILE FILTER BUTTON */}
         <div className="mb-5 lg:hidden">
           <button
             type="button"
@@ -302,9 +279,7 @@ console.log("Brand status:", brandStatus);
           </button>
         </div>
 
-        {/* MAIN CONTENT */}
         <div className="flex w-full flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-          {/* FILTER SIDEBAR */}
           <div
             className={`w-full lg:block lg:w-[230px] lg:shrink-0 ${
               filtersOpen ? "block" : "hidden"
@@ -327,16 +302,13 @@ console.log("Brand status:", brandStatus);
             />
           </div>
 
-          {/* PRODUCT SECTION */}
           <section className="min-w-0 w-full flex-1">
-            {/* RESULT COUNT */}
             <div className="mb-5 flex items-center justify-between">
               <p className="text-xs text-gray-500 sm:text-sm">
                 {isLoading ? "Loading products..." : `${totalResults} products`}
               </p>
             </div>
 
-            {/* LOADING */}
             {isLoading && (
               <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 md:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, index) => (
@@ -351,7 +323,6 @@ console.log("Brand status:", brandStatus);
               </div>
             )}
 
-            {/* ERROR */}
             {!isLoading && productStatus === "failed" && (
               <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 px-6 text-center">
                 <h3 className="text-base font-semibold text-red-700">
@@ -372,7 +343,6 @@ console.log("Brand status:", brandStatus);
               </div>
             )}
 
-            {/* EMPTY */}
             {!isLoading && productStatus !== "failed" && products.length === 0 && (
               <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-gray-200 px-6 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-400">
@@ -406,7 +376,6 @@ console.log("Brand status:", brandStatus);
               </div>
             )}
 
-            {/* PRODUCTS */}
             {!isLoading && productStatus !== "failed" && products.length > 0 && (
               <>
                 <div className="grid w-full grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] sm:gap-x-5 sm:gap-y-10">
@@ -423,7 +392,6 @@ console.log("Brand status:", brandStatus);
                   ))}
                 </div>
 
-                {/* PAGINATION */}
                 <div className="w-full overflow-x-auto">
                   <Pagination
                     currentPage={currentPage}

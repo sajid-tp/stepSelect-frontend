@@ -32,19 +32,16 @@ export default function AccountSidebar() {
 
   const hasValidImage = profile?.profileImage && !imgError;
 
-  // Open logout confirmation modal
   const handleLogoutClick = () => {
     setLogoutModalOpen(true);
   };
 
-  // Close logout confirmation modal
   const handleCloseLogoutModal = () => {
     if (loggingOut) return;
 
     setLogoutModalOpen(false);
   };
 
-  // Confirm logout
   const handleConfirmLogout = async () => {
     try {
       setLoggingOut(true);
@@ -60,7 +57,6 @@ export default function AccountSidebar() {
     } catch (error) {
       console.error('Logout failed:', error);
 
-      // Even if the request fails, send the user back to login
       setLogoutModalOpen(false);
 
       navigate('/login', {
@@ -83,7 +79,6 @@ export default function AccountSidebar() {
     <>
       <aside className="w-full lg:w-64 shrink-0 rounded-2xl bg-[#fafafa] border border-line/60 p-4 lg:p-6">
 
-        {/* User Info Header */}
         <div className="flex flex-row lg:flex-col items-center lg:text-center gap-4 lg:gap-0 pb-4 lg:pb-6 border-b border-line">
           <div className="relative shrink-0">
             {hasValidImage ? (
@@ -111,10 +106,8 @@ export default function AccountSidebar() {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="mt-4 lg:mt-6 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0">
 
-          {/* Overview */}
           <NavLink
             to="/profile"
             end
@@ -137,7 +130,6 @@ export default function AccountSidebar() {
             Overview
           </NavLink>
 
-          {/* Order History */}
           <NavLink
             to="/orders"
             className={navItemClass}
@@ -157,7 +149,6 @@ export default function AccountSidebar() {
             Order History
           </NavLink>
 
-          {/* My Wallet */}
           <NavLink
             to="/profile/wallet"
             className={navItemClass}
@@ -177,7 +168,6 @@ export default function AccountSidebar() {
             My Wallet
           </NavLink>
 
-          {/* Wishlist */}
           <NavLink
             to="/wishlist"
             className={navItemClass}
@@ -196,7 +186,6 @@ export default function AccountSidebar() {
             Wishlist
           </NavLink>
 
-          {/* Addresses */}
           <NavLink
             to="/profile/addresses"
             className={navItemClass}
@@ -216,7 +205,6 @@ export default function AccountSidebar() {
             Addresses
           </NavLink>
 
-          {/* My Cart */}
           <NavLink
             to="/cart"
             className={navItemClass}
@@ -237,7 +225,6 @@ export default function AccountSidebar() {
             My Cart
           </NavLink>
 
-          {/* Logout - Mobile */}
           <button
             type="button"
             onClick={handleLogoutClick}
@@ -261,7 +248,6 @@ export default function AccountSidebar() {
           </button>
         </nav>
 
-        {/* Logout - Desktop */}
         <div className="hidden lg:block mt-8 pt-4 border-t border-line">
           <button
             type="button"
@@ -287,7 +273,6 @@ export default function AccountSidebar() {
         </div>
       </aside>
 
-      {/* Logout Confirmation Modal */}
       <Modal
         open={logoutModalOpen}
         title="Logout"

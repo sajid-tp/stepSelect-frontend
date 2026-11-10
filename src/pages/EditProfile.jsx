@@ -38,10 +38,6 @@ function EditProfile() {
 
 const isGoogleUser = Boolean(profile?.isGoogleUser);
 
-  // --------------------------------------------------
-  // Personal Information Form
-  // --------------------------------------------------
-
   const {
     register: registerPersonal,
     reset: resetPersonalForm,
@@ -60,12 +56,10 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   });
 
   useEffect(() => {
-    // Same rules and messages as the server (see utils/validators.js)
     registerPersonal('username', {
       validate: (v) => validateUsername(v, 'Name') || true,
     });
 
-    // Phone is optional: it is only checked when something is typed
     registerPersonal('phoneNumber', {
       validate: (v) => validatePhone(v) || true,
     });
@@ -73,10 +67,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
   const username = watchPersonal('username');
   const phoneNumber = watchPersonal('phoneNumber');
-
-  // --------------------------------------------------
-  // Security Settings Form
-  // --------------------------------------------------
 
   const {
     register: registerSecurity,
@@ -101,7 +91,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       required: 'Current password is required',
     });
 
-    // Same password rule as signup, reset-password and the server
     registerSecurity('newPassword', {
       required: 'New password is required',
       validate: (v) => validatePassword(v) || true,
@@ -116,10 +105,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   const newPassword = watchSecurity('newPassword');
   const confirmPassword = watchSecurity('confirmPassword');
 
-  // --------------------------------------------------
-  // Image & Preview States
-  // --------------------------------------------------
-
   const [previewImage, setPreviewImage] = useState(null);
   const [imgError, setImgError] = useState(false);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
@@ -128,25 +113,13 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   const [removeImageModalOpen, setRemoveImageModalOpen] = useState(false);
   const [isRemovingImage, setIsRemovingImage] = useState(false);
 
-  // --------------------------------------------------
-  // Success Messages
-  // --------------------------------------------------
-
   const [personalSuccess, setPersonalSuccess] = useState('');
   const [personalError, setPersonalError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
-  // --------------------------------------------------
-  // Password Confirmation Modal
-  // --------------------------------------------------
-
   const [passwordConfirmModalOpen, setPasswordConfirmModalOpen] =
     useState(false);
-
-  // --------------------------------------------------
-  // Change Email + OTP States
-  // --------------------------------------------------
 
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -154,7 +127,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   const [emailSuccess, setEmailSuccess] = useState('');
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
 
-  // Email confirmation modal
   const [emailConfirmModalOpen, setEmailConfirmModalOpen] = useState(false);
 
   const [isOtpOpen, setIsOtpOpen] = useState(false);
@@ -165,19 +137,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
   const pendingEmailRef = useRef('');
 
-  // --------------------------------------------------
-  // Fetch Profile
-  // --------------------------------------------------
-
   useEffect(() => {
     if (!profile) {
       dispatch(fetchUserProfile());
     }
   }, [dispatch, profile]);
-
-  // --------------------------------------------------
-  // Populate Personal Form When Profile Loads
-  // --------------------------------------------------
 
   useEffect(() => {
     if (profile) {
@@ -200,10 +164,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   }, [profile, resetPersonalForm]);
 
-  // --------------------------------------------------
-  // Image Upload
-  // --------------------------------------------------
-
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
 
@@ -211,7 +171,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
     setImageError('');
 
-    // PNG / JPG / WEBP only, max 3MB (same limits as the server)
     const imageValidationError = validateProfileImage(file);
 
     if (imageValidationError) {
@@ -240,10 +199,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Image Removal
-  // --------------------------------------------------
-
   const handleConfirmRemoveImage = async () => {
     setImageError('');
     setIsRemovingImage(true);
@@ -264,16 +219,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Personal Information Submit
-  // --------------------------------------------------
-
   const onPersonalSubmit = async (data) => {
     setPersonalSuccess('');
     setPersonalError('');
 
     const trimmedName = data.username.trim();
-    // "+91 98765 43210" is sent as "9876543210" (empty stays empty and clears the phone)
     const trimmedPhone = normalizePhone(data.phoneNumber);
 
     try {
@@ -297,11 +247,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Password Submit
-  // --------------------------------------------------
-
-  // First validate password fields and open confirmation modal
   const onSecuritySubmit = async (data) => {
     setPasswordError('');
     setPasswordSuccess('');
@@ -316,11 +261,9 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       return;
     }
 
-    // Open confirmation modal
     setPasswordConfirmModalOpen(true);
   };
 
-  // Actually update password after confirmation
   const handleConfirmPasswordChange = async () => {
     setPasswordError('');
 
@@ -333,10 +276,8 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         })
       ).unwrap();
 
-      // Close confirmation modal
       setPasswordConfirmModalOpen(false);
 
-      // Clear password fields
       resetSecurityForm({
         currentPassword: '',
         newPassword: '',
@@ -357,11 +298,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Change Email Handlers
-  // --------------------------------------------------
-
-  // Validate email and open confirmation modal
   const handleSendEmailOtp = () => {
     setEmailError('');
     setEmailSuccess('');
@@ -387,7 +323,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     setEmailConfirmModalOpen(true);
   };
 
-  // Actually send OTP after confirmation
   const handleConfirmEmailChange = async () => {
     const trimmed = newEmail.trim().toLowerCase();
 
@@ -419,19 +354,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Close OTP Modal
-  // --------------------------------------------------
-
   const closeOtpModal = () => {
     setIsOtpOpen(false);
     setOtpError('');
     setOtpExpiresAt(null);
   };
-
-  // --------------------------------------------------
-  // OTP Submit
-  // --------------------------------------------------
 
   const handleOtpSubmit = async (code) => {
     const otpValidationError = validateOtp(code);
@@ -464,7 +391,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         setEmailSuccess('');
       }, 4000);
 
-      // Refresh profile with new email
       dispatch(fetchUserProfile());
     } catch (err) {
       setOtpError(
@@ -474,10 +400,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       setIsVerifyingOtp(false);
     }
   };
-
-  // --------------------------------------------------
-  // OTP Resend
-  // --------------------------------------------------
 
   const handleOtpResend = async () => {
     setOtpError('');
@@ -500,19 +422,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
     }
   };
 
-  // --------------------------------------------------
-  // Other UI Values
-  // --------------------------------------------------
-
   const userInitial =
     profile?.username?.charAt(0).toUpperCase() || 'U';
 
   const hasValidImage =
     previewImage && !imgError;
-
-  // --------------------------------------------------
-  // JSX
-  // --------------------------------------------------
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fbfbfb]">
@@ -521,17 +435,12 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
       <main className="container flex-1 py-10 max-w-xl mx-auto">
 
-        {/* Breadcrumb */}
         <p className="text-xs text-muted mb-6 tracking-wide uppercase">
           Home / Account /{' '}
           <span className="font-semibold text-ink">
             Edit Profile
           </span>
         </p>
-
-        {/* --------------------------------------------- */}
-        {/* Personal Information */}
-        {/* --------------------------------------------- */}
 
         <div className="rounded-2xl border border-line bg-white p-8 shadow-xs mb-8">
 
@@ -542,7 +451,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             </span>
           </h2>
 
-          {/* Avatar */}
           <div className="flex flex-col items-center mb-6">
 
             <input
@@ -634,14 +542,12 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
           </div>
 
-          {/* Personal Error */}
           {personalError && (
             <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
               {personalError}
             </p>
           )}
 
-          {/* Personal Success */}
           {personalSuccess && (
             <p className="mb-4 flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
               <svg
@@ -691,14 +597,12 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       readOnly
     />
 
-    {/* Email Success */}
     {emailSuccess && (
       <p className="mb-3 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
         {emailSuccess}
       </p>
     )}
 
-    {/* Change Email */}
     {!isChangingEmail ? (
       <p className="text-[11px] text-muted -mt-2 mb-4">
         Need to change your email?{' '}
@@ -795,9 +699,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
         </div>
 
-        {/* --------------------------------------------- */}
-        {/* Security Settings */}
-        {/* --------------------------------------------- */}
 {!isGoogleUser && (
         <div className="rounded-2xl border border-line bg-white p-8 shadow-xs mb-8">
 
@@ -808,7 +709,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             </span>
           </h2>
 
-          {/* Password Success */}
           {passwordSuccess && (
             <p className="mb-4 flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
               <svg
@@ -826,7 +726,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
             </p>
           )}
 
-          {/* Password Error */}
           {passwordError && (
             <p className="mb-4 text-xs font-semibold text-[#f4511e]">
               {passwordError}
@@ -918,7 +817,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
         </div>
 )}
-        {/* Back to Account */}
         <div className="text-center">
           <Link
             to="/profile"
@@ -929,10 +827,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         </div>
 
       </main>
-
-      {/* --------------------------------------------- */}
-      {/* Remove Photo Confirmation Modal */}
-      {/* --------------------------------------------- */}
 
       <Modal
         open={removeImageModalOpen}
@@ -950,10 +844,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         variant="danger"
       />
 
-      {/* --------------------------------------------- */}
-      {/* Password Confirmation Modal */}
-      {/* --------------------------------------------- */}
-
       <Modal
         open={passwordConfirmModalOpen}
         title="Change Password"
@@ -970,10 +860,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         variant="danger"
       />
 
-      {/* --------------------------------------------- */}
-      {/* Email Change Confirmation Modal */}
-      {/* --------------------------------------------- */}
-
       <Modal
         open={emailConfirmModalOpen}
         title="Change Email Address"
@@ -989,10 +875,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
         loading={isSendingEmailOtp}
         variant="danger"
       />
-
-      {/* --------------------------------------------- */}
-      {/* OTP Verification */}
-      {/* --------------------------------------------- */}
 
       {isOtpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
@@ -1025,10 +907,6 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
 
         </div>
       )}
-
-      {/* --------------------------------------------- */}
-      {/* Image Viewer */}
-      {/* --------------------------------------------- */}
 
       {isViewerOpen && hasValidImage && (
         <div

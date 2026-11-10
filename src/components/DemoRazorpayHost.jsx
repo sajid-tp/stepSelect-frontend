@@ -3,13 +3,6 @@ import { useEffect, useState } from "react";
 import { formatMoney } from "./CartItem";
 import { subscribeDemoRazorpay } from "../utils/demoRazorpay";
 
-/*
-  Look-alike Razorpay checkout window for the project demo.
-  Mounted once in App.jsx. It opens when utils/demoRazorpay.js asks for it, which only happens
-  when the server answered with demo: true (RAZORPAY_DEMO_MODE=true and no real keys).
-  No real money and no real card data: every field is pre-filled and is never sent anywhere.
-*/
-
 const TABS = [
   { id: "card", label: "Card", icon: "fa-regular fa-credit-card" },
   { id: "upi", label: "UPI", icon: "fa-solid fa-mobile-screen" },
@@ -31,10 +24,10 @@ function Field({ label, children }) {
 }
 
 function DemoRazorpayHost() {
-  const [checkout, setCheckout] = useState(null); // the DemoRazorpay object that asked to open
+  const [checkout, setCheckout] = useState(null);
   const [tab, setTab] = useState("card");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState(""); // shown after a simulated failure
+  const [message, setMessage] = useState("");
 
   const [card, setCard] = useState({ number: "4111 1111 1111 1111", expiry: "12/30", cvv: "123" });
   const [upi, setUpi] = useState("success@razorpay");
@@ -43,7 +36,7 @@ function DemoRazorpayHost() {
   useEffect(
     () =>
       subscribeDemoRazorpay((instance) => {
-        setCheckout(instance); // null = closed from code
+        setCheckout(instance);
         if (!instance) return;
         setTab("card");
         setBusy(false);
@@ -52,7 +45,6 @@ function DemoRazorpayHost() {
     []
   );
 
-  // Escape closes the window, like the real one
   useEffect(() => {
     if (!checkout) return undefined;
     const onKey = (e) => {
@@ -85,7 +77,6 @@ function DemoRazorpayHost() {
     setMessage("");
     setBusy(true);
 
-    // A short pause so it feels like a real payment being processed
     setTimeout(() => {
       const current = checkout;
       setCheckout(null);
@@ -107,7 +98,6 @@ function DemoRazorpayHost() {
       aria-label="Razorpay demo checkout"
     >
       <div className="w-full max-w-[400px] overflow-hidden rounded-xl bg-white shadow-2xl">
-        {/* HEADER */}
         <div className="flex items-start justify-between gap-3 bg-[#1f2a44] px-5 py-4 text-white">
           <div className="min-w-0">
             <p className="text-sm font-extrabold">{options.name || "Step Select"}</p>
@@ -137,7 +127,6 @@ function DemoRazorpayHost() {
           Demo mode: no real money is charged and nothing here is sent to a bank.
         </p>
 
-        {/* TABS */}
         <div className="flex border-b border-gray-200">
           {TABS.map((t) => (
             <button
@@ -160,7 +149,6 @@ function DemoRazorpayHost() {
           ))}
         </div>
 
-        {/* BODY */}
         <div className="space-y-3 px-5 py-5">
           {tab === "card" && (
             <>

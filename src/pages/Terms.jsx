@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Static Terms & Conditions page. Opened from the "Terms & Conditions" link on the sign up form.
-// Have a lawyer review this text before going live.
 const SECTIONS = [
   {
     title: 'Introduction',

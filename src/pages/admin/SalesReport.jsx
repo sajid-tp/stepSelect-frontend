@@ -16,14 +16,8 @@ import {
   clearSalesExportError,
 } from "../../features/admin/salesReportSlice";
 
-/*
-|--------------------------------------------------------------------------
-| CONSTANTS
-|--------------------------------------------------------------------------
-*/
 const PAGE_SIZE = 10;
 
-// value = what the server calls the period
 const PERIODS = [
   { value: "daily", label: "Today" },
   { value: "weekly", label: "Last 7 days" },
@@ -36,30 +30,17 @@ const CATEGORY_COLORS = ["#ff5722", "#3b82f6", "#a855f7", "#10b981", "#9ca3af"];
 const inputClass =
   "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10";
 
-/*
-|--------------------------------------------------------------------------
-| SMALL HELPERS
-|--------------------------------------------------------------------------
-*/
-// Whole rupees, Indian grouping: ₹8,45,230
 const rupees = (value) =>
   `₹${Math.round(Number(value) || 0).toLocaleString("en-IN")}`;
 
-// Today as YYYY-MM-DD in the browser's own time zone (for the date inputs)
 const todayText = () => {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-// "2026-10-30" -> "Oct 30, 2026" (read as a local date so the day never shifts)
 const dayText = (ymd) => formatDate(`${ymd}T00:00:00`);
 
-/*
-|--------------------------------------------------------------------------
-| SMALL COMPONENTS
-|--------------------------------------------------------------------------
-*/
 function ChangeBadge({ value, neutral = false }) {
   if (value === null || value === undefined) {
     return (
@@ -126,7 +107,6 @@ function CardShell({ title, children, className = "" }) {
   );
 }
 
-/* ---------------- Sales by category (donut) ---------------- */
 function CategoryDonut({ categories }) {
   const R = 58;
   const C = 2 * Math.PI * R;
@@ -192,7 +172,6 @@ function CategoryDonut({ categories }) {
   );
 }
 
-/* ---------------- Discounts and coupons ---------------- */
 function DiscountBreakdown({ discounts }) {
   const rows = [
     { label: "Offer discounts", value: discounts.offer, color: "#ff5722" },
@@ -264,11 +243,6 @@ function CouponUsage({ coupons }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function SalesReport() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -278,8 +252,8 @@ function SalesReport() {
   );
 
   const [period, setPeriod] = useState("daily");
-  const [range, setRange] = useState({ from: "", to: "" }); // applied custom range
-  const [draft, setDraft] = useState({ from: "", to: "" }); // what is typed in the popup
+  const [range, setRange] = useState({ from: "", to: "" });
+  const [draft, setDraft] = useState({ from: "", to: "" });
   const [rangeOpen, setRangeOpen] = useState(false);
   const [rangeError, setRangeError] = useState("");
   const rangeRef = useRef(null);
@@ -290,7 +264,6 @@ function SalesReport() {
 
   const customReady = period !== "custom" || (range.from && range.to);
 
-  /* ---------------- FETCH ---------------- */
   useEffect(() => {
     if (!customReady) return undefined;
     const request = dispatch(
@@ -303,11 +276,9 @@ function SalesReport() {
         limit: PAGE_SIZE,
       })
     );
-    // a newer choice cancels the older request, so a slow answer can't overwrite a fresh one
     return () => request.abort();
   }, [dispatch, period, range, debouncedSearch, page, customReady]);
 
-  /* ---------------- close the custom range popup on outside click ---------------- */
   useEffect(() => {
     const handler = (e) => {
       if (rangeRef.current && !rangeRef.current.contains(e.target)) setRangeOpen(false);
@@ -316,7 +287,6 @@ function SalesReport() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ---------------- HANDLERS ---------------- */
   const choosePeriod = (value) => {
     setPeriod(value);
     setPage(1);
@@ -355,7 +325,6 @@ function SalesReport() {
       getSalesReport({ period, from: range.from, to: range.to, search: debouncedSearch, page, limit: PAGE_SIZE })
     );
 
-  /* ---------------- VALUES ---------------- */
   const loading = status === "loading";
   const firstLoad = loading && !report;
   const summary = report?.summary;
@@ -373,14 +342,12 @@ function SalesReport() {
       : `${dayText(report.range.from)} – ${dayText(report.range.to)}`
     : "";
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
         <section className="mx-auto max-w-[1180px] px-10 py-9">
-          {/* HEADER */}
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
@@ -417,7 +384,6 @@ function SalesReport() {
             </div>
           </div>
 
-          {/* EXPORT ERROR */}
           {exportError && (
             <div className="mb-5 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{exportError}</span>
@@ -427,7 +393,6 @@ function SalesReport() {
             </div>
           )}
 
-          {/* FILTER BAR */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
             <div className="flex flex-wrap items-center gap-1.5">
               {PERIODS.map((p) => (
@@ -530,7 +495,6 @@ function SalesReport() {
             </div>
           </div>
 
-          {/* REPORT ERROR */}
           {error && (
             <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -547,7 +511,6 @@ function SalesReport() {
           )}
 
           <div className={`transition-opacity ${loading && report ? "opacity-60" : ""}`}>
-            {/* KPI CARDS */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <StatCard
                 label="Total revenue"
@@ -588,7 +551,6 @@ function SalesReport() {
               />
             </div>
 
-            {/* CHARTS */}
             <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
               <CardShell title="Sales over Time">
                 {report ? (
@@ -607,7 +569,6 @@ function SalesReport() {
               </CardShell>
             </div>
 
-            {/* DISCOUNTS + COUPONS */}
             {report && (
               <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <CardShell title="Discount Breakdown">
@@ -619,7 +580,6 @@ function SalesReport() {
               </div>
             )}
 
-            {/* ORDERS TABLE */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
                 <h3 className="text-sm font-bold text-[#111]">Sales Orders</h3>
@@ -703,7 +663,6 @@ function SalesReport() {
                 </table>
               </div>
 
-              {/* EMPTY */}
               {!loading && !error && report && orders.length === 0 && (
                 <div className="flex min-h-[200px] flex-col items-center justify-center px-6 text-center">
                   <i className="fa-solid fa-chart-line text-4xl text-gray-300" />

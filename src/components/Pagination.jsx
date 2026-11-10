@@ -5,7 +5,6 @@ function Pagination({
   limit,
   onPageChange,
 }) {
-  // No pagination needed
   if (!totalResults) {
     return null;
   }
@@ -18,11 +17,9 @@ function Pagination({
     totalResults
   );
 
-  // Generate page numbers
   const getPageNumbers = () => {
     const pages = [];
 
-    // Show all pages when there are only a few
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -31,15 +28,12 @@ function Pagination({
       return pages;
     }
 
-    // Always show first page
     pages.push(1);
 
-    // Ellipsis before current area
     if (currentPage > 3) {
       pages.push("left-ellipsis");
     }
 
-    // Pages around current page
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(
       totalPages - 1,
@@ -52,12 +46,10 @@ function Pagination({
       }
     }
 
-    // Ellipsis after current area
     if (currentPage < totalPages - 2) {
       pages.push("right-ellipsis");
     }
 
-    // Always show last page
     if (!pages.includes(totalPages)) {
       pages.push(totalPages);
     }
@@ -77,7 +69,6 @@ function Pagination({
         pt-6
       "
     >
-      {/* ================= RESULT COUNT ================= */}
 
       <p className="text-sm text-gray-500">
         Showing{" "}
@@ -96,11 +87,7 @@ function Pagination({
       </p>
 
 
-      {/* ================= PAGINATION CONTROLS ================= */}
-
       <div className="flex items-center gap-2">
-
-        {/* Previous */}
 
         <button
           type="button"
@@ -130,12 +117,9 @@ function Pagination({
         </button>
 
 
-        {/* Page Numbers */}
-
         {getPageNumbers().map(
           (page, index) => {
 
-            // Ellipsis
             if (
               page === "left-ellipsis" ||
               page === "right-ellipsis"
@@ -159,7 +143,6 @@ function Pagination({
             }
 
 
-            // Page button
             return (
               <button
                 key={page}
@@ -201,8 +184,6 @@ function Pagination({
           }
         )}
 
-
-        {/* Next */}
 
         <button
           type="button"

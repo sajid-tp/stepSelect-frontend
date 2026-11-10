@@ -18,8 +18,6 @@ function ChangeEmail() {
   const [otp, setOtp] = useState('');
   const [localError, setLocalError] = useState('');
 
-  // 'otpSent' means step 1 succeeded — show the OTP form.
-  // Anything else (idle/requesting/failed before a send) stays on step 1.
   const otpStep = emailChangeStatus === 'otpSent' || emailChangeStatus === 'confirming';
 
   const handleRequestOtp = async (e) => {
@@ -36,9 +34,6 @@ function ChangeEmail() {
     try {
       await dispatch(requestEmailChange({ newEmail: trimmedEmail })).unwrap();
     } catch (err) {
-      // emailChangeError in the store already holds this, but keeping a
-      // local copy means the message doesn't vanish if the user navigates
-      // back to step 1 and the store gets reset elsewhere.
       setLocalError(err || 'Failed to send verification code');
     }
   };

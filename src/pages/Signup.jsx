@@ -24,8 +24,6 @@ import {
   MESSAGES as VALIDATION,
 } from '../utils/validators';
 
-// Live checklist shown under the password field. These mirror validatePassword()
-// in utils/validators.js (the server enforces the same rule).
 const PASSWORD_CHECKS = [
   { label: '8 to 64 characters', test: (p) => p.length >= 8 && p.length <= 64 },
   { label: 'An uppercase letter', test: (p) => /[A-Z]/.test(p) },
@@ -56,10 +54,9 @@ function Signup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Referral (optional): a typed code, or the token from an invite link (?ref=...)
   const [referral, setReferral] = useState('');
   const [fromLink, setFromLink] = useState(false);
-  const [referralCheck, setReferralCheck] = useState({ state: 'idle', name: '' }); // idle | checking | valid | invalid
+  const [referralCheck, setReferralCheck] = useState({ state: 'idle', name: '' });
 
   const checkReferral = async (value) => {
     const ref = value.trim();
@@ -74,7 +71,7 @@ function Signup() {
         result.valid ? { state: 'valid', name: result.referrerName } : { state: 'invalid', name: '' }
       );
     } catch {
-      setReferralCheck({ state: 'idle', name: '' }); // could not check: the server checks again on submit
+      setReferralCheck({ state: 'idle', name: '' });
     }
   };
 
@@ -92,7 +89,6 @@ function Signup() {
       setFromLink(true);
       checkReferral(ref);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const clearReferral = () => {
@@ -102,16 +98,13 @@ function Signup() {
     try {
       sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
     } catch {
-      /* ignore */
     }
   };
 
-  // Single source of truth now — no local isSubmitting/submitError
   const authStatus = useSelector((state) => state.auth.status);
   const authError = useSelector((state) => state.auth.error);
   const isSubmitting = authStatus === 'loading';
 
-  // Same rules and messages as the server (see utils/validators.js)
   const errors = {
     username: validateUsername(form.username),
     email: validateEmail(form.email),
@@ -150,7 +143,6 @@ function Signup() {
     }
 
     if (!isValid) {
-      // Take the user straight to the first problem (FormField ids = field names)
       const firstInvalid = ['username', 'email', 'password', 'confirmPassword'].find(
         (field) => errors[field]
       );
@@ -162,7 +154,6 @@ function Signup() {
 
     dispatch(clearAuthError());
 
-    // Send the same normalised email everywhere (trimmed + lower-case)
     const email = normalizeEmail(form.email);
 
     try {
@@ -176,7 +167,7 @@ function Signup() {
           referralCode: referral.trim(),
         })
       ).unwrap();
-      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* ignore */ }
+      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { }
       const otpRes = await dispatch(otpSignup({ email })).unwrap();
 
       navigate('/verify-otp', {
@@ -290,7 +281,6 @@ function Signup() {
           error={touched.confirmPassword ? errors.confirmPassword : ''}
         />
 
-        {/* Referral (optional) */}
         <div className="mb-5">
           <label htmlFor="referral" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
             Referral code <span className="font-normal normal-case text-gray-400">(optional)</span>
@@ -336,7 +326,6 @@ function Signup() {
           )}
         </div>
 
-        {/* Terms & Conditions (required) */}
         <div className="mb-5">
           <label className="flex cursor-pointer items-start gap-2.5 text-sm text-muted">
             <input

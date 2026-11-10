@@ -1,4 +1,3 @@
-// Saves a Blob (e.g. the invoice PDF) to the user's computer.
 export const downloadBlob = (blob, filename) => {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");

@@ -1,24 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Backend endpoints used by the admin Banner page
-|--------------------------------------------------------------------------
-| GET    /admin/banners?search&status&page&limit  -> data { banners[], pagination }
-| POST   /admin/banners                  (multipart: title, image, link, displayOrder, isActive)
-| PATCH  /admin/banners/:id              (multipart, image optional)
-| PATCH  /admin/banners/:id/status       -> show / hide
-| DELETE /admin/banners/:id
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   error?.message ||
   fallback;
 
-// Banner details + the picture travel together as a form (multipart)
 const toFormData = ({ title, link, displayOrder, isActive, image }) => {
   const form = new FormData();
   form.append("title", title);
@@ -29,9 +17,6 @@ const toFormData = ({ title, link, displayOrder, isActive, image }) => {
   return form;
 };
 
-// =====================================================
-// LIST
-// =====================================================
 export const getAdminBanners = createAsyncThunk(
   "adminBanners/getAdminBanners",
   async (
@@ -51,9 +36,6 @@ export const getAdminBanners = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CREATE / UPDATE
-// =====================================================
 export const createAdminBanner = createAsyncThunk(
   "adminBanners/createAdminBanner",
   async (values, { rejectWithValue }) => {
@@ -84,9 +66,6 @@ export const updateAdminBanner = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SHOW / HIDE ON THE LANDING PAGE
-// =====================================================
 export const toggleAdminBannerStatus = createAsyncThunk(
   "adminBanners/toggleAdminBannerStatus",
   async ({ bannerId, isActive }, { rejectWithValue }) => {
@@ -102,9 +81,6 @@ export const toggleAdminBannerStatus = createAsyncThunk(
   }
 );
 
-// =====================================================
-// DELETE
-// =====================================================
 export const deleteAdminBanner = createAsyncThunk(
   "adminBanners/deleteAdminBanner",
   async (bannerId, { rejectWithValue }) => {
@@ -117,16 +93,13 @@ export const deleteAdminBanner = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SLICE
-// =====================================================
 const initialState = {
   banners: [],
   pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 1 },
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 
-  togglingId: null, // banner whose switch is being saved
+  togglingId: null,
 };
 
 const adminBannerSlice = createSlice({
@@ -146,7 +119,7 @@ const adminBannerSlice = createSlice({
         state.pagination = action.payload.pagination || initialState.pagination;
       })
       .addCase(getAdminBanners.rejected, (state, action) => {
-        if (action.meta.aborted) return; // replaced by a newer request
+        if (action.meta.aborted) return;
         state.status = "failed";
         state.error = action.payload || "Failed to load banners.";
       })

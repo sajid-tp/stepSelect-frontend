@@ -1,20 +1,16 @@
 function AdminEntityCard({
   item,
 
-  // What to display
   name,
   description,
 
-  // Visual
   visual,
   visualType = "image",
 
-  // Actions
   onEdit,
   onToggleStatus,
   onDelete,
 
-  // Loading states
   toggling,
   deleting,
 }) {
@@ -39,13 +35,7 @@ function AdminEntityCard({
       "
     >
 
-      {/* ================================================= */}
-      {/* TOP SECTION */}
-      {/* ================================================= */}
-
       <div className="flex items-start justify-between">
-
-        {/* VISUAL */}
 
         <div
           className="
@@ -106,8 +96,6 @@ function AdminEntityCard({
         </div>
 
 
-        {/* STATUS */}
-
         <span
           className={`
             rounded-full
@@ -129,10 +117,6 @@ function AdminEntityCard({
 
       </div>
 
-
-      {/* ================================================= */}
-      {/* CONTENT */}
-      {/* ================================================= */}
 
       <div className="mt-5 flex-1">
 
@@ -164,10 +148,6 @@ function AdminEntityCard({
       </div>
 
 
-      {/* ================================================= */}
-      {/* ACTIONS */}
-      {/* ================================================= */}
-
       <div
         className="
           mt-5
@@ -180,12 +160,9 @@ function AdminEntityCard({
         "
       >
 
-        {/* EDIT */}
-
         <button
           type="button"
           onClick={() => onEdit(item)}
-          // disabled={!item.isActive}
           className={`
             flex-1
             rounded-lg
@@ -204,8 +181,6 @@ function AdminEntityCard({
           Edit
         </button>
 
-
-        {/* TOGGLE STATUS */}
 
         <button
           type="button"
@@ -240,8 +215,6 @@ function AdminEntityCard({
               : "Activate"}
         </button>
 
-
-        {/* DELETE */}
 
         <button
           type="button"

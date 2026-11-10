@@ -2,10 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
 
-// =====================================================
-// GET CATEGORIES
-// =====================================================
-
 export const getCategories = createAsyncThunk(
   "adminCategories/getCategories",
 
@@ -45,10 +41,6 @@ export const getCategories = createAsyncThunk(
 );
 
 
-// =====================================================
-// CREATE CATEGORY
-// =====================================================
-
 export const createCategory = createAsyncThunk(
   "adminCategories/createCategory",
 
@@ -70,10 +62,6 @@ export const createCategory = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// UPDATE CATEGORY
-// =====================================================
 
 export const updateCategory = createAsyncThunk(
   "adminCategories/updateCategory",
@@ -100,10 +88,6 @@ export const updateCategory = createAsyncThunk(
 );
 
 
-// =====================================================
-// TOGGLE CATEGORY STATUS
-// =====================================================
-
 export const toggleCategoryStatus = createAsyncThunk(
   "adminCategories/toggleCategoryStatus",
 
@@ -124,10 +108,6 @@ export const toggleCategoryStatus = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// DELETE CATEGORY
-// =====================================================
 
 export const deleteCategory = createAsyncThunk(
   "adminCategories/deleteCategory",
@@ -150,10 +130,6 @@ export const deleteCategory = createAsyncThunk(
 );
 
 
-// =====================================================
-// SLICE
-// =====================================================
-
 const adminCategorySlice = createSlice({
 
   name: "adminCategories",
@@ -170,19 +146,15 @@ const adminCategorySlice = createSlice({
 
     limit: 8,
 
-    // GET
     status: "idle",
     error: null,
 
-    // CREATE
     createStatus: "idle",
     createError: null,
 
-    // UPDATE
     updateStatus: "idle",
     updateError: null,
 
-    // DELETE
     deleteStatus: "idle",
     deleteError: null,
 
@@ -190,7 +162,6 @@ const adminCategorySlice = createSlice({
 
 
   reducers: {
-    // Clears the create/update status and errors, so an old error doesn't show up when the form is opened again
     resetCategoryFormState: (state) => {
       state.createStatus = "idle";
       state.createError = null;
@@ -203,10 +174,6 @@ const adminCategorySlice = createSlice({
   extraReducers: (builder) => {
 
     builder
-
-      // =================================================
-      // GET
-      // =================================================
 
       .addCase(
         getCategories.pending,
@@ -256,10 +223,6 @@ const adminCategorySlice = createSlice({
       )
 
 
-      // =================================================
-      // CREATE
-      // =================================================
-
       .addCase(
         createCategory.pending,
         (state) => {
@@ -292,10 +255,6 @@ const adminCategorySlice = createSlice({
         }
       )
 
-
-      // =================================================
-      // UPDATE
-      // =================================================
 
       .addCase(
         updateCategory.pending,
@@ -347,10 +306,6 @@ const adminCategorySlice = createSlice({
       )
 
 
-      // =================================================
-      // TOGGLE STATUS
-      // =================================================
-
       .addCase(
         toggleCategoryStatus.pending,
         (state) => {
@@ -395,10 +350,6 @@ const adminCategorySlice = createSlice({
         }
       )
 
-
-      // =================================================
-      // DELETE
-      // =================================================
 
       .addCase(
         deleteCategory.pending,

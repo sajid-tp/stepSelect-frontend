@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
 
-// Normalize Mongo's _id -> id so the UI doesn't break regardless of field name
 const normalize = (addr) => ({ ...addr, id: addr._id ?? addr.id });
 
 export const fetchAddresses = createAsyncThunk(
@@ -45,7 +44,6 @@ export const deleteAddress = createAsyncThunk(
   async (id, { dispatch, rejectWithValue }) => {
     try {
       await axiosInstance.delete(`/addresses/${id}`);
-      // Re-fetch to ensure default address re-assignment syncs from backend
       dispatch(fetchAddresses());
       return id;
     } catch (err) {
@@ -58,7 +56,7 @@ const addressSlice = createSlice({
   name: 'address',
   initialState: {
     list: [],
-    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    status: 'idle',
     error: null,
   },
   reducers: {
@@ -68,7 +66,6 @@ const addressSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch
       .addCase(fetchAddresses.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -82,7 +79,6 @@ const addressSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Add
       .addCase(addAddress.pending, (state) => {
         state.error = null;
       })
@@ -96,7 +92,6 @@ const addressSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Update
       .addCase(updateAddress.pending, (state) => {
         state.error = null;
       })
@@ -116,7 +111,6 @@ const addressSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Delete
       .addCase(deleteAddress.fulfilled, (state, action) => {
         state.list = state.list.filter(
           (a) => a.id !== action.payload && a._id !== action.payload

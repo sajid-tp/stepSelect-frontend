@@ -1,15 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Backend endpoint used by the admin Dashboard
-|--------------------------------------------------------------------------
-| GET /admin/dashboard?period&from&to
-|       period = daily | weekly | monthly | yearly | custom (custom needs from + to)
-|       -> data { range, summary, trend, topProducts[], topCategories[], topBrands[] }
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
@@ -37,7 +28,7 @@ export const getAdminDashboard = createAsyncThunk(
 
 const initialState = {
   data: null,
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 
@@ -56,7 +47,6 @@ const adminDashboardSlice = createSlice({
         state.data = action.payload;
       })
       .addCase(getAdminDashboard.rejected, (state, action) => {
-        // A request cancelled because a newer one started: ignore it
         if (action.meta.aborted) return;
         state.status = "failed";
         state.error = action.payload || "Failed to load the dashboard.";

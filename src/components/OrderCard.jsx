@@ -4,14 +4,11 @@ import OrderStatusBadge from "./OrderStatusBadge";
 import { formatMoney } from "./CartItem";
 import { formatDate } from "../utils/orderFormat";
 
-// One row of the Order History page.
-// Only "View Details" here: invoice, cancel and return all live on the details page.
 function OrderCard({ order, backTo = "/orders" }) {
   const items = order.items || [];
   const first = items[0];
   const extra = Math.max(items.length - 1, 0);
 
-  // payment_failed | payment_pending | the normal status (the server decides)
   const displayStatus = order.displayStatus || order.status;
   const isPaymentFailed = displayStatus === "payment_failed";
   const isPaymentPending = displayStatus === "payment_pending";
@@ -31,7 +28,6 @@ function OrderCard({ order, backTo = "/orders" }) {
 
   return (
     <article className="flex flex-col gap-4 rounded-xl border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-5">
-      {/* IMAGE */}
       <Link
         to={detailsLink}
         state={{ from: backTo }}
@@ -52,7 +48,6 @@ function OrderCard({ order, backTo = "/orders" }) {
         )}
       </Link>
 
-      {/* DETAILS */}
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-extrabold uppercase tracking-tight text-ink">
           {first?.name || "Order"}
@@ -87,7 +82,6 @@ function OrderCard({ order, backTo = "/orders" }) {
         )}
       </div>
 
-      {/* PRICE + LINK */}
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
         <p
           className={`text-base font-extrabold ${

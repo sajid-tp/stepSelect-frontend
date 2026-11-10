@@ -2,11 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
 
-// ======================================================
-// GET ALL VARIANTS OF A PRODUCT
-// GET /api/admin/variants/products/:productId/variants
-// ======================================================
-
 export const getVariants = createAsyncThunk(
   "adminVariants/getVariants",
   async (
@@ -44,11 +39,6 @@ export const getVariants = createAsyncThunk(
 );
 
 
-// ======================================================
-// GET SINGLE VARIANT
-// GET /api/admin/variants/:variantId
-// ======================================================
-
 export const getVariant = createAsyncThunk(
   "adminVariants/getVariant",
   async (
@@ -75,11 +65,6 @@ export const getVariant = createAsyncThunk(
   }
 );
 
-
-// ======================================================
-// ADD VARIANT
-// POST /api/admin/variants/products/:productId/variants
-// ======================================================
 
 export const addVariant = createAsyncThunk(
   "adminVariants/addVariant",
@@ -112,11 +97,6 @@ export const addVariant = createAsyncThunk(
 );
 
 
-// ======================================================
-// UPDATE VARIANT
-// PATCH /api/admin/variants/:variantId
-// ======================================================
-
 export const updateVariant = createAsyncThunk(
   "adminVariants/updateVariant",
   async (
@@ -148,11 +128,6 @@ export const updateVariant = createAsyncThunk(
 );
 
 
-// ======================================================
-// DELETE VARIANT
-// DELETE /api/admin/variants/:variantId
-// ======================================================
-
 export const deleteVariant = createAsyncThunk(
   "adminVariants/deleteVariant",
   async (
@@ -183,11 +158,6 @@ export const deleteVariant = createAsyncThunk(
 );
 
 
-// ======================================================
-// TOGGLE VARIANT STATUS
-// PATCH /api/admin/variants/:variantId/status
-// ======================================================
-
 export const toggleVariantStatus = createAsyncThunk(
   "adminVariants/toggleVariantStatus",
   async (
@@ -215,77 +185,42 @@ export const toggleVariantStatus = createAsyncThunk(
 );
 
 
-// ======================================================
-// INITIAL STATE
-// ======================================================
-
 const initialState = {
 
-  // Variant list
   variants: [],
 
-  // Pagination
   totalResults: 0,
   totalPages: 1,
   currentPage: 1,
   limit: 5,
 
-  // Selected variant
   selectedVariant: null,
 
-
-  // -----------------------------
-  // GET VARIANTS
-  // -----------------------------
 
   status: "idle",
   error: null,
 
 
-  // -----------------------------
-  // GET SINGLE VARIANT
-  // -----------------------------
-
   getVariantStatus: "idle",
   getVariantError: null,
 
-
-  // -----------------------------
-  // ADD VARIANT
-  // -----------------------------
 
   addStatus: "idle",
   addError: null,
 
 
-  // -----------------------------
-  // UPDATE VARIANT
-  // -----------------------------
-
   updateStatus: "idle",
   updateError: null,
 
-
-  // -----------------------------
-  // DELETE VARIANT
-  // -----------------------------
 
   deleteStatus: "idle",
   deleteError: null,
 
 
-  // -----------------------------
-  // TOGGLE STATUS
-  // -----------------------------
-
   statusUpdateStatus: "idle",
   statusUpdateError: null,
 };
 
-
-// ======================================================
-// SLICE
-// ======================================================
 
 const variantSlice = createSlice({
 
@@ -353,18 +288,10 @@ const variantSlice = createSlice({
   },
 
 
-  // ====================================================
-  // EXTRA REDUCERS
-  // ====================================================
-
   extraReducers: (builder) => {
 
     builder
 
-
-      // ==================================================
-      // GET VARIANTS
-      // ==================================================
 
       .addCase(
         getVariants.pending,
@@ -414,10 +341,6 @@ const variantSlice = createSlice({
       )
 
 
-      // ==================================================
-      // GET SINGLE VARIANT
-      // ==================================================
-
       .addCase(
         getVariant.pending,
         (state) => {
@@ -455,10 +378,6 @@ const variantSlice = createSlice({
       )
 
 
-      // ==================================================
-      // ADD VARIANT
-      // ==================================================
-
       .addCase(
         addVariant.pending,
         (state) => {
@@ -493,10 +412,6 @@ const variantSlice = createSlice({
       )
 
 
-      // ==================================================
-      // UPDATE VARIANT
-      // ==================================================
-
       .addCase(
         updateVariant.pending,
         (state) => {
@@ -513,11 +428,6 @@ const variantSlice = createSlice({
         (state, action) => {
 
           state.updateStatus = "succeeded";
-
-          /*
-           * If the API returns the updated variant,
-           * update it inside the current list as well.
-           */
 
           const updatedVariant =
             action.payload?.variant ||
@@ -567,10 +477,6 @@ const variantSlice = createSlice({
       )
 
 
-      // ==================================================
-      // DELETE VARIANT
-      // ==================================================
-
       .addCase(
         deleteVariant.pending,
         (state) => {
@@ -619,10 +525,6 @@ const variantSlice = createSlice({
         }
       )
 
-
-      // ==================================================
-      // TOGGLE VARIANT STATUS
-      // ==================================================
 
       .addCase(
         toggleVariantStatus.pending,
@@ -693,10 +595,6 @@ const variantSlice = createSlice({
 });
 
 
-// ======================================================
-// ACTIONS
-// ======================================================
-
 export const {
   clearSelectedVariant,
   clearVariantErrors,
@@ -706,9 +604,5 @@ export const {
   resetStatusUpdateStatus,
 } = variantSlice.actions;
 
-
-// ======================================================
-// REDUCER
-// ======================================================
 
 export default variantSlice.reducer;

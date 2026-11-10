@@ -11,7 +11,6 @@ const formatDate = (value) =>
     year: "numeric",
   });
 
-// "10% off, up to ₹500" / "₹500 off" - the rule of the coupon, shown on the applied coupon
 const ruleLabel = (coupon) =>
   coupon.discountType === "percentage"
     ? `${coupon.discountValue}% off${
@@ -26,18 +25,6 @@ const offLabel = (coupon) =>
     ? `${coupon.discountValue}% OFF`
     : `₹${Number(coupon.discountValue).toLocaleString("en-IN")} OFF`;
 
-/*
-  "Have a coupon?" control for the checkout page.
-
-  - Clicking the field opens a dropdown with the coupons the customer can use
-    (GET /coupons). Coupons the cart doesn't qualify for yet are greyed out
-    and say how much more is needed.
-  - Picking a coupon fills the field; APPLY sends it to the server.
-  - Once applied, the field is replaced by a pill with a Remove button.
-
-  onApply(code) and onRemove() must return a promise that REJECTS with an error
-  message string when the server refuses, so it can be shown under the field.
-*/
 function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
   const dispatch = useDispatch();
 
@@ -53,11 +40,10 @@ function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
 
-  /* ---------- open / close ---------- */
   const openList = () => {
     if (open || disabled) return;
     setOpen(true);
-    dispatch(fetchAvailableCoupons()); // always fresh: eligibility depends on the cart
+    dispatch(fetchAvailableCoupons());
   };
 
   useEffect(() => {
@@ -80,7 +66,6 @@ function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
     };
   }, [open]);
 
-  /* ---------- actions ---------- */
   const handlePick = (coupon) => {
     if (!coupon.isApplicable) return;
     setCode(coupon.couponCode);
@@ -121,7 +106,6 @@ function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
     }
   };
 
-  /* ---------- APPLIED STATE ---------- */
   if (appliedCoupon) {
     return (
       <div>
@@ -159,7 +143,6 @@ function CouponDropdown({ appliedCoupon, onApply, onRemove, disabled }) {
     );
   }
 
-  /* ---------- INPUT + DROPDOWN ---------- */
   return (
     <div ref={wrapperRef} className="relative">
       <div className="flex gap-2">

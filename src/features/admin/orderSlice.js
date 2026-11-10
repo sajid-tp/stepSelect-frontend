@@ -1,34 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Backend endpoints used by the admin order pages
-|--------------------------------------------------------------------------
-| GET   /admin/orders?search&status&sort&from&to&page&limit
-|         -> data { orders[] (each with returnRequestCount), pagination, pendingReturnOrders }
-|         status can also be "return_requested" = the Returns tab
-| GET   /admin/orders/:orderId
-|         -> data order (+ user; every item has its own allowedStatuses[])
-| PATCH /admin/orders/:orderId/items/:itemId/status   body { status }
-|         -> data order (same shape as GET one)
-|
-| Every PRODUCT (item) of an order has its own delivery status. The order's
-| status is worked out by the server from its items, so it is never edited.
-| The server decides which status changes are allowed (one step forward,
-| cancel only while still pending) and sends them in each item's
-| `allowedStatuses`, so this slice and the pages never repeat those rules.
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   error?.message ||
   fallback;
 
-// =====================================================
-// LIST
-// =====================================================
 export const getAdminOrders = createAsyncThunk(
   "adminOrders/getAdminOrders",
   async (
@@ -44,7 +22,6 @@ export const getAdminOrders = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // "all" and empty values are simply not sent
       const params = { sort, page, limit };
       if (search) params.search = search;
       if (status && status !== "all") params.status = status;
@@ -59,9 +36,6 @@ export const getAdminOrders = createAsyncThunk(
   }
 );
 
-// =====================================================
-// ONE ORDER (edit page)
-// =====================================================
 export const getAdminOrder = createAsyncThunk(
   "adminOrders/getAdminOrder",
   async (orderId, { rejectWithValue }) => {
@@ -76,9 +50,6 @@ export const getAdminOrder = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CHANGE THE DELIVERY STATUS OF ONE PRODUCT (item) OF AN ORDER
-// =====================================================
 export const updateAdminItemStatus = createAsyncThunk(
   "adminOrders/updateAdminItemStatus",
   async ({ orderId, itemId, status }, { rejectWithValue }) => {
@@ -96,9 +67,6 @@ export const updateAdminItemStatus = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CHANGE STATUS OF EVERY OPEN ITEM AT ONCE (not used by the pages any more)
-// =====================================================
 export const updateAdminOrderStatus = createAsyncThunk(
   "adminOrders/updateAdminOrderStatus",
   async ({ orderId, status }, { rejectWithValue }) => {
@@ -115,14 +83,10 @@ export const updateAdminOrderStatus = createAsyncThunk(
   }
 );
 
-// =====================================================
-// APPROVE / REJECT A RETURN REQUEST (one item)
-// =====================================================
 export const handleAdminReturn = createAsyncThunk(
   "adminOrders/handleAdminReturn",
   async ({ orderId, itemId, action, reason, restock }, { rejectWithValue }) => {
     try {
-      // restock (approve only): true = add the returned units back to stock, false = do not
       const body = { action, reason };
       if (restock !== undefined) body.restock = restock;
 
@@ -139,14 +103,11 @@ export const handleAdminReturn = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SLICE
-// =====================================================
 const initialState = {
   orders: [],
   pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 1 },
-  pendingReturnOrders: 0, // orders with a return waiting for the admin (badge on the Returns tab)
-  status: "idle", // idle | loading | succeeded | failed
+  pendingReturnOrders: 0,
+  status: "idle",
   error: null,
 
   current: null,
@@ -154,7 +115,6 @@ const initialState = {
   currentError: null,
 };
 
-// An item (or the whole order) changed: show the new order and keep the list row in step
 const applyUpdatedOrder = (state, action) => {
   const updated = action.payload.order;
   state.current = updated;
@@ -180,7 +140,6 @@ const adminOrderSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // ----- list -----
       .addCase(getAdminOrders.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -196,7 +155,6 @@ const adminOrderSlice = createSlice({
         state.error = action.payload || "Failed to fetch orders.";
       })
 
-      // ----- one order -----
       .addCase(getAdminOrder.pending, (state) => {
         state.currentStatus = "loading";
         state.currentError = null;
@@ -210,11 +168,9 @@ const adminOrderSlice = createSlice({
         state.currentError = action.payload || "Failed to load order.";
       })
 
-      // ----- status changed: show the new order, keep the list row in step -----
       .addCase(updateAdminItemStatus.fulfilled, applyUpdatedOrder)
       .addCase(updateAdminOrderStatus.fulfilled, applyUpdatedOrder)
 
-      // ----- return approved / rejected: show the refreshed order -----
       .addCase(handleAdminReturn.fulfilled, (state, action) => {
         state.current = action.payload.order;
         state.currentStatus = "succeeded";

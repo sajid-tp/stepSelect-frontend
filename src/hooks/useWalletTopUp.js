@@ -5,17 +5,6 @@ import { initiateTopUp, verifyTopUp } from "../features/user/walletSlice";
 import { DemoRazorpay } from "../utils/demoRazorpay";
 import { loadRazorpay } from "../utils/loadRazorpay";
 
-/*
-  Add money to the wallet. Money goes in ONLY through Razorpay:
-
-    1. the server checks the amount and creates the Razorpay order
-    2. the Razorpay popup opens (real test popup, or the look-alike demo popup in demo mode)
-    3. after paying, the server checks Razorpay's signature and only then adds the money
-
-  topUp(amount) resolves with { balance, amount } once the money is in the wallet,
-  and rejects with a readable message when the payment did not complete.
-*/
-
 export default function useWalletTopUp() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
@@ -45,7 +34,6 @@ export default function useWalletTopUp() {
           },
           theme: { color: "#b13600" },
 
-          // Paid: the server checks the signature before it adds the money
           handler: async (response) => {
             finished = true;
             try {
@@ -62,7 +50,6 @@ export default function useWalletTopUp() {
             }
           },
 
-          // Closed without paying: nothing is added
           modal: {
             ondismiss: () => {
               if (finished) return;
@@ -72,7 +59,6 @@ export default function useWalletTopUp() {
           },
         });
 
-        // A failed try stays inside the popup (the customer can try again there).
         razorpay.on("payment.failed", (response) => {
           lastFailure = response?.error?.description || "Your payment could not be completed.";
         });

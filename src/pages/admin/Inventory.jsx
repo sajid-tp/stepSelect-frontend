@@ -12,14 +12,8 @@ import {
   updateAdminStock,
 } from "../../features/admin/inventorySlice";
 
-/*
-|--------------------------------------------------------------------------
-| CONSTANTS
-|--------------------------------------------------------------------------
-*/
 const PAGE_SIZE = 10;
 
-// value = what the server filters on (stockFilter)
 const TABS = [
   { value: "all", label: "All" },
   { value: "in", label: "In stock" },
@@ -27,7 +21,6 @@ const TABS = [
   { value: "out", label: "Out of stock" },
 ];
 
-// values must match `sorts` in adminInventoryServices.getInventory
 const SORT_OPTIONS = [
   { value: "newest", label: "Recently updated" },
   { value: "stock_asc", label: "Stock: low to high" },
@@ -44,11 +37,6 @@ const STOCK_STATUS_META = {
 const inputClass =
   "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10";
 
-/*
-|--------------------------------------------------------------------------
-| SMALL PIECES
-|--------------------------------------------------------------------------
-*/
 function StockBadge({ status }) {
   const meta = STOCK_STATUS_META[status] || {
     label: status,
@@ -82,22 +70,14 @@ function SizeChip({ size }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE-STOCK MODAL
-|--------------------------------------------------------------------------
-| One row per size. Two ways to change a number:
-|   "Set exact number"  -> body { size, stock }
-|   "Add / remove"      -> body { size, adjust }  (safe while customers are buying)
-*/
 function StockModal({ item, onClose, onSaved, onError }) {
   const dispatch = useDispatch();
 
-  const [row, setRow] = useState(item); // kept fresh from each server reply
-  const [mode, setMode] = useState("set"); // set | adjust
-  const [values, setValues] = useState({}); // { [size]: "text" }
+  const [row, setRow] = useState(item);
+  const [mode, setMode] = useState("set");
+  const [values, setValues] = useState({});
   const [busySize, setBusySize] = useState(null);
-  const [rowError, setRowError] = useState({}); // { [size]: "message" }
+  const [rowError, setRowError] = useState({});
 
   const setValue = (size, text) => {
     setValues((v) => ({ ...v, [size]: text }));
@@ -114,7 +94,6 @@ function StockModal({ item, onClose, onSaved, onError }) {
     const text = String(values[s.size] ?? "").trim();
     const number = Number(text);
 
-    // check on the client first, the server checks again
     let message = "";
     if (text === "" || !Number.isInteger(number)) {
       message = "Enter a whole number.";
@@ -167,7 +146,6 @@ function StockModal({ item, onClose, onSaved, onError }) {
         aria-modal="true"
         aria-labelledby="stock-modal-title"
       >
-        {/* header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-[#f7f7f7]">
@@ -202,7 +180,6 @@ function StockModal({ item, onClose, onSaved, onError }) {
           </button>
         </div>
 
-        {/* mode switch */}
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1 text-sm font-medium">
           {[
             { value: "set", label: "Set exact number" },
@@ -228,7 +205,6 @@ function StockModal({ item, onClose, onSaved, onError }) {
             : "Type +10 to add 10 pairs (a delivery) or -3 to remove 3 (damaged pairs)."}
         </p>
 
-        {/* sizes */}
         <div className="mt-4 divide-y divide-gray-100 rounded-lg border border-gray-200">
           {row.sizes.map((s) => {
             const busy = busySize === s.size;
@@ -297,11 +273,6 @@ function StockModal({ item, onClose, onSaved, onError }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function Inventory() {
   const dispatch = useDispatch();
 
@@ -315,11 +286,10 @@ function Inventory() {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
 
-  const [activeId, setActiveId] = useState(null); // variantId being edited
+  const [activeId, setActiveId] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
-  const [toast, setToast] = useState(null); // { type, text }
+  const [toast, setToast] = useState(null);
 
-  /* ---------------- FETCH ---------------- */
   const fetchInventory = () =>
     dispatch(
       getAdminInventory({
@@ -333,7 +303,6 @@ function Inventory() {
 
   useEffect(() => {
     fetchInventory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, debouncedSearch, tab, sort, page]);
 
   useEffect(() => {
@@ -342,7 +311,6 @@ function Inventory() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  /* ---------------- HANDLERS ---------------- */
   const handleTabChange = (value) => {
     setTab(value);
     setPage(1);
@@ -363,7 +331,7 @@ function Inventory() {
   const closeModal = () => {
     setActiveId(null);
     setActiveItem(null);
-    fetchInventory(); // refresh cards, filters and order after edits
+    fetchInventory();
   };
 
   const hasFilters = Boolean(debouncedSearch) || tab !== "all" || sort !== "newest";
@@ -377,13 +345,11 @@ function Inventory() {
     { key: "out", label: "Out of stock", value: summary.out, tone: "text-red-600" },
   ];
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-        {/* HEADER */}
         <header className="border-b border-gray-200 bg-white px-12 py-7">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
             Stock
@@ -399,7 +365,6 @@ function Inventory() {
         </header>
 
         <section className="px-12 py-8">
-          {/* SUMMARY CARDS (click one to filter) */}
           <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
             {cards.map((c) => (
               <button
@@ -418,7 +383,6 @@ function Inventory() {
             ))}
           </div>
 
-          {/* SEARCH + SORT */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div className="relative w-full max-w-[460px]">
               <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
@@ -445,7 +409,6 @@ function Inventory() {
             )}
           </div>
 
-          {/* TABS + SORT */}
           <AdminTabsSort
             className="mt-14 mb-8"
             tabs={TABS}
@@ -460,7 +423,6 @@ function Inventory() {
             sortId="inventory-sort"
           />
 
-          {/* LIST ERROR */}
           {error && (
             <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -470,7 +432,6 @@ function Inventory() {
             </div>
           )}
 
-          {/* TABLE */}
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[860px] text-left">
@@ -562,7 +523,6 @@ function Inventory() {
               </table>
             </div>
 
-            {/* EMPTY */}
             {!isLoading && !error && items.length === 0 && (
               <div className="flex min-h-[260px] flex-col items-center justify-center px-6 text-center">
                 <i className="fa-solid fa-boxes-stacked text-4xl text-gray-300" />
@@ -586,7 +546,6 @@ function Inventory() {
               </div>
             )}
 
-            {/* PAGINATION */}
             {items.length > 0 && (
               <div className="px-8 pb-6 [&>div]:mt-0">
                 <Pagination
@@ -605,7 +564,6 @@ function Inventory() {
         </section>
       </main>
 
-      {/* UPDATE STOCK */}
       {activeId && activeItem && (
         <StockModal
           key={activeId}
@@ -616,7 +574,6 @@ function Inventory() {
         />
       )}
 
-      {/* TOAST */}
       {toast && (
         <div
           role="status"

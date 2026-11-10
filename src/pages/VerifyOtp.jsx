@@ -1,4 +1,3 @@
-// pages/VerifyOtp.jsx
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,7 +10,6 @@ function VerifyOtp() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read once on mount. Falls back to sessionStorage, so it survives a refresh.
   const [session] = useState(() => resolveOtpSession(location.state));
   const { email, type = 'signup' } = session || {};
 
@@ -20,8 +18,6 @@ function VerifyOtp() {
   const [isResending, setIsResending] = useState(false);
   const [expiresAt, setExpiresAt] = useState(session?.expiresAt || null);
 
-  // Every time expiresAt changes (first load or after Resend) store it,
-  // so a refresh picks up the latest value instead of the one from navigation.
   useEffect(() => {
     if (email && expiresAt) saveOtpSession({ email, type, expiresAt });
   }, [email, type, expiresAt]);
@@ -42,7 +38,6 @@ function VerifyOtp() {
       if (type === 'reset') {
         await dispatch(verifyResetOtp({ email, otp: code })).unwrap();
         clearOtpSession();
-        // replace: true -> the OTP page is swapped out of history, so Back can't return to it
         navigate('/update-password', { state: { email }, replace: true });
       } else {
         await dispatch(verifyOtp({ email, otp: code })).unwrap();
@@ -66,7 +61,7 @@ function VerifyOtp() {
     setIsResending(true);
     try {
       const result = await dispatch(resendOtp({ email, type })).unwrap();
-      setExpiresAt(result.expiresAt); // new expiry -> card restarts both countdowns by itself
+      setExpiresAt(result.expiresAt);
     } catch (err) {
       setError(err || 'Could not resend code. Please try again.');
     } finally {

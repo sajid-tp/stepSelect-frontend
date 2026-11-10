@@ -10,10 +10,8 @@ function BlockedModal() {
 
   const blocked = useSelector((state) => state.auth.blocked);
 
-  // Both "OK" and "Close" do the same thing so a blocked user
-  // can't dismiss the modal and keep using the app.
   const handleClose = () => {
-    dispatch(logout()); // local only: the logout API would return 403 for a blocked user too
+    dispatch(logout());
     dispatch(clearBlocked());
     navigate('/login', { replace: true });
   };

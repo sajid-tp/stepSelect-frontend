@@ -2,21 +2,6 @@ import { useEffect, useState } from "react";
 
 import { formatMoney } from "./CartItem";
 
-/*
-  "Add Money" window of the wallet page.
-  The customer types (or picks) an amount; the money is only added after paying through Razorpay.
-  Wallet money cannot be withdrawn afterwards, it can only be spent on orders.
-
-  Mount it only while it is open ({open && <AddMoneyModal ... />}), so the amount starts empty each time.
-
-  Props
-    limits       { MIN_TOP_UP } from the server (null until loaded)
-    demo         true while the server runs the built-in demo Razorpay (no real keys)
-    busy, error  loading state + message from the server
-    onAdd(amount)  called with a number when the amount looks valid (opens Razorpay)
-    onClose
-*/
-
 const QUICK_AMOUNTS = [500, 1000, 2000];
 
 function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, onClose }) {
@@ -25,7 +10,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
 
   const min = limits?.MIN_TOP_UP ?? 100;
 
-  // Escape closes the window
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape" && !busy) onClose();
@@ -34,7 +18,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
     return () => window.removeEventListener("keydown", onKey);
   }, [busy, onClose]);
 
-  // Only digits and one dot, at most 2 decimals
   const handleChange = (e) => {
     const cleaned = e.target.value.replace(/[^\d.]/g, "");
     const match = cleaned.match(/^\d*\.?\d{0,2}/);
@@ -74,7 +57,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
         aria-label="Add money to wallet"
         className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl"
       >
-        {/* header */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-ink">Add Money</h2>
@@ -99,7 +81,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
             </span>
           </div>
 
-          {/* amount */}
           <label className="mt-6 flex items-center gap-2 rounded-lg border border-line bg-[#f7f7f7] px-4 py-4 focus-within:border-[#b13600]">
             <span className="text-lg font-bold text-ink">₹</span>
             <input
@@ -114,7 +95,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
             />
           </label>
 
-          {/* quick amounts */}
           <div className="mt-4 grid grid-cols-3 gap-3">
             {QUICK_AMOUNTS.map((value) => (
               <button
@@ -158,9 +138,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
             )}
           </button>
 
-          {/* <p className="mt-4 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-            Up to {formatMoney(max).replace(".00", "")} at a time
-          </p> */}
           <p className="mt-1 text-center text-[10px] text-gray-400">
             Wallet money can be used for orders only. It can't be withdrawn.
           </p>

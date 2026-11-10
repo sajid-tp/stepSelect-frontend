@@ -1,23 +1,5 @@
 import { useState } from "react";
 
-/*
-  One modal for all four actions: cancel order, cancel item, return order, return item.
-  The page decides what to show through props, so this file has no order logic.
-
-  Mount it only while it is open ({open && <OrderActionModal ... />}),
-  that way its fields start empty every time.
-
-  Props
-    title, description, confirmText, variant ("danger" | "primary")
-    reasons          list of reason strings for the dropdown
-    reasonRequired   true for returns, false for cancels
-    maxQuantity      shows a quantity dropdown (1..max) when set
-    quantityLabel
-    showDescription  shows the optional "tell us more" box (returns)
-    busy, error      loading state + message from the server
-    onConfirm({ reason, quantity, description })
-    onClose
-*/
 function OrderActionModal({
   title,
   description,
@@ -96,7 +78,6 @@ function OrderActionModal({
         )}
 
         <div className="space-y-4">
-          {/* QUANTITY */}
           {maxQuantity && (
             <div>
               <label
@@ -123,7 +104,6 @@ function OrderActionModal({
             </div>
           )}
 
-          {/* REASON */}
           <div>
             <label
               htmlFor="order-action-reason"
@@ -152,7 +132,6 @@ function OrderActionModal({
             </select>
           </div>
 
-          {/* DESCRIPTION */}
           {showDescription && (
             <div>
               <label

@@ -30,14 +30,11 @@ function AccountOverview() {
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      {/* Full width container with standard side padding so it aligns with navbar/footer */}
       <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         
-        {/* Same shell as Orders / Wishlist / Cart: sidebar column + content column */}
         <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
           <AccountSidebar />
 
-          {/* Profile Content Area */}
           <section className="min-w-0">
             <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
               <Link to="/" className="text-muted transition hover:text-ink">
@@ -55,10 +52,8 @@ function AccountOverview() {
               Account <span className="text-[#f4511e]">Overview</span>
             </h1>
 
-            {/* Profile card: full width of the content column, like the other account pages */}
             <div className="w-full rounded-xl border border-line bg-white p-5 shadow-xs sm:p-7">
               
-              {/* Card Header */}
               <div className="flex items-center justify-between gap-2 border-b border-line pb-4 mb-6">
                 <span className="text-sm font-bold tracking-wider uppercase text-muted">
                   Personal Details
@@ -75,7 +70,6 @@ function AccountOverview() {
                 </Link>
               </div>
 
-              {/* Loading & Error States */}
               {status === 'loading' && !profile && (
                 <p className="text-base text-muted py-2">Loading your details...</p>
               )}
@@ -86,11 +80,9 @@ function AccountOverview() {
                 </p>
               )}
 
-              {/* Profile details */}
               {profile && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-8">
                   
-                  {/* Avatar */}
                   <div className="relative shrink-0">
                     {hasValidImage ? (
                       <img
@@ -106,7 +98,6 @@ function AccountOverview() {
                     )}
                   </div>
 
-                  {/* Grouped Name and Email together */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 flex-1 min-w-0">
                     <div>
                       <span className="text-xs text-muted block uppercase tracking-wider font-semibold mb-1">
@@ -142,7 +133,6 @@ function AccountOverview() {
               )}
             </div>
 
-            {/* Referral: code, invite link and earnings */}
             <ReferralCard />
           </section>
 

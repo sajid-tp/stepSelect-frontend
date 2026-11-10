@@ -1,7 +1,3 @@
-// Small helpers shared by the Order History and Order Details pages.
-
-/* ---------- Status labels + colours ---------- */
-
 export const STATUS_META = {
   pending: {
     label: "Pending",
@@ -35,7 +31,6 @@ export const STATUS_META = {
     label: "Return Rejected",
     cls: "border-red-200 bg-red-50 text-red-600",
   },
-  // online payment not finished yet / over (see the payment rules: 30 minute hold, 4 attempts)
   payment_pending: {
     label: "Payment Pending",
     cls: "border-amber-200 bg-amber-50 text-amber-700",
@@ -52,10 +47,6 @@ export const getStatusMeta = (status) =>
     cls: "border-gray-200 bg-gray-100 text-gray-600",
   };
 
-/* ---------- Which items may show which buttons ---------- */
-
-// Tracking is available from the moment the order is placed ("pending" = placed / processing),
-// through shipped and out for delivery, and stays available after delivery (and in the return flow)
 export const TRACKABLE_ITEM_STATUSES = [
   "pending",
   "shipped",
@@ -66,14 +57,11 @@ export const TRACKABLE_ITEM_STATUSES = [
   "return_rejected",
 ];
 
-// Item reached the customer, so it can be rated and reviewed
 export const REVIEWABLE_ITEM_STATUSES = [
   "delivered",
   "return_requested",
   "return_rejected",
 ];
-
-/* ---------- Same lists the server validates against (used until /orders/reasons loads) ---------- */
 
 export const DEFAULT_CANCEL_REASONS = [
   "Changed my mind",
@@ -91,8 +79,6 @@ export const DEFAULT_RETURN_REASONS = [
   "Quality not as expected",
   "Other",
 ];
-
-/* ---------- Dates ---------- */
 
 export const formatDate = (value) => {
   if (!value) return "";
@@ -120,8 +106,6 @@ export const formatDateTime = (value) => {
   });
   return `${date} at ${time}`;
 };
-
-/* ---------- Payment ---------- */
 
 export const paymentLabel = (method) => {
   if (method === "COD") return "Cash on Delivery";

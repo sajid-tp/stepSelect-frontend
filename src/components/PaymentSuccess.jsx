@@ -4,32 +4,20 @@ import { formatMoney } from "./CartItem";
 import InvoiceButton from "./InvoiceButton";
 import { paymentLabel, formatDateTime } from "../utils/orderFormat";
 
-/*
-  Payment successful card.
-  Props:
-    payment  -> the server's payment status { orderNumber, paymentMethod, totalAmount, paymentId, paidAt, couponCode, couponDiscount }
-  Shows a statement, an illustration, the payment details and two buttons:
-  "View order details" and "Continue shopping".
-*/
-
-// Little drawing: a parcel with a check badge
 function SuccessIllustration() {
   return (
     <svg viewBox="0 0 200 160" className="mx-auto h-36 w-44" role="img" aria-label="Payment successful">
       <ellipse cx="100" cy="146" rx="62" ry="8" fill="#f1ece8" />
-      {/* confetti */}
       <circle cx="30" cy="40" r="4" fill="#f4511e" />
       <circle cx="170" cy="52" r="5" fill="#fbbf24" />
       <rect x="22" y="84" width="8" height="8" rx="2" fill="#22c55e" transform="rotate(20 26 88)" />
       <rect x="168" y="96" width="8" height="8" rx="2" fill="#b13600" transform="rotate(-15 172 100)" />
       <path d="M44 22l6 10M52 22l-6 10" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
       <path d="M150 24l8 8M158 24l-8 8" stroke="#f4511e" strokeWidth="3" strokeLinecap="round" />
-      {/* box */}
       <path d="M52 66l48-20 48 20v54l-48 20-48-20z" fill="#ffddd0" stroke="#b13600" strokeWidth="3" strokeLinejoin="round" />
       <path d="M52 66l48 20 48-20" fill="none" stroke="#b13600" strokeWidth="3" strokeLinejoin="round" />
       <path d="M100 86v54" stroke="#b13600" strokeWidth="3" />
       <path d="M76 56l48 20" stroke="#b13600" strokeWidth="3" strokeLinecap="round" />
-      {/* badge */}
       <circle cx="140" cy="48" r="22" fill="#16a34a" />
       <path d="M129 48l8 8 14-16" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -107,7 +95,6 @@ function PaymentSuccess({ payment }) {
         </div>
       </dl>
 
-      {/* The invoice is ready the moment the payment goes through */}
       <div className="mt-5">
         <InvoiceButton orderNumber={orderNumber} />
       </div>

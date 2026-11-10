@@ -12,16 +12,6 @@ import {
   resetPayment,
 } from "../features/user/paymentSlice";
 
-/*
-  The ONE payment-failure modal. Mounted once in App.jsx; the payment hook opens it (dispatch openPaymentFailure)
-  after any failed attempt, from the checkout page or from Order Details.
-
-  It always asks the server for the real state, so what it shows (attempts left, the 30 minute hold,
-  the 2 minute cool-down before the final attempt, or "Payment failed" once the order is closed) can never drift.
-    Retry payment / Make final attempt -> opens Razorpay again for the SAME order
-    View order                         -> Order Details (a closed order stays in Order History as Payment failed)
-    Cancel payment                     -> gives the held items back, then the cart opens
-*/
 function PaymentFailureModal() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,7 +23,6 @@ function PaymentFailureModal() {
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState("");
 
-  // Opened: load the real state of this payment from the server
   useEffect(() => {
     if (!open || !orderNumber) return;
     setRetryError(openError || "");
@@ -44,7 +33,6 @@ function PaymentFailureModal() {
   const current = result?.orderNumber === orderNumber ? result : null;
   const isPaid = current && ["paid", "refunded"].includes(current.paymentStatus);
 
-  // Paid in the meantime (slow UPI, another tab): show the good news instead
   useEffect(() => {
     if (open && isPaid) {
       dispatch(closePaymentFailure());
@@ -52,7 +40,6 @@ function PaymentFailureModal() {
     }
   }, [open, isPaid, orderNumber, dispatch, navigate]);
 
-  // Escape closes the modal (the order and its attempts stay as they are)
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {
@@ -71,11 +58,10 @@ function PaymentFailureModal() {
     if (!current) return;
     setRetrying(true);
     setRetryError("");
-    close(); // the Razorpay popup takes over; a new failure opens this modal again with fresh numbers
+    close();
     try {
       await retry({ orderNumber, gateway: current.paymentMethod });
     } catch (message) {
-      // The server refused (cool-down not over, no attempts left, ...): show why, with the real numbers
       dispatch(
         openPaymentFailure({
           orderNumber,
@@ -90,7 +76,7 @@ function PaymentFailureModal() {
 
   const handleCancelPayment = async () => {
     setRetrying(true);
-    await dispatch(abandonPayment(orderNumber)); // never blocks the redirect
+    await dispatch(abandonPayment(orderNumber));
     setRetrying(false);
     close();
     navigate("/cart");

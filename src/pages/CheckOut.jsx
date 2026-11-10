@@ -22,14 +22,6 @@ import Modal from "../components/Modals";
 import useOnlinePayment from "../hooks/useOnlinePayment";
 import { payWithWallet } from "../features/user/walletSlice";
 
-/*
-|--------------------------------------------------------------------------
-| STATIC DATA
-|--------------------------------------------------------------------------
-| The server sends data.paymentMethods: COD, Razorpay (when it has keys or demo mode in
-| server/.env) and the customer's wallet. A method that is not in that list is shown greyed
-| out. Razorpay opens its popup (see hooks/useOnlinePayment.js). The wallet pays at once.
-*/
 const PAYMENT_OPTIONS = [
   { id: "COD", label: "Cash on Delivery", note: "Pay when your order arrives" },
   { id: "RAZORPAY", label: "Razorpay", note: "Cards, UPI, Netbanking" },
@@ -44,11 +36,6 @@ const ISSUE_TEXT = {
   INSUFFICIENT_STOCK: "Not enough stock",
 };
 
-/*
-|--------------------------------------------------------------------------
-| SMALL PIECES
-|--------------------------------------------------------------------------
-*/
 function SectionTitle({ icon, children }) {
   return (
     <h2 className="flex items-center gap-2.5 border-b border-gray-100 pb-3 text-[15px] font-extrabold uppercase tracking-wide text-[#141414]">
@@ -166,11 +153,6 @@ function PaymentOption({ option, selected, enabled, onSelect }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function Checkout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -180,22 +162,20 @@ function Checkout() {
   );
 
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [formMode, setFormMode] = useState(null); // null | { address: null | addressObject }
+  const [formMode, setFormMode] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const [placing, setPlacing] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false); // "are you sure?" modal
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [placeError, setPlaceError] = useState("");
 
   const { payNow, goToSuccess } = useOnlinePayment();
 
-  /* ---------- load ---------- */
   useEffect(() => {
-    dispatch(resetCheckout()); // never flash a previous visit's data
+    dispatch(resetCheckout());
     dispatch(fetchCheckout());
   }, [dispatch]);
 
-  /* ---------- if the chosen payment method is not offered (e.g. COD above its limit), pick another ---------- */
   useEffect(() => {
     if (!data || data.paymentMethods.includes(paymentMethod)) return;
     setPaymentMethod(
@@ -203,7 +183,6 @@ function Checkout() {
     );
   }, [data, paymentMethod]);
 
-  /* ---------- keep a valid address selected (default first) ---------- */
   useEffect(() => {
     if (!data) return;
 
@@ -216,11 +195,9 @@ function Checkout() {
     );
   }, [data]);
 
-  /* ---------- coupon ---------- */
   const handleApplyCoupon = (code) => dispatch(applyCoupon(code)).unwrap();
   const handleRemoveCoupon = () => dispatch(removeCoupon()).unwrap();
 
-  /* ---------- address add / edit ---------- */
   const handleSaveAddress = async (values) => {
     if (formMode?.address) {
       await dispatch(
@@ -236,22 +213,19 @@ function Checkout() {
     setFormMode(null);
   };
 
-  /* ---------- place order ---------- */
   const handlePlaceOrder = async () => {
     setPlacing(true);
     setPlaceError("");
 
     try {
-      // Razorpay: create the order, open the payment, then the success / failed page
       if (ONLINE_METHODS.includes(paymentMethod)) {
         await payNow({ addressId: selectedAddressId, gateway: paymentMethod });
-        return; // payNow moves to the right page by itself
+        return;
       }
 
-      // Wallet: the server takes the money and marks the order paid in one go
       if (paymentMethod === "WALLET") {
         const payment = await dispatch(payWithWallet({ addressId: selectedAddressId })).unwrap();
-        goToSuccess(payment.orderNumber); // refreshes the cart / wishlist and opens the success page
+        goToSuccess(payment.orderNumber);
         return;
       }
 
@@ -259,8 +233,8 @@ function Checkout() {
         placeOrder({ addressId: selectedAddressId, paymentMethod })
       ).unwrap();
 
-      dispatch(getCart()); // the server emptied the cart; refresh the navbar badge
-      dispatch(getWishlistIds()); // ...and took the bought pairs off the wishlist: keep the hearts in sync
+      dispatch(getCart());
+      dispatch(getWishlistIds());
       navigate(`/order-success/${order.orderNumber}`, {
         replace: true,
         state: { order },
@@ -269,12 +243,11 @@ function Checkout() {
       setPlaceError(
         typeof message === "string" ? message : "Could not place your order."
       );
-      dispatch(fetchCheckout()); // stock / coupon may have changed: show the truth
+      dispatch(fetchCheckout());
       setPlacing(false);
     }
   };
 
-  /* ---------- derived ---------- */
   const isLoading = status === "idle" || status === "loading";
   const addresses = data?.addresses ?? [];
   const items = data?.items ?? [];
@@ -302,7 +275,6 @@ function Checkout() {
   else if (data?.limitIssue) placeHint = data.limitIssue;
   else if (!selectedAddressId) placeHint = "Select or add a delivery address.";
 
-  /* ---------- confirmation modal text ---------- */
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
   const methodLabel =
     PAYMENT_OPTIONS.find((o) => o.id === paymentMethod)?.label || paymentMethod;
@@ -328,7 +300,6 @@ function Checkout() {
     handlePlaceOrder();
   };
 
-  /* ---------- render ---------- */
   return (
     <div className="flex min-h-screen flex-col bg-[#fafafa]">
       <Navbar />
@@ -338,7 +309,6 @@ function Checkout() {
           Checkout
         </h1>
 
-        {/* ORDER / PAGE ERRORS */}
         {placeError && (
           <div
             role="alert"
@@ -361,7 +331,6 @@ function Checkout() {
           </div>
         )}
 
-        {/* LOADING */}
         {isLoading && (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-8">
             <div className="space-y-6">
@@ -372,7 +341,6 @@ function Checkout() {
           </div>
         )}
 
-        {/* LOAD FAILED */}
         {!isLoading && status === "failed" && (
           <div className="flex min-h-[260px] flex-col items-center justify-center rounded-lg border border-red-100 bg-red-50 px-6 text-center">
             <h2 className="text-base font-semibold text-red-700">
@@ -389,7 +357,6 @@ function Checkout() {
           </div>
         )}
 
-        {/* EMPTY CART */}
         {!isLoading && data && items.length === 0 && (
           <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-6 text-center">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -407,12 +374,9 @@ function Checkout() {
           </div>
         )}
 
-        {/* CONTENT */}
         {!isLoading && data && items.length > 0 && (
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] xl:gap-8">
-            {/* ============ LEFT COLUMN ============ */}
             <div className="min-w-0 space-y-6">
-              {/* SHIPPING ADDRESS */}
               <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-7">
                 <SectionTitle icon="fa-solid fa-location-dot">
                   Shipping Address
@@ -432,7 +396,6 @@ function Checkout() {
                   </div>
                 )}
 
-                {/* ADD NEW LINK */}
                 {addresses.length > 0 && !formOpen && (
                   <div className="mt-4 flex justify-end border-b border-gray-100 pb-4">
                     <button
@@ -445,7 +408,6 @@ function Checkout() {
                   </div>
                 )}
 
-                {/* ADD / EDIT FORM */}
                 {formOpen && (
                   <div
                     className={
@@ -471,7 +433,6 @@ function Checkout() {
                 )}
               </section>
 
-              {/* PAYMENT METHOD */}
               <section className="rounded-lg border border-gray-200 bg-white p-5 sm:p-7">
                 <SectionTitle icon="fa-regular fa-credit-card">
                   Payment Method
@@ -502,7 +463,6 @@ function Checkout() {
               </section>
             </div>
 
-            {/* ============ ORDER REVIEW ============ */}
             <aside
               className={`rounded-lg border border-gray-200 bg-white p-5 transition-opacity sm:p-6 lg:sticky lg:top-6 ${
                 refreshing ? "opacity-70" : ""
@@ -510,7 +470,6 @@ function Checkout() {
             >
               <SectionTitle>Order Review</SectionTitle>
 
-              {/* ITEMS */}
               <ul className="mt-4 space-y-4">
                 {items.map((item) => (
                   <li
@@ -558,7 +517,6 @@ function Checkout() {
                 </p>
               )}
 
-              {/* COUPON */}
               <div className="mt-6">
                 <CouponDropdown
                   appliedCoupon={data.coupon}
@@ -568,7 +526,6 @@ function Checkout() {
                 />
               </div>
 
-              {/* PRICING */}
               <dl className="mt-5 space-y-2.5 border-t border-gray-100 pt-4 text-[13px] text-gray-600">
                 <div className="flex justify-between">
                   <dt>Subtotal</dt>
@@ -687,7 +644,6 @@ function Checkout() {
 
       <Footer />
 
-      {/* PLACE ORDER CONFIRMATION */}
       <Modal
         open={confirmOpen && canPlace}
         title="Confirm your order"

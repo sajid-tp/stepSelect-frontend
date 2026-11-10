@@ -6,10 +6,6 @@ import {
 import axiosInstance from "../../api/axiosInstance";
 
 
-// =====================================================
-// GET PRODUCTS
-// =====================================================
-
 export const getProducts = createAsyncThunk(
   "adminProducts/getProducts",
 
@@ -43,8 +39,6 @@ export const getProducts = createAsyncThunk(
       return response.data;
 
     } catch (error) {
-      // ...unchangedcatch (error) {
-
       return rejectWithValue(
         error.response?.data?.error?.message ||
         error.response?.data?.message ||
@@ -56,10 +50,6 @@ export const getProducts = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// GET SINGLE PRODUCT
-// =====================================================
 
 export const getProduct = createAsyncThunk(
   "adminProducts/getProduct",
@@ -92,10 +82,6 @@ export const getProduct = createAsyncThunk(
 );
 
 
-// =====================================================
-// CREATE PRODUCT
-// =====================================================
-
 export const createProduct = createAsyncThunk(
   "adminProducts/createProduct",
 
@@ -127,10 +113,6 @@ export const createProduct = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// UPDATE PRODUCT
-// =====================================================
 
 export const updateProduct = createAsyncThunk(
   "adminProducts/updateProduct",
@@ -167,10 +149,6 @@ export const updateProduct = createAsyncThunk(
 );
 
 
-// =====================================================
-// DELETE PRODUCT
-// =====================================================
-
 export const deleteProduct = createAsyncThunk(
   "adminProducts/deleteProduct",
 
@@ -204,10 +182,6 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// TOGGLE PRODUCT STATUS
-// =====================================================
 
 export const toggleProductStatus =
   createAsyncThunk(
@@ -252,10 +226,6 @@ export const toggleProductStatus =
 
   );
 
-
-// =====================================================
-// UPLOAD PRODUCT IMAGES
-// =====================================================
 
 export const uploadProductImages =
   createAsyncThunk(
@@ -309,10 +279,6 @@ export const uploadProductImages =
   );
 
 
-// =====================================================
-// INITIAL STATE
-// =====================================================
-
 const initialState = {
 
   products: [],
@@ -357,10 +323,6 @@ const initialState = {
 
 };
 
-
-// =====================================================
-// SLICE
-// =====================================================
 
 const productSlice = createSlice({
 
@@ -446,10 +408,6 @@ const productSlice = createSlice({
     builder
   ) => {
 
-    // =================================================
-    // GET PRODUCTS
-    // =================================================
-
     builder
 
       .addCase(
@@ -512,10 +470,6 @@ const productSlice = createSlice({
       );
 
 
-    // =================================================
-    // GET SINGLE PRODUCT
-    // =================================================
-
     builder
 
       .addCase(
@@ -561,10 +515,6 @@ const productSlice = createSlice({
       );
 
 
-    // =================================================
-    // CREATE PRODUCT
-    // =================================================
-
     builder
 
       .addCase(
@@ -606,10 +556,6 @@ const productSlice = createSlice({
         }
       );
 
-
-    // =================================================
-    // UPDATE PRODUCT
-    // =================================================
 
     builder
 
@@ -675,10 +621,6 @@ const productSlice = createSlice({
       );
 
 
-    // =================================================
-    // DELETE PRODUCT
-    // =================================================
-
     builder
 
       .addCase(
@@ -738,10 +680,6 @@ const productSlice = createSlice({
         }
       );
 
-
-    // =================================================
-    // TOGGLE PRODUCT STATUS
-    // =================================================
 
     builder
 
@@ -822,10 +760,6 @@ const productSlice = createSlice({
         }
       );
 
-
-    // =================================================
-    // UPLOAD PRODUCT IMAGES
-    // =================================================
 
     builder
 

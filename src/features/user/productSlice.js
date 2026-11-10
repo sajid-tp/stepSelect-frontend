@@ -2,10 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
 
-// =====================================================
-// GET PRODUCTS
-// =====================================================
-
 export const getProducts = createAsyncThunk(
   "userProducts/getProducts",
 
@@ -53,10 +49,6 @@ export const getProducts = createAsyncThunk(
 );
 
 
-// =====================================================
-// GET CATEGORIES
-// =====================================================
-
 export const getCategories = createAsyncThunk(
   "userProducts/getCategories",
 
@@ -77,10 +69,6 @@ export const getCategories = createAsyncThunk(
   }
 );
 
-
-// =====================================================
-// GET BRANDS
-// =====================================================
 
 export const getBrands = createAsyncThunk(
   "userProducts/getBrands",
@@ -123,8 +111,6 @@ export const getRelatedProducts = createAsyncThunk(
   "userProducts/getRelatedProducts",
   async ({ productId, limit = 4 }, { rejectWithValue }) => {
     try {
-      // The server returns products from the SAME category as this product
-      // (never the product itself; only active brands and in-stock items).
       const res = await axiosInstance.get(`/products/${productId}/related`, {
         params: { limit },
       });
@@ -139,28 +125,19 @@ export const getRelatedProducts = createAsyncThunk(
 );
 
 
-// =====================================================
-// INITIAL STATE
-// =====================================================
-
 const initialState = {
 
-  // Products
   products: [],
 
-  // Categories
   categories: [],
 
-  // Brands
   brands: [],
 
-  // Pagination
   totalResults: 0,
   totalPages: 1,
   currentPage: 1,
   limit: 12,
 
-  // Product GET
   productStatus: "idle",
   productError: null,
 
@@ -168,11 +145,9 @@ const initialState = {
 productDetailsStatus: "idle",
 productDetailsError: null,
 
-  // Category GET
   categoryStatus: "idle",
   categoryError: null,
 
-  // Brand GET
   brandStatus: "idle",
   brandError: null,
 
@@ -185,10 +160,6 @@ relatedRequestId: null,
 };
 
 
-// =====================================================
-// SLICE
-// =====================================================
-
 const userProductSlice = createSlice({
 
   name: "userProducts",
@@ -198,10 +169,6 @@ const userProductSlice = createSlice({
   reducers: {},
 
   extraReducers: (builder) => {
-
-    // =================================================
-    // GET PRODUCTS
-    // =================================================
 
     builder
 
@@ -256,10 +223,6 @@ const userProductSlice = createSlice({
         }
       );
 
-
-    // =================================================
-    // GET CATEGORIES
-    // =================================================
 
     builder
 
@@ -321,7 +284,7 @@ builder
     state.relatedRequestId = action.meta.requestId;
   })
   .addCase(getRelatedProducts.fulfilled, (state, action) => {
-    if (action.meta.requestId !== state.relatedRequestId) return; // outdated reply
+    if (action.meta.requestId !== state.relatedRequestId) return;
     state.relatedStatus = "succeeded";
     state.relatedProducts = action.payload;
   })
@@ -331,10 +294,6 @@ builder
     state.relatedError = action.payload || "Failed to load products";
     state.relatedProducts = [];
   });
-
-    // =================================================
-    // GET BRANDS
-    // =================================================
 
     builder
 

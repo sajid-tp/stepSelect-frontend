@@ -6,25 +6,6 @@ import PaymentCountdown, { clock } from "./PaymentCountdown";
 import PaymentAttemptDots from "./PaymentAttemptDots";
 import { paymentLabel } from "../utils/orderFormat";
 
-/*
-  Payment failed card (shown inside the payment-failure modal).
-  Props:
-    payment        -> the server's payment status (GET /payments/:orderNumber/status)
-    reason         -> why the last attempt failed (text)
-    retrying       -> true while the payment window is opening
-    error          -> text shown when retry itself was refused
-    onRetry        -> "Retry payment" / "Make final attempt" button
-    onCancelPayment-> "Cancel payment" button (gives the held items back, then the cart opens)
-    onViewOrder    -> "View order" button (an order that is closed as Payment failed stays in Order History)
-    onRefresh      -> called when a countdown ends (the new state is loaded from the server)
-
-  The rules (decided by the server):
-    - the items are held for 30 minutes from the moment the order was created (retries never extend it)
-    - 4 attempts in total: attempts 1-3 straight away, the 4th and final one opens after a 2 minute cool-down
-    - when the 4th attempt fails, or the 30 minutes end, the order is closed as "Payment failed" and the items go back in stock
-*/
-
-// Little drawing: a card with a cross badge
 function FailureIllustration() {
   return (
     <svg viewBox="0 0 200 160" className="mx-auto h-36 w-44" role="img" aria-label="Payment failed">
@@ -33,12 +14,10 @@ function FailureIllustration() {
       <circle cx="172" cy="40" r="4" fill="#f4511e" />
       <path d="M40 92l8 8M48 92l-8 8" stroke="#d1d5db" strokeWidth="3" strokeLinecap="round" />
       <path d="M160 100l8 8M168 100l-8 8" stroke="#d1d5db" strokeWidth="3" strokeLinecap="round" />
-      {/* card */}
       <rect x="40" y="46" width="112" height="76" rx="10" fill="#fff4ef" stroke="#b13600" strokeWidth="3" />
       <rect x="40" y="64" width="112" height="16" fill="#b13600" />
       <rect x="54" y="96" width="34" height="8" rx="3" fill="#eab4ae" />
       <rect x="54" y="110" width="52" height="6" rx="3" fill="#f6d9d6" />
-      {/* badge */}
       <circle cx="148" cy="52" r="22" fill="#dc2626" />
       <path d="M139 43l18 18M157 43l-18 18" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
     </svg>
@@ -67,7 +46,6 @@ function PaymentFailed({ payment, reason, retrying, error, onRetry, onCancelPaym
   const isClosed = closedReason !== null && closedReason !== undefined;
   const inCooldown = !isClosed && cooldownSecondsLeft > 0;
 
-  // While the server still shows an attempt as running, keep asking so the screen settles by itself
   const waitingOnAttempt = Boolean(attemptInProgress) && !isClosed;
   useEffect(() => {
     if (!waitingOnAttempt || !onRefresh) return undefined;

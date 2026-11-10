@@ -5,7 +5,6 @@ const createImage = (url) =>
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("Unable to load image for cropping."));
 
-    // Selected local files are blob URLs. They do not need CORS.
     if (!url.startsWith("blob:")) {
       image.crossOrigin = "anonymous";
     }

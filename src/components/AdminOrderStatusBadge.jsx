@@ -1,8 +1,3 @@
-/*
-  Status pill for the admin side.
-  The database value "pending" is shown as "Processing" (that is the word in the design).
-  Also knows the item-only statuses (return requested / returned ...).
-*/
 export const ADMIN_STATUS_META = {
   pending: { label: "Processing", cls: "bg-blue-50 text-blue-600" },
   shipped: { label: "Shipped", cls: "bg-purple-50 text-purple-600" },

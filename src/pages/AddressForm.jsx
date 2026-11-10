@@ -56,7 +56,6 @@ function AddressForm() {
     }
   }, [existingAddress]);
 
-  // ✅ Validation logic — returns an errors object based on current form values
   const validate = (values) => {
     const newErrors = {};
 
@@ -97,11 +96,9 @@ function AddressForm() {
       newErrors.pinCode = 'Enter a valid PIN code with 6 digits';
     }
 
-    // libphonenumber-js check, same as the server
     const phoneError = validateRequiredPhone(values.phoneNumber);
     if (phoneError) newErrors.phoneNumber = phoneError;
 
-    // Email is optional; when typed it gets the same check as signup
     if (values.email.trim()) {
       const emailError = validateEmail(values.email);
       if (emailError) newErrors.email = emailError;
@@ -110,7 +107,6 @@ function AddressForm() {
     return newErrors;
   };
 
-  // ✅ Re-run validation live, whenever form changes
   useEffect(() => {
     setErrors(validate(form));
   }, [form]);
@@ -130,7 +126,6 @@ function AddressForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Mark every field as touched so all errors show on submit attempt
     const allTouched = Object.keys(form).reduce((acc, key) => ({ ...acc, [key]: true }), {});
     setTouched(allTouched);
 
@@ -138,13 +133,12 @@ function AddressForm() {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      return; // stop submission if there are errors
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // send the clean 10-digit phone and a normalised email
       const payload = {
         ...form,
         phoneNumber: normalizePhone(form.phoneNumber),
@@ -167,7 +161,6 @@ function AddressForm() {
     <div className="min-h-screen flex flex-col bg-[#fbfbfb]">
       <Navbar />
 
-      {/* px-4 keeps the card off the screen edges on phones */}
       <main className="container flex-1 w-full max-w-lg mx-auto px-4 sm:px-0 py-6 sm:py-10">
         <div className="mb-4">
           <Link
@@ -219,7 +212,6 @@ function AddressForm() {
               >
                 Detailed Address
               </label>
-              {/* text-base on phones stops iOS Safari from zooming in on focus */}
               <textarea
                 id="detailedAddress"
                 name="detailedAddress"
@@ -235,7 +227,6 @@ function AddressForm() {
               )}
             </div>
 
-            {/* One column on phones, two from 640px up (card is max-w-lg, so sm is the right breakpoint) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-4">
               <div className="min-w-0">
                 <FormField

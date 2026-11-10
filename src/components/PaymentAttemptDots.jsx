@@ -1,4 +1,3 @@
-// "● ● ○ ○": one dot per payment attempt. Red = failed, amber = running, grey = still available.
 export default function PaymentAttemptDots({ failed = 0, used = 0, max = 4 }) {
   return (
     <div className="flex items-center justify-center gap-2" aria-label={`${failed} of ${max} attempts failed`}>

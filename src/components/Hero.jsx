@@ -4,15 +4,13 @@ import StaticImage from "./StaticImage";
 
 const SLIDE_SECONDS = 5;
 
-// Shop paths (/shop) stay in the app, full links open in a new tab
 const linkProps = (link) =>
   link && /^https?:\/\//i.test(link)
     ? { href: link, target: "_blank", rel: "noopener noreferrer" }
     : { href: link };
 
-/* ---------- the picture area: the banners the admin switched on ---------- */
 function BannerSlider() {
-  const [banners, setBanners] = useState(null); // null = still loading, [] = none
+  const [banners, setBanners] = useState(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timer = useRef(null);
@@ -25,7 +23,7 @@ function BannerSlider() {
         if (!cancelled) setBanners(res.data?.data || []);
       })
       .catch(() => {
-        if (!cancelled) setBanners([]); // the page still works with the fixed picture
+        if (!cancelled) setBanners([]);
       });
     return () => {
       cancelled = true;
@@ -34,7 +32,6 @@ function BannerSlider() {
 
   const count = banners ? banners.length : 0;
 
-  // Move to the next banner every few seconds (not when paused, one banner, or reduced motion)
   useEffect(() => {
     clearInterval(timer.current);
     const reduceMotion =
@@ -48,10 +45,8 @@ function BannerSlider() {
 
   const frame = "relative aspect-[7/5] w-full overflow-hidden rounded-lg bg-[#f2f2f2]";
 
-  // loading
   if (banners === null) return <div className={`${frame} animate-pulse`} />;
 
-  // no banner is switched on: show the fixed picture
   if (count === 0) {
     return (
       <div className={frame}>

@@ -12,11 +12,6 @@ import { fetchOrders } from "../features/user/orderSlice";
 
 const LIMIT = 5;
 
-/*
-  Order History  (/orders?page=2)
-  The page number lives in the URL, so "back" from an order's details
-  lands on the same page of the list.
-*/
 function Orders() {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,7 +26,6 @@ function Orders() {
     dispatch(fetchOrders({ page, limit: LIMIT }));
   }, [dispatch, page]);
 
-  // ?page=9 but only 3 pages exist -> go to the last real page
   useEffect(() => {
     if (
       listStatus === "succeeded" &&
@@ -58,12 +52,9 @@ function Orders() {
 
       <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
-          {/* SIDEBAR */}
           <AccountSidebar />
 
-          {/* CONTENT */}
           <section className="min-w-0">
-            {/* BREADCRUMB */}
             <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
               <Link to="/" className="text-muted transition hover:text-ink">
                 Home
@@ -91,7 +82,6 @@ function Orders() {
               )}
             </div>
 
-            {/* LOADING */}
             {isLoading && (
               <div className="mt-6 space-y-4">
                 {[0, 1, 2].map((n) => (
@@ -111,7 +101,6 @@ function Orders() {
               </div>
             )}
 
-            {/* LOAD ERROR */}
             {!isLoading && listStatus === "failed" && (
               <div className="mt-6 flex min-h-[260px] flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 px-6 text-center">
                 <h2 className="text-base font-semibold text-red-700">
@@ -130,7 +119,6 @@ function Orders() {
               </div>
             )}
 
-            {/* EMPTY */}
             {!isLoading && listStatus === "succeeded" && total === 0 && (
               <div className="mt-6 flex min-h-[320px] flex-col items-center justify-center rounded-xl border border-gray-200 px-6 text-center">
                 <i className="fa-solid fa-box-open text-4xl text-gray-300" />
@@ -149,7 +137,6 @@ function Orders() {
               </div>
             )}
 
-            {/* ORDERS */}
             {!isLoading && list.length > 0 && (
               <>
                 <div className="mt-6 space-y-4">

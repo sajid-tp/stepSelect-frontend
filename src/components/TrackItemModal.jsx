@@ -1,14 +1,5 @@
 import { formatDateTime } from "../utils/orderFormat";
 
-/*
-  Tracking timeline for ONE item, built from what really happened:
-  the item's statusHistory (sent by the server) + the order's placed date.
-
-  Normal flow:  Order Placed -> Shipped -> Out for Delivery -> Delivered
-  Steps that have not happened yet are greyed out.
-  Return / cancel events are added after the flow when they exist.
-*/
-
 const FLOW = [
   { status: "shipped", label: "Shipped" },
   { status: "out_for_delivery", label: "Out for Delivery" },
@@ -22,7 +13,6 @@ const EXTRA = {
   cancelled: "Cancelled",
 };
 
-// first time the item reached this status
 const timeOf = (history, status) =>
   (history || []).find((h) => h.status === status)?.updatedAt || null;
 
@@ -34,7 +24,6 @@ function buildSteps(item, order) {
 
   const cancelled = history.some((h) => h.status === "cancelled");
 
-  // A cancelled item never reaches the next stages, so do not show them
   if (!cancelled) {
     FLOW.forEach(({ status, label }) => {
       const time = timeOf(history, status);
@@ -60,7 +49,6 @@ function buildSteps(item, order) {
 function TrackItemModal({ item, order, onClose }) {
   const steps = buildSteps(item, order);
 
-  // the last finished step is the "current" one
   let currentIndex = -1;
   steps.forEach((s, i) => {
     if (s.done) currentIndex = i;
@@ -107,7 +95,6 @@ function TrackItemModal({ item, order, onClose }) {
 
             return (
               <li key={step.label} className="relative flex gap-4 pb-6 last:pb-0">
-                {/* line to the next step */}
                 {!isLast && (
                   <span
                     aria-hidden="true"
@@ -119,7 +106,6 @@ function TrackItemModal({ item, order, onClose }) {
                   />
                 )}
 
-                {/* dot */}
                 <span
                   className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-[10px] ${
                     step.done

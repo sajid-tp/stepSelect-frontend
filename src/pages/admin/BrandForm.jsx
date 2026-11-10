@@ -18,13 +18,6 @@ import {
 } from "../../features/admin/brandSlice";
 
 
-/*
-|--------------------------------------------------------------------------
-| VALIDATION RULES
-|--------------------------------------------------------------------------
-*/
-
-// Name and description use the same numbers as server/src/constants/brandConstants.js - change both together.
 const RULES = {
   NAME_MIN: 2,
   NAME_MAX: 50,
@@ -34,7 +27,6 @@ const RULES = {
   LOGO_MAX: 500,
 };
 
-// Collapses repeated spaces: "New   Balance " -> "New Balance"
 const normalizeSpaces = (value) =>
   String(value || "").trim().replace(/\s+/g, " ");
 
@@ -58,7 +50,6 @@ const validateBrandName = (value) => {
 };
 
 
-// Description is optional, but cannot be longer than the maximum
 const validateDescription = (value) => {
   const text = String(value || "").trim();
 
@@ -70,7 +61,6 @@ const validateDescription = (value) => {
 };
 
 
-// Logo is optional, but if it is entered it must be a valid http(s) URL
 const validateLogo = (value) => {
   const url = String(value || "").trim();
 
@@ -148,15 +138,8 @@ function BrandForm() {
 
   const [errors, setErrors] = useState({});
 
-  // true when the logo URL is valid but the image could not be loaded
   const [logoLoadFailed, setLogoLoadFailed] = useState(false);
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | LOAD BRAND INTO FORM
-  |--------------------------------------------------------------------------
-  */
 
   useEffect(() => {
     if (isEditMode && brandFromState) {
@@ -174,24 +157,12 @@ function BrandForm() {
   }, [isEditMode, brandFromState]);
 
 
-  /*
-  |--------------------------------------------------------------------------
-  | CLEAN REDUX STATE
-  |--------------------------------------------------------------------------
-  */
-
   useEffect(() => {
     dispatch(resetCreateBrandState());
 
     dispatch(resetUpdateBrandState());
   }, [dispatch]);
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE INPUT
-  |--------------------------------------------------------------------------
-  */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -201,8 +172,6 @@ function BrandForm() {
       [name]: value,
     }));
 
-    // Once a field shows an error, re-check it on every keystroke so the
-    // red message updates (or disappears) as soon as the value is fixed
     setErrors((previous) => ({
       ...previous,
       [name]: previous[name] && VALIDATORS[name]
@@ -215,12 +184,6 @@ function BrandForm() {
     }
   };
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | VALIDATE ONE FIELD (ON BLUR)
-  |--------------------------------------------------------------------------
-  */
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -235,12 +198,6 @@ function BrandForm() {
     }));
   };
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | VALIDATION
-  |--------------------------------------------------------------------------
-  */
 
   const validateForm = () => {
     const newErrors = {};
@@ -258,12 +215,6 @@ function BrandForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | SUBMIT
-  |--------------------------------------------------------------------------
-  */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -302,12 +253,6 @@ function BrandForm() {
   };
 
 
-  /*
-  |--------------------------------------------------------------------------
-  | LOADING
-  |--------------------------------------------------------------------------
-  */
-
   const isSubmitting =
     createStatus === "loading" ||
     updateStatus === "loading";
@@ -318,7 +263,6 @@ function BrandForm() {
     : createError;
 
 
-  // Shared style helper for inputs
   const fieldClass = (hasError) => `
     w-full rounded-lg
     border bg-white
@@ -339,17 +283,10 @@ function BrandForm() {
   `;
 
 
-  // Show the preview only when the URL itself is valid
   const showLogoPreview =
     formData.logo.trim() &&
     !validateLogo(formData.logo);
 
-
-  /*
-  |--------------------------------------------------------------------------
-  | EDIT ROUTE WITHOUT STATE
-  |--------------------------------------------------------------------------
-  */
 
   if (isEditMode && !brandFromState) {
     return (
@@ -398,10 +335,8 @@ function BrandForm() {
 
       <main className="ml-[214px] min-h-screen px-8 py-10">
 
-        {/* CENTERED CONTENT CONTAINER */}
         <div className="mx-auto w-full max-w-5xl">
 
-          {/* HEADER */}
           <div className="mb-8">
             <button
               type="button"
@@ -431,10 +366,8 @@ function BrandForm() {
           </div>
 
 
-          {/* FORM CARD */}
           <div className="w-full max-w-4xl rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
 
-            {/* SERVER ERROR */}
             {serverError && (
               <div
                 className="
@@ -451,7 +384,6 @@ function BrandForm() {
 
             <form onSubmit={handleSubmit} noValidate>
 
-              {/* BRAND NAME */}
               <div className="mb-6">
                 <label
                   htmlFor="brandName"
@@ -498,7 +430,6 @@ function BrandForm() {
               </div>
 
 
-              {/* DESCRIPTION */}
               <div className="mb-6">
                 <label
                   htmlFor="description"
@@ -546,7 +477,6 @@ function BrandForm() {
               </div>
 
 
-              {/* LOGO */}
               <div className="mb-8">
                 <label
                   htmlFor="logo"
@@ -583,7 +513,6 @@ function BrandForm() {
                 )}
 
 
-                {/* LOGO PREVIEW */}
                 {showLogoPreview && (
                   <div className="mt-4">
                     <p className="mb-2 text-xs font-medium text-gray-500">
@@ -611,7 +540,6 @@ function BrandForm() {
               </div>
 
 
-              {/* ACTIONS */}
               <div className="flex justify-end gap-3 border-t border-gray-100 pt-6">
 
                 <button

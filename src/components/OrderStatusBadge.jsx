@@ -1,6 +1,5 @@
 import { getStatusMeta } from "../utils/orderFormat";
 
-// Small coloured pill: Pending / Shipped / Out for Delivery / Delivered / Cancelled ...
 function OrderStatusBadge({ status, className = "" }) {
   const meta = getStatusMeta(status);
 

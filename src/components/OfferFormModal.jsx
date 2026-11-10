@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { createOffer, getOfferOptions, updateOffer } from "../features/admin/offerSlice";
 import useDebounce from "../hooks/useDebounce";
 
-// Same numbers as OFFER_NAME_LIMITS in server/src/constants/offerConstants.js - change both together.
 const NAME_MIN = 2;
 const NAME_MAX = 80;
 
@@ -21,14 +20,11 @@ const inputClass = (hasError) =>
       : "border-gray-200 focus:border-[#ff5722] focus:ring-[#ff5722]/10"
   }`;
 
-// the message that sits right under a field (same look as the coupon form)
 const FieldError = ({ message }) =>
   message ? <p className="mt-1 text-xs text-red-500">{message}</p> : null;
 
 const todayInput = () => toDateInput(new Date());
 
-// Checks one field. Returns "" when it is fine, otherwise the message to show under it.
-// (kept in line with the checks in server/src/services/admin/adminOfferServices.js)
 const validateField = (name, form, { isCategory, isEdit }) => {
   switch (name) {
     case "offerName": {
@@ -62,7 +58,6 @@ const validateField = (name, form, { isCategory, isEdit }) => {
 
 const FIELDS = ["offerName", "targetId", "discountPercent", "startDate", "expiryDate"];
 
-// Put a server message under the field it is about; anything else stays in the box at the bottom.
 const serverErrorField = (message) => {
   if (/already covers/i.test(message)) return "targetId";
   if (/offer name/i.test(message)) return "offerName";
@@ -72,10 +67,6 @@ const serverErrorField = (message) => {
   return null;
 };
 
-/*
-| Create / edit one offer.  type = "category" | "product"  (decided by the tab the admin is on)
-| offer = the row being edited (null when creating)
-*/
 function OfferFormModal({ open, type, offer, onClose, onSaved }) {
   const dispatch = useDispatch();
   const options = useSelector((state) => state.adminOffers.options);
@@ -93,16 +84,14 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
   const [productSearch, setProductSearch] = useState("");
   const debouncedSearch = useDebounce(productSearch.trim(), 300);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({}); // { [field]: message } shown under each field
-  const [error, setError] = useState(""); // errors that belong to no single field (server / network)
+  const [errors, setErrors] = useState({});
+  const [error, setError] = useState("");
   const errorRef = useRef(null);
 
-  // The popup scrolls on small screens and the message sits near the bottom, so bring it into view
   useEffect(() => {
     if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [error]);
 
-  // reset the form each time the modal opens
   useEffect(() => {
     if (!open) return;
     setError("");
@@ -118,7 +107,6 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
     });
   }, [open, offer, isCategory]);
 
-  // category list once; product list follows the search box
   useEffect(() => {
     if (open) dispatch(getOfferOptions({ search: isCategory ? "" : debouncedSearch }));
   }, [dispatch, open, isCategory, debouncedSearch]);
@@ -127,16 +115,13 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
 
   const set = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
-    // the admin is fixing this field, so drop its message (and any server message)
     setErrors((prev) => (prev[name] ? { ...prev, [name]: "" } : prev));
     setError("");
   };
 
-  // check a field when the admin leaves it
   const handleBlur = (name) => () =>
     setErrors((prev) => ({ ...prev, [name]: validateField(name, form, { isCategory, isEdit }) }));
 
-  // When editing, the chosen product may not be in the current search results: keep showing it
   const productChoices = options.products.some((p) => p.id === form.targetId) || !offer?.productId
     ? options.products
     : [{ id: offer.productId, name: offer.targetName, categoryName: "" }, ...options.products];
@@ -145,7 +130,6 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
     e.preventDefault();
     setError("");
 
-    // check every field at once so each wrong one shows its own message
     const found = {};
     FIELDS.forEach((name) => {
       const message = validateField(name, form, { isCategory, isEdit });
@@ -169,7 +153,7 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
     try {
       setSaving(true);
       if (isEdit) {
-        const { offerType, ...changes } = payload; // the type of an offer cannot change
+        const { offerType, ...changes } = payload;
         await dispatch(updateOffer({ offerId: offer.id, offerData: changes })).unwrap();
       } else {
         await dispatch(createOffer(payload)).unwrap();
@@ -305,7 +289,6 @@ function OfferFormModal({ open, type, offer, onClose, onSaved }) {
                 value={form.startDate}
                 onChange={(e) => {
                   set("startDate", e.target.value);
-                  // the expiry check depends on the start date, so clear its date-order message too
                   setErrors((prev) => (prev.expiryDate ? { ...prev, expiryDate: "" } : prev));
                 }}
               />

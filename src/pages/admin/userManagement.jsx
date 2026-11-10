@@ -30,11 +30,10 @@ function Users() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name_asc");
   const [statusFilter, setStatusFilter] = useState("all");
-  const debouncedSearch = useDebounce(search.trim(), 400); // the list reloads after the admin pauses typing
+  const debouncedSearch = useDebounce(search.trim(), 400);
   const [page, setPage] = useState(1);
 
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [blockingUser, setBlockingUser] = useState(false);
@@ -49,7 +48,6 @@ function Users() {
     status,
   } = useSelector((state) => state.adminUsers);
 
-  // Fetch users
   useEffect(() => {
     dispatch(
       getUsers({
@@ -66,7 +64,6 @@ function Users() {
     setPage(1);
   };
 
-  // Search
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
     setPage(1);
@@ -77,13 +74,11 @@ function Users() {
     setPage(1);
   };
 
-  // Open confirmation modal
   const handleBlockToggle = (user) => {
     setSelectedUser(user);
     setModalOpen(true);
   };
 
-  // Close modal
   const handleCloseModal = () => {
     if (blockingUser) return;
 
@@ -91,7 +86,6 @@ function Users() {
     setSelectedUser(null);
   };
 
-  // Confirm block/unblock
   const handleConfirmBlock = async () => {
     if (!selectedUser) return;
 
@@ -116,13 +110,10 @@ function Users() {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
 
-      {/* Sidebar */}
       <AdminSidebar />
 
-      {/* Main Content */}
       <main className="ml-[214px] min-h-screen p-8">
 
-        {/* ================= HEADER ================= */}
         <div className="mb-6 flex items-start justify-between">
 
           <div>
@@ -150,7 +141,6 @@ function Users() {
 
         </div>
 
-        {/* ================= SEARCH ================= */}
         <div className="mb-6 flex items-center gap-3">
 
           <div className="relative flex-1">
@@ -205,7 +195,6 @@ function Users() {
 
         </div>
 
-        {/* ================= TABS + SORT ================= */}
         <AdminTabsSort
           className="mt-14 mb-8"
           tabs={STATUS_OPTIONS}
@@ -221,21 +210,18 @@ function Users() {
         />
 
 
-        {/* ================= LOADING ================= */}
         {status === "loading" && (
           <div className="mb-4 rounded-md bg-white px-4 py-3 text-sm text-gray-500">
             Loading users...
           </div>
         )}
 
-        {/* ================= USERS TABLE ================= */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
           <div className="overflow-x-auto">
 
             <table className="w-full min-w-[850px] text-left text-sm">
 
-              {/* Table Header */}
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-400">
 
@@ -266,7 +252,6 @@ function Users() {
                 </tr>
               </thead>
 
-              {/* Table Body */}
               <tbody>
 
                 {users.length > 0 ? (
@@ -278,7 +263,6 @@ function Users() {
                       className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
                     >
 
-                      {/* Customer */}
                       <td className="px-5 py-4">
 
                         <div className="font-semibold text-gray-900">
@@ -287,12 +271,10 @@ function Users() {
 
                       </td>
 
-                      {/* Email */}
                       <td className="px-5 py-4 text-gray-500">
                         {user.email}
                       </td>
 
-                      {/* Joined */}
                       <td className="px-5 py-4 text-gray-500">
                         {user.joinedOn
                           ? new Date(
@@ -301,12 +283,10 @@ function Users() {
                           : "-"}
                       </td>
 
-                      {/* Orders */}
                       <td className="px-5 py-4 text-gray-700">
                         {user.orderCount ?? 0} Orders
                       </td>
 
-                      {/* Status */}
                       <td className="px-5 py-4">
 
                         <span
@@ -323,7 +303,6 @@ function Users() {
 
                       </td>
 
-                      {/* Action */}
                       <td className="px-5 py-4">
 
                         <button
@@ -369,7 +348,6 @@ function Users() {
 
         </div>
 
-        {/* ================= PAGINATION ================= */}
         <AdminPagination
   currentPage={page}
   totalPages={totalPages}
@@ -379,7 +357,6 @@ function Users() {
 />
       </main>
 
-      {/* ================= CONFIRMATION MODAL ================= */}
       <Modal
         open={modalOpen}
         title={

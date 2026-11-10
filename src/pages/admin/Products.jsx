@@ -35,10 +35,6 @@ import {
 } from "../../features/admin/productSlice";
 
 
-// ===================================================
-// CONSTANTS (outside the component, they never change)
-// ===================================================
-
 const PAGE_LIMIT = 5;
 
 const SORT_OPTIONS = [
@@ -62,10 +58,6 @@ function Products() {
   const navigate = useNavigate();
 
 
-  // ===================================================
-  // REDUX
-  // ===================================================
-
   const {
     products,
     totalResults,
@@ -82,14 +74,9 @@ function Products() {
   );
 
 
-  // ===================================================
-  // LOCAL STATE
-  // ===================================================
-
   const [search, setSearch] =
     useState("");
 
-  // the list reloads after the admin pauses typing
   const debouncedSearch =
     useDebounce(search.trim(), 400);
 
@@ -99,7 +86,6 @@ function Products() {
   const [sort, setSort] =
     useState("newest");
 
-  // "all" | "active" | "inactive"
   const [statusFilter, setStatusFilter] =
     useState("all");
 
@@ -108,28 +94,13 @@ function Products() {
     useState(null);
 
 
-  /*
-    Keep track of which product's
-    switch is currently being changed.
-  */
-
   const [statusTargetId, setStatusTargetId] =
     useState(null);
 
 
-  /*
-    The product the admin just clicked
-    the switch on. While this is set,
-    the confirmation modal is open.
-  */
-
   const [statusConfirmTarget, setStatusConfirmTarget] =
     useState(null);
 
-
-  // ===================================================
-  // FETCH PRODUCTS
-  // ===================================================
 
   useEffect(() => {
 
@@ -152,10 +123,6 @@ function Products() {
   ]);
 
 
-  // ===================================================
-  // SEARCH
-  // ===================================================
-
   const handleSearchChange = (
     e
   ) => {
@@ -168,10 +135,6 @@ function Products() {
 
   };
 
-
-  // ===================================================
-  // SORT
-  // ===================================================
 
   const handleSortChange = (
     e
@@ -186,10 +149,6 @@ function Products() {
   };
 
 
-  // ===================================================
-  // STATUS TAB CHANGE
-  // ===================================================
-
   const handleStatusFilterChange = (
     value
   ) => {
@@ -202,10 +161,6 @@ function Products() {
 
   };
 
-
-  // ===================================================
-  // EDIT
-  // ===================================================
 
   const handleEdit = (
     product
@@ -223,10 +178,6 @@ function Products() {
   };
 
 
-  // ===================================================
-  // VIEW
-  // ===================================================
-
   const handleView = (
     product
   ) => {
@@ -237,10 +188,6 @@ function Products() {
 
   };
 
-
-  // ===================================================
-  // DELETE
-  // ===================================================
 
   const handleDelete = (
     product
@@ -275,12 +222,6 @@ function Products() {
         );
 
 
-        /*
-          If we deleted the only product
-          on the current page, go back
-          one page.
-        */
-
         if (
           products.length === 1 &&
           page > 1
@@ -304,13 +245,6 @@ function Products() {
 
     };
 
-
-  // ===================================================
-  // TOGGLE STATUS
-  // ===================================================
-
-  // STEP 1: the switch was clicked.
-  // Do NOT change anything yet, just ask the admin to confirm.
 
   const handleToggleStatus =
     (product) => {
@@ -346,19 +280,11 @@ function Products() {
     };
 
 
-  // STEP 2: the admin pressed Confirm in the modal.
-  // Now really activate / deactivate the product.
-
   const confirmToggleStatus =
     async () => {
 
       const product =
         statusConfirmTarget;
-
-      /*
-        Prevent double clicking while
-        the current request is running.
-      */
 
       if (
         !product ||
@@ -382,28 +308,12 @@ function Products() {
             productId:
               product.id,
 
-            /*
-              If currently true,
-              send false.
-
-              If currently false,
-              send true.
-            */
-
             isActive:
               !product.isActive,
 
           })
         ).unwrap();
 
-
-        /*
-          The list is filtered on the server,
-          so on the Active / Inactive tabs the
-          toggled product no longer belongs
-          there. Refetch to update the list
-          and the pagination counts.
-        */
 
         if (
           statusFilter !== "all"
@@ -444,10 +354,6 @@ function Products() {
     };
 
 
-  // ===================================================
-  // ADD PRODUCT
-  // ===================================================
-
   const handleAddProduct =
     () => {
 
@@ -457,10 +363,6 @@ function Products() {
 
     };
 
-
-  // ===================================================
-  // RENDER
-  // ===================================================
 
   return (
 
@@ -481,10 +383,6 @@ function Products() {
         "
       >
 
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
-
         <AdminPageHeader
           eyebrow="Catalog"
           title="Product"
@@ -493,18 +391,12 @@ function Products() {
         />
 
 
-        {/* ================================================= */}
-        {/* CONTENT */}
-        {/* ================================================= */}
-
         <section
           className="
             px-12
             py-10
           "
         >
-
-          {/* SEARCH */}
 
           <div
             className="
@@ -540,10 +432,6 @@ function Products() {
           </div>
 
 
-          {/* ================================================= */}
-          {/* TABS + SORT */}
-          {/* ================================================= */}
-
           <AdminTabsSort
             className="mt-14 mb-8"
             tabs={STATUS_TABS}
@@ -555,10 +443,6 @@ function Products() {
             sortId="product-sort"
           />
 
-
-          {/* ================================================= */}
-          {/* LOADING */}
-          {/* ================================================= */}
 
           {status === "loading" && (
 
@@ -577,10 +461,6 @@ function Products() {
 
           )}
 
-
-          {/* ================================================= */}
-          {/* ERROR */}
-          {/* ================================================= */}
 
           {status === "failed" &&
             !products.length && (
@@ -603,10 +483,6 @@ function Products() {
 
             )}
 
-
-          {/* ================================================= */}
-          {/* EMPTY */}
-          {/* ================================================= */}
 
           {status !== "loading" &&
             !products.length &&
@@ -657,10 +533,6 @@ function Products() {
 
             )}
 
-
-          {/* ================================================= */}
-          {/* PRODUCTS */}
-          {/* ================================================= */}
 
           {products.length > 0 && (
 
@@ -719,10 +591,6 @@ function Products() {
           )}
 
 
-          {/* ================================================= */}
-          {/* PAGINATION */}
-          {/* ================================================= */}
-
           <div
             className="mt-8"
           >
@@ -760,10 +628,6 @@ function Products() {
       </main>
 
 
-      {/* ================================================= */}
-      {/* DELETE MODAL */}
-      {/* ================================================= */}
-
       <Modal
         open={
           !!deleteTarget
@@ -799,10 +663,6 @@ function Products() {
         }
       />
 
-
-      {/* ================================================= */}
-      {/* ACTIVATE / DEACTIVATE MODAL */}
-      {/* ================================================= */}
 
       <Modal
         open={

@@ -12,13 +12,6 @@ import { formatDateTime } from "../utils/orderFormat";
 import useWalletTopUp from "../hooks/useWalletTopUp";
 import { fetchWallet } from "../features/user/walletSlice";
 
-/*
-  /profile/wallet
-  Balance card + the full history of the wallet (newest first, filter, pages).
-  Money comes in from: Razorpay top-ups, cancelled orders (at once), returns (after admin approval).
-  Money goes out only when an order is paid with the wallet at checkout (no withdrawal).
-*/
-
 const PAGE_SIZE = 10;
 
 const FILTERS = [
@@ -27,7 +20,6 @@ const FILTERS = [
   { id: "debit", label: "Money out" },
 ];
 
-// Title shown for each reason money moved
 const SOURCE_TITLE = {
   ADD_MONEY: "Money added via Razorpay",
   ORDER_PAYMENT: "Paid for an order",
@@ -110,7 +102,6 @@ function Wallet() {
     load();
   }, [load]);
 
-  // The success message goes away by itself
   useEffect(() => {
     if (!notice) return undefined;
     const timer = setTimeout(() => setNotice(""), 4000);
@@ -127,12 +118,10 @@ function Wallet() {
     setModalError("");
 
     try {
-      // Opens Razorpay; resolves only after the payment is verified and the money is in the wallet
       const result = await topUp(amount);
       setModalOpen(false);
       setNotice(`${formatMoney(result?.amount ?? amount)} was added to your wallet.`);
 
-      // Newest rows first: show page 1 of "All" so the new row is visible
       if (filter !== "" || page !== 1) {
         setFilter("");
         setPage(1);
@@ -183,7 +172,6 @@ function Wallet() {
               </div>
             )}
 
-            {/* BALANCE */}
             <div className="flex flex-col gap-5 rounded-xl bg-[#2b2b2b] px-6 py-7 text-white sm:flex-row sm:items-center sm:justify-between sm:px-8">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
@@ -207,7 +195,6 @@ function Wallet() {
               </button>
             </div>
 
-            {/* HISTORY */}
             <div className="mt-10">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink">

@@ -26,13 +26,11 @@ function ProductCard({
       : price;
 
   const handleAddToCart = async (e) => {
-    // Prevent opening product details
     e.preventDefault();
     e.stopPropagation();
 
     if (adding) return;
 
-    // Already in the cart: the button takes the user there.
     if (inCart) {
       onViewCart?.();
       return;
@@ -68,7 +66,6 @@ function ProductCard({
 
   return (
     <div className="group">
-      {/* PRODUCT IMAGE */}
       <Link to={`/products/${product.id}`} className="block">
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-[#f7f7f7]">
           {image ? (
@@ -83,14 +80,12 @@ function ProductCard({
             </div>
           )}
 
-          {/* DISCOUNT */}
           {discountPercent > 0 && (
             <span className="absolute left-3 top-3 rounded-full bg-[#f4511e] px-2.5 py-1 text-[11px] font-semibold text-white sm:px-3 sm:text-xs">
               {discountPercent}% OFF
             </span>
           )}
 
-          {/* HEART */}
           <button
             type="button"
             onClick={handleWishlist}
@@ -110,21 +105,17 @@ function ProductCard({
         </div>
       </Link>
 
-      {/* PRODUCT INFORMATION */}
       <div className="mt-3">
-        {/* BRAND */}
         <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-wide text-gray-500 sm:text-xs">
           {product?.brand?.name || product?.brandName || ""}
         </p>
 
-        {/* PRODUCT NAME */}
         <Link to={`/products/${product.id}`} className="mt-1 block">
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-medium leading-5 text-gray-900 transition group-hover:text-[#f4511e]">
             {product.name}
           </h3>
         </Link>
 
-        {/* PRICE */}
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-sm font-semibold text-gray-900 sm:text-base">
             ₹{discountedPrice.toLocaleString("en-IN")}
@@ -137,10 +128,8 @@ function ProductCard({
           )}
         </div>
 
-        {/* REFERRAL OFFER (customers who signed up through a referral) */}
         <ReferralOfferNote variant="compact" />
 
-        {/* ADD TO CART */}
         <button
           type="button"
           onClick={handleAddToCart}

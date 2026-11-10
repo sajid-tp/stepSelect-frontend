@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Static "Contact us" page. Replace the placeholder details below with the real ones.
 const CONTACT_INFO = [
   {
     icon: 'fa-solid fa-location-dot',
@@ -64,7 +63,6 @@ function Contact() {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  // Static page: there is no API call. Hook your backend / email service in here later.
   const handleSubmit = (e) => {
     e.preventDefault();
     const found = validate(values);
@@ -100,7 +98,6 @@ function Contact() {
 
         <section className="px-4 pb-14 sm:px-6 sm:pb-20 lg:px-10">
           <div className="mx-auto grid max-w-6xl overflow-hidden rounded-xl border border-line bg-white md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            {/* CONTACT INFORMATION */}
             <div className="border-b border-line bg-[#fafafa] p-6 sm:p-8 md:border-b-0 md:border-r">
               <h2 className="text-lg font-extrabold text-ink">Contact Information</h2>
               <p className="mt-1 text-sm text-muted">Reach us any way you like. We usually reply within 24 hours.</p>
@@ -148,7 +145,6 @@ function Contact() {
               </div>
             </div>
 
-            {/* SEND A MESSAGE */}
             <div className="p-6 sm:p-8">
               <h2 className="text-lg font-extrabold text-ink">Send a Message</h2>
 

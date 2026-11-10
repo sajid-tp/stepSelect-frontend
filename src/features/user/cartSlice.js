@@ -2,19 +2,8 @@ import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
 
-/*
-  Every cart endpoint returns the full cart as `data`:
-  { id, items[], totalPrice, totalItems, maxQuantityPerItem }
-  so the server is the single source of truth: after any action the
-  slice simply stores what the server sent back.
-*/
-
 const getErrorMessage = (error, fallback) =>
   error.response?.data?.error?.message || fallback;
-
-// =====================================================
-// GET CART        GET /cart
-// =====================================================
 
 export const getCart = createAsyncThunk(
   "cart/getCart",
@@ -28,10 +17,6 @@ export const getCart = createAsyncThunk(
   }
 );
 
-// =====================================================
-// ADD TO CART     POST /cart   { variantId, size, quantity }
-// =====================================================
-
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async ({ variantId, size, quantity = 1 }, { rejectWithValue }) => {
@@ -44,11 +29,6 @@ export const addToCart = createAsyncThunk(
   }
 );
 
-// =====================================================
-// QUICK ADD (shop card, no size picker)
-// Uses the cheapest colour (the one the Shop card shows) that has an in-stock size.
-// =====================================================
-
 export const quickAddToCart = createAsyncThunk(
   "cart/quickAddToCart",
   async (productId, { rejectWithValue }) => {
@@ -56,7 +36,6 @@ export const quickAddToCart = createAsyncThunk(
       const details = await axiosInstance.get(`/products/${productId}`);
       const variants = details.data.data?.variants || [];
 
-      // Cheapest colour first = the colour the Shop card shows (same rule as the Shop list and the details page)
       const byPrice = [...variants].sort(
         (a, b) => Number(a.price) - Number(b.price)
       );
@@ -73,17 +52,12 @@ export const quickAddToCart = createAsyncThunk(
       if (!pick) return rejectWithValue("This product is out of stock.");
 
       const res = await axiosInstance.post("/cart", { ...pick, quantity: 1 });
-      // `added` lets the wishlist slice drop that line (the server removes it from the wishlist too)
       return { message: res.data.message, cart: res.data.data, added: pick };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to add item to cart"));
     }
   }
 );
-
-// =====================================================
-// UPDATE QUANTITY PATCH /cart/items/:variantId?size=   { quantity }
-// =====================================================
 
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
@@ -101,10 +75,6 @@ export const updateCartItem = createAsyncThunk(
   }
 );
 
-// =====================================================
-// REMOVE ITEM     DELETE /cart/items/:variantId?size=
-// =====================================================
-
 export const removeCartItem = createAsyncThunk(
   "cart/removeCartItem",
   async ({ variantId, size }, { rejectWithValue }) => {
@@ -119,10 +89,6 @@ export const removeCartItem = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CLEAR CART      DELETE /cart
-// =====================================================
-
 export const clearCart = createAsyncThunk(
   "cart/clearCart",
   async (_, { rejectWithValue }) => {
@@ -135,20 +101,16 @@ export const clearCart = createAsyncThunk(
   }
 );
 
-// =====================================================
-// STATE
-// =====================================================
-
 const initialState = {
   cartId: null,
   items: [],
-  totalPrice: 0, // only items that are currently available (after product / category offers)
-  totalMrp: 0, // the same items at their normal price
-  totalSavings: 0, // totalMrp - totalPrice
-  cartCount: 0, // total units in the cart (navbar badge)
+  totalPrice: 0,
+  totalMrp: 0,
+  totalSavings: 0,
+  cartCount: 0,
   maxQuantityPerItem: 5,
 
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 
@@ -173,7 +135,6 @@ const cartSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getCart.pending, (state) => {
-        // Skeleton only on the first load, not on silent refreshes.
         if (state.status !== "succeeded") state.status = "loading";
         state.error = null;
       })
@@ -185,11 +146,9 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
-      // never leak one user's cart to the next
       .addCase(logoutUser.fulfilled, () => initialState)
       .addCase(logoutUser.rejected, () => initialState)
 
-      // every change returns the new full cart
       .addMatcher(
         isAnyOf(
           addToCart.fulfilled,

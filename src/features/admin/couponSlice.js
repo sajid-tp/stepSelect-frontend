@@ -1,24 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Helper: pull a readable message out of whatever the interceptor rejected
-|--------------------------------------------------------------------------
-| Backend error shape: { success:false, message, error:{ code, message } }
-*/
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   error?.message ||
   fallback;
 
-/*
-|--------------------------------------------------------------------------
-| GET COUPONS   GET /admin/coupons?search&status&page&limit&sort
-| Response: { success, data: { coupons: [], pagination: {} } }
-|--------------------------------------------------------------------------
-*/
 export const getCoupons = createAsyncThunk(
   "adminCoupons/getCoupons",
   async (
@@ -36,11 +24,6 @@ export const getCoupons = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| GET ONE COUPON   GET /admin/coupons/:couponId   (used by the edit page)
-|--------------------------------------------------------------------------
-*/
 export const getCouponById = createAsyncThunk(
   "adminCoupons/getCouponById",
   async (couponId, { rejectWithValue }) => {
@@ -53,11 +36,6 @@ export const getCouponById = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| CREATE COUPON   POST /admin/coupons
-|--------------------------------------------------------------------------
-*/
 export const createCoupon = createAsyncThunk(
   "adminCoupons/createCoupon",
   async (couponData, { rejectWithValue }) => {
@@ -70,11 +48,6 @@ export const createCoupon = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE COUPON   PATCH /admin/coupons/:couponId
-|--------------------------------------------------------------------------
-*/
 export const updateCoupon = createAsyncThunk(
   "adminCoupons/updateCoupon",
   async ({ couponId, couponData }, { rejectWithValue }) => {
@@ -90,12 +63,6 @@ export const updateCoupon = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| TOGGLE STATUS   PATCH /admin/coupons/:couponId/status
-| Response data: { id, couponCode, isActive }
-|--------------------------------------------------------------------------
-*/
 export const toggleCouponStatus = createAsyncThunk(
   "adminCoupons/toggleCouponStatus",
   async (couponId, { rejectWithValue }) => {
@@ -112,12 +79,6 @@ export const toggleCouponStatus = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| DELETE COUPON (soft delete)   DELETE /admin/coupons/:couponId
-| Response data: { message, id }
-|--------------------------------------------------------------------------
-*/
 export const deleteCoupon = createAsyncThunk(
   "adminCoupons/deleteCoupon",
   async (couponId, { rejectWithValue }) => {
@@ -130,11 +91,6 @@ export const deleteCoupon = createAsyncThunk(
   }
 );
 
-/*
-|--------------------------------------------------------------------------
-| INITIAL STATE
-|--------------------------------------------------------------------------
-*/
 const initialState = {
   coupons: [],
   totalResults: 0,
@@ -145,7 +101,6 @@ const initialState = {
   status: "idle",
   error: null,
 
-  // single coupon (edit page)
   current: null,
   currentStatus: "idle",
   currentError: null,
@@ -163,11 +118,6 @@ const initialState = {
   deleteError: null,
 };
 
-/*
-|--------------------------------------------------------------------------
-| SLICE
-|--------------------------------------------------------------------------
-*/
 const couponSlice = createSlice({
   name: "adminCoupons",
   initialState,
@@ -194,7 +144,6 @@ const couponSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      // ---------------- GET LIST ----------------
       .addCase(getCoupons.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -213,7 +162,6 @@ const couponSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ---------------- GET ONE ----------------
       .addCase(getCouponById.pending, (state) => {
         state.currentStatus = "loading";
         state.currentError = null;
@@ -227,7 +175,6 @@ const couponSlice = createSlice({
         state.currentError = action.payload;
       })
 
-      // ---------------- CREATE ----------------
       .addCase(createCoupon.pending, (state) => {
         state.createStatus = "loading";
         state.createError = null;
@@ -240,7 +187,6 @@ const couponSlice = createSlice({
         state.createError = action.payload;
       })
 
-      // ---------------- UPDATE ----------------
       .addCase(updateCoupon.pending, (state) => {
         state.updateStatus = "loading";
         state.updateError = null;
@@ -255,7 +201,6 @@ const couponSlice = createSlice({
         state.updateError = action.payload;
       })
 
-      // ---------------- TOGGLE ----------------
       .addCase(toggleCouponStatus.pending, (state) => {
         state.toggleStatus = "loading";
         state.toggleError = null;
@@ -272,7 +217,6 @@ const couponSlice = createSlice({
         state.toggleError = action.payload;
       })
 
-      // ---------------- DELETE ----------------
       .addCase(deleteCoupon.pending, (state) => {
         state.deleteStatus = "loading";
         state.deleteError = null;

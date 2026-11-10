@@ -27,9 +27,6 @@ function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
 
-  // Login only checks that the fields are filled in. Password strength is a
-  // signup / change-password rule; older accounts may have weaker passwords
-  // and must still be able to sign in.
   const errors = {
     email: validateEmail(form.email),
     password: form.password ? '' : 'Password is required',
@@ -69,15 +66,11 @@ function Login() {
     dispatch(clearAuthError());
   },[dispatch])
 
-  // After a logout, Back must not return to the signed-in pages. We land here with
-  // state.loggedOut; each time this page is reached by Back (POP) or by the logout
-  // redirect (REPLACE) we add one more /login entry on top, so Back keeps the person here.
   useEffect(() => {
     if (!location.state?.loggedOut) return;
     if (navigationType === 'POP' || navigationType === 'REPLACE') {
       navigate('/login', { state: { loggedOut: true } });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key]);
 
   

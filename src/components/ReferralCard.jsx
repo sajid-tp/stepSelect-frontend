@@ -11,7 +11,6 @@ function CopyButton({ text, label }) {
     try {
       await navigator.clipboard.writeText(text);
     } catch {
-      // older browsers / http: fall back to a hidden textarea
       const area = document.createElement("textarea");
       area.value = text;
       document.body.appendChild(area);
@@ -35,7 +34,6 @@ function CopyButton({ text, label }) {
   );
 }
 
-// "Referral" card of the account overview page
 function ReferralCard() {
   const dispatch = useDispatch();
   const { mine, mineStatus, mineError } = useSelector((state) => state.referral);

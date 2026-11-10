@@ -12,14 +12,8 @@ import { formatDate } from "../../utils/orderFormat";
 
 import { getAdminOrders } from "../../features/admin/orderSlice";
 
-/*
-|--------------------------------------------------------------------------
-| CONSTANTS
-|--------------------------------------------------------------------------
-*/
 const PAGE_SIZE = 10;
 
-// value = what the server filters on (order status)
 const TABS = [
   { value: "all", label: "All Orders" },
   { value: "pending", label: "Processing" },
@@ -27,11 +21,9 @@ const TABS = [
   { value: "out_for_delivery", label: "Out for Delivery" },
   { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
-  // orders that have a product whose return the admin still has to approve / reject
   { value: "return_requested", label: "Returns" },
 ];
 
-// values must match SORTS in adminOrderServices.getOrders
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
@@ -42,11 +34,6 @@ const SORT_OPTIONS = [
 const inputClass =
   "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10";
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function Orders() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -67,7 +54,6 @@ function Orders() {
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);
 
-  /* ---------------- FETCH ---------------- */
   const fetchOrders = () =>
     dispatch(
       getAdminOrders({
@@ -83,10 +69,8 @@ function Orders() {
 
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, debouncedSearch, tab, sort, from, to, page]);
 
-  /* ---------------- close the filter menu on outside click ---------------- */
   useEffect(() => {
     const handler = (e) => {
       if (filterRef.current && !filterRef.current.contains(e.target)) {
@@ -97,7 +81,6 @@ function Orders() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ---------------- HANDLERS ---------------- */
   const handleTabChange = (value) => {
     setTab(value);
     setPage(1);
@@ -119,13 +102,11 @@ function Orders() {
   const isLoading = status === "loading";
   const showSkeleton = isLoading && orders.length === 0;
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-        {/* HEADER */}
         <header className="border-b border-gray-200 bg-white px-12 py-7">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">
             Logistics
@@ -136,7 +117,6 @@ function Orders() {
         </header>
 
         <section className="px-12 py-8">
-          {/* SEARCH + FILTER */}
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="relative w-full max-w-[460px]">
               <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
@@ -163,7 +143,6 @@ function Orders() {
             )}
           </div>
 
-          {/* TABS + SORT */}
           <AdminTabsSort
             className="mt-14 mb-8"
             tabs={TABS.map((t) =>
@@ -264,7 +243,6 @@ function Orders() {
             }
           />
 
-          {/* LIST ERROR */}
           {error && (
             <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -278,7 +256,6 @@ function Orders() {
             </div>
           )}
 
-          {/* TABLE */}
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left">
@@ -348,7 +325,6 @@ function Orders() {
                           <div className="flex flex-wrap items-center gap-2">
                             <AdminOrderStatusBadge status={order.status} />
 
-                            {/* a product of this order is waiting for the admin's decision */}
                             {order.returnRequestCount > 0 && (
                               <>
                                 <AdminOrderStatusBadge
@@ -380,7 +356,6 @@ function Orders() {
               </table>
             </div>
 
-            {/* EMPTY */}
             {!isLoading && !error && orders.length === 0 && (
               <div className="flex min-h-[260px] flex-col items-center justify-center px-6 text-center">
                 <i className="fa-solid fa-box-open text-4xl text-gray-300" />
@@ -404,7 +379,6 @@ function Orders() {
               </div>
             )}
 
-            {/* PAGINATION (the shared component, inside the table card) */}
             {orders.length > 0 && (
               <div className="px-8 pb-6 [&>div]:mt-0">
                 <Pagination

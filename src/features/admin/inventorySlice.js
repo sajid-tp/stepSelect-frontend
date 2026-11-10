@@ -1,27 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
-/*
-|--------------------------------------------------------------------------
-| Backend endpoints used by the admin inventory page
-|--------------------------------------------------------------------------
-| GET   /admin/inventory?search&stockFilter=low|out|in&sort&page&limit
-|         -> data { items[], summary, lowStockLimit, pagination }
-| PATCH /admin/inventory/:variantId/stock
-|         body { size, stock }   set an exact number
-|          or  { size, adjust }  add (+) or remove (-) units
-|         -> data  the updated row
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   error?.message ||
   fallback;
 
-// =====================================================
-// LIST
-// =====================================================
 export const getAdminInventory = createAsyncThunk(
   "adminInventory/getAdminInventory",
   async (
@@ -35,7 +20,6 @@ export const getAdminInventory = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // "all" and empty values are simply not sent
       const params = { sort, page, limit };
       if (search) params.search = search;
       if (stockFilter && stockFilter !== "all") params.stockFilter = stockFilter;
@@ -50,9 +34,6 @@ export const getAdminInventory = createAsyncThunk(
   }
 );
 
-// =====================================================
-// CHANGE THE STOCK OF ONE SIZE
-// =====================================================
 export const updateAdminStock = createAsyncThunk(
   "adminInventory/updateAdminStock",
   async ({ variantId, size, stock, adjust }, { rejectWithValue }) => {
@@ -74,15 +55,12 @@ export const updateAdminStock = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SLICE
-// =====================================================
 const initialState = {
   items: [],
   summary: { total: 0, inStock: 0, low: 0, out: 0, units: 0 },
   lowStockLimit: 5,
   pagination: { page: 1, limit: 10, totalItems: 0, totalPages: 1 },
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 };
 
@@ -110,7 +88,6 @@ const inventorySlice = createSlice({
         state.error = action.payload || "Failed to load the inventory.";
       })
 
-      // stock changed: update that row in place (the page also refreshes the summary)
       .addCase(updateAdminStock.fulfilled, (state, action) => {
         const updated = action.payload.item;
         state.items = state.items.map((row) =>

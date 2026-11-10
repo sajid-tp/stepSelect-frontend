@@ -1,11 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-/*
-  Tells the browser tab apart: every /admin page gets the title "Step Select Admin" and the
-  orange admin icon, the shop keeps "Step Select" and the navy icon.
-  Render it once, inside <BrowserRouter> (see App.jsx). It shows nothing on the page.
-*/
 function TabIdentity() {
   const { pathname } = useLocation();
 

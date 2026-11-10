@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 
-// 6 cards fill complete rows at every width: 2 x 3 (mobile), 3 x 2 (tablet), 6 x 1 (desktop)
 const COUNT = 6;
 
 const rupees = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
-// The newest products from the shop (real names, prices and pictures from the database),
-// ordered by createdAt, newest first (sort: 'newest' = { createdAt: -1 } on the server)
 function CuratedReleases() {
-  const [products, setProducts] = useState(null); // null = loading
+  const [products, setProducts] = useState(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -31,7 +28,6 @@ function CuratedReleases() {
     };
   }, []);
 
-  // nothing to show (and nothing broken): hide the whole block
   if (products && products.length === 0) return null;
 
   return (

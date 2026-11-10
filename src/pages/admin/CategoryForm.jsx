@@ -22,22 +22,14 @@ import {
   resetCategoryFormState,
 } from "../../features/admin/categorySlice";
 
-// Same numbers as ICON_CLASS_LIMITS in server/src/constants/categoryConstants.js - change both together.
 const ICON_CLASS_RULES = { MIN: 3, MAX: 100 };
-// Letters, numbers, spaces and hyphens only
 const ICON_CLASS_REGEX = /^[A-Za-z0-9 -]+$/;
-// server messages about the icon class ("Icon class is required", "Icon class must be ...")
 const ICON_CLASS_ERROR_REGEX = /icon class/i;
 
-// Same numbers as NAME_LIMITS in server/src/constants/categoryConstants.js - change both together.
 const NAME_RULES = { MIN: 2, MAX: 50 };
-// server messages about the name ("Category name is required.", "Category name must be ...")
 const NAME_ERROR_REGEX = /^category name/i;
 
-// Same numbers as DESCRIPTION_LIMITS in server/src/constants/categoryConstants.js - change both together.
-// The description is optional, so there is no minimum.
 const DESCRIPTION_RULES = { MAX: 500 };
-// server messages about the description ("Description must be ...", "Description cannot exceed ...")
 const DESCRIPTION_ERROR_REGEX = /^description/i;
 
 
@@ -55,23 +47,13 @@ function CategoryForm() {
     useParams();
 
 
-  // ===================================================
-  // MODE
-  // ===================================================
-
   const isEditMode =
     Boolean(categoryId);
 
 
-  // Category passed from Categories.jsx
-
   const category =
     location.state?.category;
 
-
-  // ===================================================
-  // REDUX
-  // ===================================================
 
   const {
     createStatus,
@@ -86,10 +68,6 @@ function CategoryForm() {
   );
 
 
-  // ===================================================
-  // FORM
-  // ===================================================
-
   const {
     register,
     handleSubmit,
@@ -102,7 +80,6 @@ function CategoryForm() {
 
   } = useForm({
 
-    // show the red message after leaving a field, then update it live while typing
     mode: "onTouched",
 
     defaultValues: {
@@ -118,7 +95,6 @@ function CategoryForm() {
   });
 
 
-  // clear any old create/update error left in the store from an earlier visit to this form
   useEffect(() => {
 
     dispatch(resetCategoryFormState());
@@ -212,7 +188,6 @@ function CategoryForm() {
 
     } catch (error) {
 
-      // show the server's icon class error right under the icon class field
       const message =
         typeof error === "string"
           ? error
@@ -251,10 +226,6 @@ function CategoryForm() {
   };
 
 
-  // ===================================================
-  // STATUS
-  // ===================================================
-
   const isSubmitting =
     isEditMode
       ? updateStatus === "loading"
@@ -266,10 +237,6 @@ function CategoryForm() {
       ? updateError
       : createError;
 
-
-  // ===================================================
-  // EDIT URL WITHOUT CATEGORY STATE
-  // ===================================================
 
   if (
     isEditMode &&
@@ -368,16 +335,8 @@ function CategoryForm() {
       "
     >
 
-      {/* ================================================= */}
-      {/* SIDEBAR */}
-      {/* ================================================= */}
-
       <AdminSidebar />
 
-
-      {/* ================================================= */}
-      {/* MAIN */}
-      {/* ================================================= */}
 
       <main
         className="
@@ -385,10 +344,6 @@ function CategoryForm() {
           min-h-screen
         "
       >
-
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
 
         <header
           className="
@@ -432,10 +387,6 @@ function CategoryForm() {
         </header>
 
 
-        {/* ================================================= */}
-        {/* CONTENT */}
-        {/* ================================================= */}
-
         <section
           className="
             px-12
@@ -456,10 +407,6 @@ function CategoryForm() {
               shadow-sm
             "
           >
-
-            {/* ================================================= */}
-            {/* TITLE */}
-            {/* ================================================= */}
 
             <div className="mb-8">
 
@@ -491,10 +438,6 @@ function CategoryForm() {
             </div>
 
 
-            {/* ================================================= */}
-            {/* ERROR */}
-            {/* ================================================= */}
-
             {formError &&
               !NAME_ERROR_REGEX.test(formError) &&
               !ICON_CLASS_ERROR_REGEX.test(formError) &&
@@ -519,20 +462,12 @@ function CategoryForm() {
             )}
 
 
-            {/* ================================================= */}
-            {/* FORM */}
-            {/* ================================================= */}
-
             <form
               onSubmit={
                 handleSubmit(onSubmit)
               }
               className="space-y-7"
             >
-
-              {/* ================================================= */}
-              {/* CATEGORY NAME */}
-              {/* ================================================= */}
 
               <div>
 
@@ -631,10 +566,6 @@ function CategoryForm() {
 
               </div>
 
-
-              {/* ================================================= */}
-              {/* ICON */}
-              {/* ================================================= */}
 
               <div>
 
@@ -752,105 +683,6 @@ function CategoryForm() {
               </div>
 
 
-              {/* ================================================= */}
-              {/* VISIBILITY */}
-              {/* ================================================= */}
-
-              {/* <div>
-
-                <label
-                  className="
-                    mb-2
-                    block
-                    text-sm
-                    font-semibold
-                    text-gray-700
-                  "
-                >
-                  Visibility Status
-                </label>
-
-
-                <div
-                  className="
-                    flex
-                    items-center
-                    justify-between
-                    rounded-lg
-                    border
-                    border-gray-200
-                    bg-gray-50
-                    px-4
-                    py-3
-                  "
-                >
-
-                  <div>
-
-                    <p
-                      className="
-                        text-sm
-                        font-medium
-                        text-gray-800
-                      "
-                    >
-                      Active
-                    </p>
-
-
-                    <p
-                      className="
-                        mt-0.5
-                        text-xs
-                        text-gray-500
-                      "
-                    >
-                      New categories are active
-                      by default.
-                    </p>
-
-                  </div>
-
-
-                  <span
-                    className="
-                      inline-flex
-                      items-center
-                      gap-2
-                      rounded-full
-                      border
-                      border-green-200
-                      bg-green-50
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      text-green-700
-                    "
-                  >
-
-                    <span
-                      className="
-                        h-1.5
-                        w-1.5
-                        rounded-full
-                        bg-green-600
-                      "
-                    />
-
-                    Active
-
-                  </span>
-
-                </div>
-
-              </div> */}
-
-
-              {/* ================================================= */}
-              {/* DESCRIPTION */}
-              {/* ================================================= */}
-
               <div>
 
                 <label
@@ -949,10 +781,6 @@ function CategoryForm() {
               </div>
 
               
-
-              {/* ================================================= */}
-              {/* ACTIONS */}
-              {/* ================================================= */}
 
               <div
                 className="

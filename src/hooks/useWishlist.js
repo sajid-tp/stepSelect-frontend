@@ -8,12 +8,6 @@ import {
   removeProductFromWishlist,
 } from "../features/user/wishlistSlice";
 
-/*
-  Shared by every screen that shows product cards (Shop, Related products).
-  - loads the light wishlist list once for a logged-in user
-  - tells which products are saved
-  - toggles a product (heart on a card)
-*/
 export default function useWishlist() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -22,8 +16,6 @@ export default function useWishlist() {
   const ids = useSelector((state) => state.wishlist.ids);
   const idsStatus = useSelector((state) => state.wishlist.idsStatus);
 
-  // Public pages: only call the API for a logged-in user,
-  // otherwise the 401 would redirect visitors to /login.
   useEffect(() => {
     if (user && idsStatus === "idle") dispatch(getWishlistIds());
   }, [dispatch, user, idsStatus]);
@@ -33,7 +25,6 @@ export default function useWishlist() {
     [ids]
   );
 
-  // Rejects with the error text so the card can show it.
   const toggleProduct = useCallback(
     async (product) => {
       if (!user) {

@@ -16,17 +16,11 @@ import {
   deleteAdminBanner,
 } from "../../features/admin/bannerSlice";
 
-/*
-|--------------------------------------------------------------------------
-| CONSTANTS
-|--------------------------------------------------------------------------
-*/
-const PAGE_SIZE = 9; // three full rows of the 3-column card grid
+const PAGE_SIZE = 9;
 const IMAGE_MAX_MB = 5;
 const TITLE_MIN = 2;
-const TITLE_MAX = 60; // same as TITLE_MAX in server/src/services/admin/adminBannerServices.js - change both together
+const TITLE_MAX = 60;
 
-// value = what the server filters on
 const TABS = [
   { value: "all", label: "All Banners" },
   { value: "active", label: "Active" },
@@ -38,11 +32,6 @@ const EMPTY_FORM = { title: "", link: "", displayOrder: "", isActive: true };
 const inputClass =
   "h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-[#ff5722] focus:ring-2 focus:ring-[#ff5722]/10";
 
-/*
-|--------------------------------------------------------------------------
-| SMALL COMPONENTS
-|--------------------------------------------------------------------------
-*/
 function Switch({ checked, onChange, disabled, label }) {
   return (
     <button
@@ -65,7 +54,6 @@ function Switch({ checked, onChange, disabled, label }) {
   );
 }
 
-/* ---------------- Upload / edit window ---------------- */
 function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
   const isEdit = Boolean(banner);
 
@@ -84,7 +72,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
   const [errors, setErrors] = useState({});
   const fileRef = useRef(null);
 
-  // free the temporary picture address when it is replaced / the window closes
   useEffect(
     () => () => {
       if (preview && preview.startsWith("blob:")) URL.revokeObjectURL(preview);
@@ -189,7 +176,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         </div>
 
         <div className="grid gap-6 md:grid-cols-[300px_1fr]">
-        {/* Picture */}
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-600">Banner image</label>
           <button
@@ -225,7 +211,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         </div>
 
         <div>
-        {/* Title */}
         <div className="mb-4">
           <label htmlFor="banner-title" className="mb-1 block text-xs font-semibold text-gray-600">
             Title
@@ -252,7 +237,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
         </div>
 
         <div className="mb-4 grid grid-cols-[1fr_130px] gap-3">
-          {/* Link */}
           <div>
             <label htmlFor="banner-link" className="mb-1 block text-xs font-semibold text-gray-600">
               Link (optional)
@@ -268,7 +252,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
             {errors.link && <p className="mt-1 text-xs font-medium text-red-500">{errors.link}</p>}
           </div>
 
-          {/* Slot */}
           <div>
             <label htmlFor="banner-slot" className="mb-1 block text-xs font-semibold text-gray-600">
               Slot number
@@ -289,7 +272,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
           </div>
         </div>
 
-        {/* Visible */}
         <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-gray-800">Visible on landing page</p>
@@ -333,11 +315,6 @@ function BannerFormModal({ banner, saving, serverError, onSubmit, onClose }) {
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| PAGE
-|--------------------------------------------------------------------------
-*/
 function Banners() {
   const dispatch = useDispatch();
 
@@ -351,17 +328,16 @@ function Banners() {
   const [page, setPage] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState(null); // banner being edited, null = new
+  const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const [toggleTarget, setToggleTarget] = useState(null); // banner waiting for show / hide confirmation
-  const [deleting, setDeleting] = useState(null); // banner waiting for delete confirmation
+  const [toggleTarget, setToggleTarget] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
-  const [notice, setNotice] = useState(null); // { type: "success" | "error", text }
+  const [notice, setNotice] = useState(null);
 
-  /* ---------------- FETCH ---------------- */
   const fetchBanners = (nextPage = page) =>
     dispatch(
       getAdminBanners({
@@ -376,17 +352,15 @@ function Banners() {
     const request = dispatch(
       getAdminBanners({ search: debouncedSearch, status: tab, page, limit: PAGE_SIZE })
     );
-    return () => request.abort(); // a newer choice cancels the older request
+    return () => request.abort();
   }, [dispatch, debouncedSearch, tab, page]);
 
-  // success / error message goes away on its own
   useEffect(() => {
     if (!notice) return undefined;
     const timer = setTimeout(() => setNotice(null), 3500);
     return () => clearTimeout(timer);
   }, [notice]);
 
-  /* ---------------- HANDLERS ---------------- */
   const openNew = () => {
     setEditing(null);
     setFormError("");
@@ -424,7 +398,6 @@ function Banners() {
     setFormOpen(false);
     setEditing(null);
     setNotice({ type: "success", text: result.payload.message });
-    // a new banner can land on any page (slots decide the order), so start from the first
     if (!editing) setPage(1);
     fetchBanners(editing ? page : 1);
   };
@@ -438,7 +411,6 @@ function Banners() {
       return;
     }
     setNotice({ type: "success", text: result.payload.message });
-    // On the Active / Inactive tabs the row no longer belongs, so reload the list
     if (tab !== "all") fetchBanners();
   };
 
@@ -461,7 +433,6 @@ function Banners() {
     }
     setNotice({ type: "success", text: result.payload.message });
 
-    // deleted the last banner on this page: go back one page
     const nextPage = banners.length === 1 && page > 1 ? page - 1 : page;
     setPage(nextPage);
     fetchBanners(nextPage);
@@ -471,13 +442,11 @@ function Banners() {
   const showSkeleton = isLoading && banners.length === 0;
   const hasFilters = Boolean(debouncedSearch) || tab !== "all";
 
-  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
-        {/* HEADER */}
         <AdminPageHeader
           eyebrow="Visuals"
           title="Banner"
@@ -486,9 +455,7 @@ function Banners() {
         />
 
         <section className="px-12 py-8">
-          {/* <h2 className="mb-4 text-lg font-extrabold text-[#111]">Banners</h2> */}
 
-          {/* SEARCH */}
           <div className="relative mb-6 w-full max-w-[420px]">
             <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
             <input
@@ -503,7 +470,6 @@ function Banners() {
             />
           </div>
 
-          {/* TABS */}
           <AdminTabsSort
             className="mt-14 mb-8"
             tabs={TABS}
@@ -514,7 +480,6 @@ function Banners() {
             }}
           />
 
-          {/* MESSAGE */}
           {notice && (
             <div
               role="status"
@@ -528,7 +493,6 @@ function Banners() {
             </div>
           )}
 
-          {/* LIST ERROR */}
           {error && (
             <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -538,7 +502,6 @@ function Banners() {
             </div>
           )}
 
-          {/* LIST (card grid, same as the Coupons page) */}
           <div
             className={`grid grid-cols-1 gap-5 transition-opacity md:grid-cols-2 xl:grid-cols-3 ${
               isLoading && !showSkeleton ? "opacity-60" : ""
@@ -555,7 +518,6 @@ function Banners() {
                   key={b.id}
                   className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                 >
-                  {/* the picture keeps its 7:5 shape, so it is never cropped or stretched */}
                   <div className="aspect-[7/5] w-full bg-gray-100">
                     <img
                       src={b.image}
@@ -612,7 +574,6 @@ function Banners() {
               ))}
           </div>
 
-          {/* EMPTY */}
           {!isLoading && !error && banners.length === 0 && (
             <div className="flex min-h-[380px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white px-6 text-center">
               <i className="fa-regular fa-image text-4xl text-gray-300" />
@@ -634,7 +595,6 @@ function Banners() {
             </div>
           )}
 
-          {/* PAGINATION */}
           {banners.length > 0 && (
             <div className="mt-6 border-t border-[#f1d6cc] pt-4 [&>div]:mt-0">
               <Pagination
@@ -649,7 +609,6 @@ function Banners() {
         </section>
       </main>
 
-      {/* UPLOAD / EDIT WINDOW (opened fresh each time so it starts with the right values) */}
       {formOpen && (
         <BannerFormModal
           key={editing ? editing.id : "new"}
@@ -661,7 +620,6 @@ function Banners() {
         />
       )}
 
-      {/* ACTIVATE / DEACTIVATE CONFIRMATION */}
       <Modal
         open={Boolean(toggleTarget)}
         title={toggleTarget?.isActive ? "Deactivate banner?" : "Activate banner?"}
@@ -678,7 +636,6 @@ function Banners() {
         variant={toggleTarget?.isActive ? "danger" : "success"}
       />
 
-      {/* DELETE CONFIRMATION */}
       <Modal
         open={Boolean(deleting)}
         title="Delete banner"

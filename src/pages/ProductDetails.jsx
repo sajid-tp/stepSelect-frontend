@@ -17,7 +17,6 @@ import {
 } from "../features/user/wishlistSlice";
 const PAGE_PADDING = "w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-16";
 
-// "red", "#ff0000" -> true.  "White / Orange" -> false (shown as a text pill)
 const isCssColor = (value) =>
   typeof CSS !== "undefined" &&
   CSS.supports("color", String(value).trim().toLowerCase());
@@ -57,7 +56,7 @@ const cartStatus = useSelector((state) => state.cart.status);
   const [viewerOpen, setViewerOpen] = useState(false);
 
   const [adding, setAdding] = useState(false);
-  const [cartMessage, setCartMessage] = useState(null); // { type, text }
+  const [cartMessage, setCartMessage] = useState(null);
   const [wishlistBusy, setWishlistBusy] = useState(false);
 
   useEffect(() => {
@@ -74,8 +73,6 @@ const cartStatus = useSelector((state) => state.cart.status);
   }, [dispatch, productId]);
 
 
-  // The Shop list shows the cheapest variant of each product, so open that same variant here
-  // (otherwise the first variant opens and its price/photos don't match the card that was clicked)
   useEffect(() => {
 
     const list = productDetails?.variants;
@@ -127,10 +124,6 @@ const cartStatus = useSelector((state) => state.cart.status);
   };
 
 
-  // =====================================================
-  // LOADING
-  // =====================================================
-
   if (productDetailsStatus === "loading") {
 
     return (
@@ -165,10 +158,6 @@ const cartStatus = useSelector((state) => state.cart.status);
   }
 
 
-  // =====================================================
-  // ERROR
-  // =====================================================
-
   if (productDetailsStatus === "failed") {
 
     return (
@@ -200,17 +189,12 @@ const cartStatus = useSelector((state) => state.cart.status);
   }
 
 
-  // =====================================================
-  // DATA
-  // =====================================================
-
   const variants = productDetails.variants || [];
 
   const activeVariant = variants[colorIndex] || variants[0];
 
   const sizes = activeVariant?.sizes || [];
 
-  // user's choice, or the first size that is in stock
   const activeSize =
     sizes.find(
       (s) => s.size === selectedSize && s.quantity > 0
@@ -220,7 +204,6 @@ const cartStatus = useSelector((state) => state.cart.status);
 
   const stock = activeSize?.quantity || 0;
 
-  // images of the selected color (fallback: every image of the product)
   const images =
     activeVariant?.images?.length
       ? activeVariant.images
@@ -230,16 +213,10 @@ const cartStatus = useSelector((state) => state.cart.status);
 
   const discount = Number(activeVariant?.discountPercent) || 0;
 
-  // same rounding as the shop card and the cart, so the price never changes between pages
   const finalPrice =
     discount > 0
       ? Math.round(price - (price * discount) / 100)
       : price;
-
-
-  // =====================================================
-  // ADD TO CART
-  // =====================================================
 
 
 const isInCart = Boolean(
@@ -252,10 +229,6 @@ const isInCart = Boolean(
     )
 );
 
-
-  // =====================================================
-  // WISHLIST (selected colour + size; stock is not required)
-  // =====================================================
 
   const wishlistSize = activeSize || sizes[0] || null;
 
@@ -352,17 +325,11 @@ const isInCart = Boolean(
 
   };
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white">
 
       <Navbar />
 
-
-      {/* Breadcrumb */}
 
       <div className={`${PAGE_PADDING} pt-6`}>
 
@@ -389,20 +356,12 @@ const isInCart = Boolean(
       </div>
 
 
-      {/* Product */}
-
       <main className={`${PAGE_PADDING} py-8 sm:py-10`}>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,640px)_minmax(0,1fr)] lg:gap-12 xl:gap-16">
 
 
-          {/* ========================= */}
-          {/* IMAGES */}
-          {/* ========================= */}
-
           <div className="min-w-0">
-
-            {/* Main image */}
 
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#f3f3f3]">
 
@@ -423,8 +382,6 @@ const isInCart = Boolean(
 
               )}
 
-
-              {/* Wishlist */}
 
               <button
                 type="button"
@@ -451,8 +408,6 @@ const isInCart = Boolean(
 
             </div>
 
-
-            {/* Thumbnails */}
 
             {images.length > 1 && (
 
@@ -488,13 +443,7 @@ const isInCart = Boolean(
           </div>
 
 
-          {/* ========================= */}
-          {/* PRODUCT INFORMATION */}
-          {/* ========================= */}
-
           <div className="min-w-0 lg:max-w-xl">
-
-            {/* Category + brand */}
 
             <div className="flex flex-wrap items-center gap-3">
 
@@ -513,14 +462,10 @@ const isInCart = Boolean(
             </div>
 
 
-            {/* Name */}
-
             <h1 className="mt-4 text-3xl font-extrabold uppercase leading-[1.05] tracking-tight text-gray-900 sm:text-4xl">
               {productDetails.name}
             </h1>
 
-
-            {/* Price */}
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
 
@@ -547,8 +492,6 @@ const isInCart = Boolean(
             </div>
 
 
-            {/* Product / category offer */}
-
             {activeVariant?.offer && discount > 0 && (
               <div className="mt-4 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
                 <i className="fa-solid fa-tag mt-0.5 text-[#f4511e]" aria-hidden="true" />
@@ -573,11 +516,7 @@ const isInCart = Boolean(
               </div>
             )}
 
-            {/* Referral offer */}
-
             <ReferralOfferNote />
-
-            {/* Description */}
 
             {productDetails.description && (
 
@@ -587,8 +526,6 @@ const isInCart = Boolean(
 
             )}
 
-
-            {/* Color */}
 
             {variants.length > 0 && (
 
@@ -613,7 +550,6 @@ const isInCart = Boolean(
 
                     const isActive = index === colorIndex;
 
-                    // real swatch when the color name is a valid CSS color
                     if (isCssColor(variant.color)) {
 
                       return (
@@ -644,7 +580,6 @@ const isInCart = Boolean(
 
                     }
 
-                    // otherwise show the name
                     return (
 
                       <button
@@ -670,8 +605,6 @@ const isInCart = Boolean(
 
             )}
 
-
-            {/* Size */}
 
             {sizes.length > 0 && (
 
@@ -719,8 +652,6 @@ const isInCart = Boolean(
             )}
 
 
-            {/* Stock */}
-
             <div className="mt-5">
 
               {stock > 5 && (
@@ -743,8 +674,6 @@ const isInCart = Boolean(
 
             </div>
 
-
-            {/* Add to cart */}
 
             <button
               type="button"

@@ -17,13 +17,11 @@ function Addresses() {
     if (status === 'idle') dispatch(fetchAddresses());
   }, [status, dispatch]);
 
-// Opens the confirmation modal
 const handleDelete = (id) => {
   setSelectedAddressId(id);
   setShowDeleteModal(true);
 };
 
-// Deletes only after confirmation
 const handleDeleteAddress = async () => {
   if (!selectedAddressId) return;
 
@@ -49,10 +47,8 @@ const [selectedAddressId, setSelectedAddressId] = useState(null);
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      {/* Main container matching the Profile layout */}
       <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         
-        {/* Same shell as Orders / Wishlist / Cart: sidebar column + content column */}
         <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
           <AccountSidebar />
 
@@ -69,7 +65,6 @@ const [selectedAddressId, setSelectedAddressId] = useState(null);
               <span className="font-semibold text-ink">Addresses</span>
             </nav>
 
-            {/* Header & Add Button */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
               <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                 My <span className="text-[#f4511e]">Addresses</span>
@@ -82,7 +77,6 @@ const [selectedAddressId, setSelectedAddressId] = useState(null);
               </Link>
             </div>
 
-            {/* Address Cards Container: max-w-4xl prevents cards from over-stretching on wide viewports */}
             <div className="w-full max-w-4xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 {addresses.map((addr) => (

@@ -8,7 +8,7 @@ function Modal({
   onClose,
   loading = false,
   variant = "danger",
-  showCancel = true, // set to false to hide the cancel button
+  showCancel = true,
 }) {
   if (!open) return null;
 
@@ -33,7 +33,6 @@ function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        {/* Header */}
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 id="modal-title" className="text-lg font-bold text-gray-900">
             {title}
@@ -60,12 +59,10 @@ function Modal({
           </button>
         </div>
 
-        {/* Message */}
         {message && (
           <p className="mb-6 text-sm leading-6 text-gray-500">{message}</p>
         )}
 
-        {/* Actions */}
         <div className="flex justify-end gap-3">
           {showCancel && (
             <button

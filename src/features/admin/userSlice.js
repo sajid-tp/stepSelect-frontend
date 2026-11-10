@@ -1,4 +1,3 @@
-// src/features/admin/users/adminUsersSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 
@@ -10,7 +9,7 @@ export const getUsers = createAsyncThunk(
         params: { search, page, sort, status },
       });
 
-      return res.data; // { users, totalPages, currentPage, totalUsers }
+      return res.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch users');
     }
@@ -23,7 +22,7 @@ export const toggleBlockUser = createAsyncThunk(
     try {
       const res = await axiosInstance.patch(`/admin/users/${userId}/status`);
       console.log('the blocked data is',res.data)
-      return res.data; // updated user with new isBlocked value
+      return res.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update user');
     }
@@ -53,8 +52,8 @@ const adminUsersSlice = createSlice({
         state.users = action.payload.users;
         state.totalPages = action.payload.totalPages;
         state.currentPage = action.payload.page;
-        state.totalUsers = action.payload.totalCustomers; // all customers (header)
-        state.totalResults = action.payload.totalResults; // matches of the current search/filter (pagination)
+        state.totalUsers = action.payload.totalCustomers;
+        state.totalResults = action.payload.totalResults;
       })
       .addCase(getUsers.rejected, (state, action) => {
         state.status = 'failed';

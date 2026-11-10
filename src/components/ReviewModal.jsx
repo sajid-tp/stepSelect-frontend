@@ -1,11 +1,5 @@
 import { useState } from "react";
 
-/*
-  Star rating + comment for one delivered item.
-  Mount it only while it is open, so the fields start empty every time.
-
-  onSubmit({ rating, comment }) is async; the page shows the server error through `error`.
-*/
 function ReviewModal({ item, busy = false, error = "", onSubmit, onClose }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -48,7 +42,6 @@ function ReviewModal({ item, busy = false, error = "", onSubmit, onClose }) {
           </button>
         </div>
 
-        {/* STARS */}
         <div
           className="flex items-center gap-1"
           role="radiogroup"
@@ -78,7 +71,6 @@ function ReviewModal({ item, busy = false, error = "", onSubmit, onClose }) {
           </span>
         </div>
 
-        {/* COMMENT */}
         <div className="mt-5">
           <label
             htmlFor="review-comment"

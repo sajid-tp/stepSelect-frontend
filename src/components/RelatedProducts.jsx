@@ -7,7 +7,6 @@ import { getRelatedProducts } from "../features/user/productSlice";
 import { getCart, quickAddToCart } from "../features/user/cartSlice";
 import useWishlist from "../hooks/useWishlist";
 
-// cards stay between 200px and 240px wide, however wide the screen is
 const GRID =
   "mt-6 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-[repeat(auto-fill,minmax(200px,240px))] sm:gap-x-5 sm:gap-y-10";
 
@@ -22,7 +21,6 @@ const { relatedProducts, relatedProductsFor, relatedStatus, relatedError } = use
   const cartItems = useSelector((state) => state.cart.items);
   const cartStatus = useSelector((state) => state.cart.status);
 
-  // load the other products whenever the viewed product changes
   useEffect(() => {
     dispatch(getRelatedProducts({ productId, limit: 5 }));
   }, [dispatch, productId]);
@@ -47,7 +45,6 @@ const { relatedProducts, relatedProductsFor, relatedStatus, relatedError } = use
 const isLoading = relatedStatus === "idle" || relatedStatus === "loading" || !isCurrent;
 const products = isCurrent ? relatedProducts : [];
 
-// show the real reason instead of skeletons forever
 if (!isLoading && relatedStatus === "failed") {
   return (
     <section className="w-full px-4 pb-14 sm:px-6 lg:px-8 xl:px-10 2xl:px-16">
@@ -58,7 +55,6 @@ if (!isLoading && relatedStatus === "failed") {
   );
 }
 
-  // nothing to show: hide the whole section
   if (!isLoading && products.length === 0) return null;
 
   return (

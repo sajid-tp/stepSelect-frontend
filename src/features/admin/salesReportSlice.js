@@ -2,24 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { downloadBlob } from "../../utils/downloadFile";
 
-/*
-|--------------------------------------------------------------------------
-| Backend endpoints used by the admin Sales Report page
-|--------------------------------------------------------------------------
-| GET /admin/sales-report?period&from&to&search&page&limit
-|       period = daily | weekly | monthly | yearly | custom (custom needs from + to)
-|       -> data { range, summary, trend, categories, discounts, orders[], pagination }
-| GET /admin/sales-report/export?format=pdf|excel&period&from&to&search
-|       -> the file (blob)
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   error?.message ||
   fallback;
 
-// Errors from a blob request arrive as a Blob, so read the JSON out of it
 const getBlobErrorMessage = async (error, fallback) => {
   const data = error?.response?.data;
   if (data instanceof Blob) {
@@ -33,7 +21,6 @@ const getBlobErrorMessage = async (error, fallback) => {
   return getErrorMessage(error, fallback);
 };
 
-// Only send the filters that have a value
 const buildParams = ({ period = "daily", from = "", to = "", search = "" }) => {
   const params = { period };
   if (period === "custom") {
@@ -44,9 +31,6 @@ const buildParams = ({ period = "daily", from = "", to = "", search = "" }) => {
   return params;
 };
 
-// =====================================================
-// REPORT
-// =====================================================
 export const getSalesReport = createAsyncThunk(
   "adminSalesReport/getSalesReport",
   async ({ page = 1, limit = 10, ...filters } = {}, { rejectWithValue }) => {
@@ -63,9 +47,6 @@ export const getSalesReport = createAsyncThunk(
   }
 );
 
-// =====================================================
-// DOWNLOAD (PDF / Excel)
-// =====================================================
 const FILES = {
   pdf: { type: "application/pdf", ext: "pdf" },
   excel: {
@@ -98,15 +79,12 @@ export const downloadSalesReport = createAsyncThunk(
   }
 );
 
-// =====================================================
-// SLICE
-// =====================================================
 const initialState = {
   report: null,
-  status: "idle", // idle | loading | succeeded | failed
+  status: "idle",
   error: null,
 
-  exporting: null, // "pdf" | "excel" while a download is running
+  exporting: null,
   exportError: null,
 };
 
@@ -131,7 +109,6 @@ const adminSalesReportSlice = createSlice({
         state.report = action.payload;
       })
       .addCase(getSalesReport.rejected, (state, action) => {
-        // A request that was cancelled because a newer one started: ignore it
         if (action.meta.aborted) return;
         state.status = "failed";
         state.error = action.payload || "Failed to load the sales report.";

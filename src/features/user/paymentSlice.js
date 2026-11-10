@@ -2,32 +2,11 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { logoutUser } from "./authSlice";
 
-/*
-  Backend endpoints used by online payment (all under /api/payments)
-
-  POST /payments/initiate                { addressId, gateway }     -> data { orderNumber, gateway, ...gateway data }
-  POST /payments/razorpay/verify         { orderNumber, razorpay_order_id, razorpay_payment_id, razorpay_signature }
-  POST /payments/:orderNumber/failed     { reason, paymentId? }     (the open attempt failed; 4 attempts per order)
-  POST /payments/:orderNumber/retry      { gateway? }               -> data { orderNumber, gateway, ...gateway data }
-                                                                       (or { alreadyPaid: true } when the money had already arrived)
-  POST /payments/:orderNumber/abandon
-  GET  /payments/:orderNumber/status     -> data { orderNumber, displayStatus, paymentStatus, paymentMethod, totalAmount,
-                                                   failureReason, canRetry, closedReason (expired | exhausted | abandoned),
-                                                   failedAttempts, attemptsUsed, maxAttempts, attemptsLeft,
-                                                   nextAttemptIsFinal, cooldownSecondsLeft, secondsLeft (30 minute hold), ... }
-
-  Business rules (decided by the server, shown here): the order holds its stock for 30 minutes from the moment it was created,
-  4 attempts in total, and the 4th (final) attempt opens only after a 2 minute cool-down. After that the order is "Payment failed".
-
-  The server decides every amount and checks every payment; this slice only passes things along.
-*/
-
 const getErrorMessage = (error, fallback) =>
   error?.response?.data?.error?.message ||
   error?.response?.data?.message ||
   fallback;
 
-// Step 1: create the order + the gateway payment
 export const initiatePayment = createAsyncThunk(
   "payment/initiate",
   async ({ addressId, gateway }, { rejectWithValue }) => {
@@ -40,7 +19,6 @@ export const initiatePayment = createAsyncThunk(
   }
 );
 
-// Razorpay popup finished: the server checks the signature
 export const verifyRazorpayPayment = createAsyncThunk(
   "payment/verifyRazorpay",
   async (body, { rejectWithValue }) => {
@@ -83,7 +61,6 @@ export const retryPayment = createAsyncThunk(
   }
 );
 
-// "Back to cart": the shoes held for this order go back on the shelf
 export const abandonPayment = createAsyncThunk(
   "payment/abandon",
   async (orderNumber, { rejectWithValue }) => {
@@ -113,10 +90,9 @@ export const fetchPaymentStatus = createAsyncThunk(
 );
 
 const initialState = {
-  result: null, // the latest payment status the server sent
-  status: "idle", // idle | loading | succeeded | failed (for fetchPaymentStatus)
+  result: null,
+  status: "idle",
   error: null,
-  // The one payment-failure modal (components/PaymentFailureModal.jsx). Any page can open it.
   failureModal: { open: false, orderNumber: null, reason: "", error: "" },
 };
 
@@ -136,7 +112,6 @@ const paymentSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchPaymentStatus.pending, (state, action) => {
-        // Re-checking the order that is already on screen must not flash the loading skeleton
         if (!state.result || state.result.orderNumber !== action.meta.arg) state.status = "loading";
         state.error = null;
       })

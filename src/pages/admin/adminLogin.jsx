@@ -25,7 +25,6 @@ function AdminLogin() {
     (state) => state.adminAuth
   );
 
-  // Clear old login/logout errors when entering login page
   useEffect(() => {
     dispatch(clearAuth());
   }, [dispatch]);
@@ -52,7 +51,6 @@ function AdminLogin() {
       [name]: value,
     }));
 
-    // Optional: remove backend error when user starts typing again
     if (error) {
       dispatch(clearAuth());
     }
@@ -134,16 +132,6 @@ function AdminLogin() {
             error={touched.password ? errors.password : ""}
           />
 
-          {/* <div className="mb-6 text-right">
-            <Link
-              to="/admin/forgot-password"
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Forgot Password?
-            </Link>
-          </div> */}
-
-          {/* Backend authentication error */}
           {error && (
             <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
