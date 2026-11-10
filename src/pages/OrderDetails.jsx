@@ -41,11 +41,14 @@ const sectionLabel =
 
   Buttons follow the status (the server also sends canCancel / canReturn flags):
 
-    Pending (processing)          item: Cancel item        bottom: Cancel order
-    Shipped / Out for delivery    item: Track item         (no cancel any more, the server also refuses it)
+    Pending (processing)          item: Cancel item        bottom: Cancel order, Download invoice
+    Shipped / Out for delivery    item: Track item         bottom: Download invoice (no cancel any more, the server also refuses it)
     Delivered                     item: Track, Return
                                   bottom: Return order, Download invoice
-    Cancelled                     no buttons
+    Cancelled                     bottom: Download invoice only
+
+  The invoice is available from the moment the order is placed, and stays available after a cancel.
+  The server decides through canDownloadInvoice: only an online order that is not paid yet has none.
 
   Cancel item: for every item that is still processing.
   Cancel order: only while ALL items are still processing (before ANY item has shipped).
@@ -238,7 +241,7 @@ function OrderDetails() {
   // Cancel order only while everything is still processing; a still-processing item keeps its own Cancel item
   const showCancelOrder = Boolean(order?.canCancel) && !leftProcessing;
   const showReturnOrder = Boolean(order?.canReturn);
-  const showInvoice = isDelivered && order?.canDownloadInvoice !== false;
+  const showInvoice = Boolean(order?.canDownloadInvoice);
   const hasBottomActions = showCancelOrder || showReturnOrder || showInvoice;
 
   const pricing = order?.pricing || {};

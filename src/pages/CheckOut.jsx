@@ -483,17 +483,7 @@ function Checkout() {
 
                     let shownOption = option;
                     if (!enabled) {
-                      const codTooHigh =
-                        option.id === "COD" &&
-                        data.limits &&
-                        pricing &&
-                        pricing.totalAmount > data.limits.maxCodOrderValue;
-                      shownOption = {
-                        ...option,
-                        note: codTooHigh
-                          ? `Available only for orders up to ${formatMoney(data.limits.maxCodOrderValue)}`
-                          : "Not available right now",
-                      };
+                      shownOption = { ...option, note: "Not available right now" };
                     } else if (option.id === "WALLET") {
                       shownOption = { ...option, note: `Balance ${formatMoney(walletBalance)}` };
                     }

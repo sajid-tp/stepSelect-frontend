@@ -3,6 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { formatMoney } from "../components/CartItem";
+import InvoiceButton from "../components/InvoiceButton";
 
 /*
   Shown after POST /checkout/place-order succeeds.
@@ -78,7 +79,12 @@ function OrderSuccess() {
             )}
           </dl>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          {/* The invoice is ready the moment the order is placed */}
+          <div className="mt-5">
+            <InvoiceButton orderNumber={orderNumber} />
+          </div>
+
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <Link
               to="/orders"
               className="flex-1 rounded-md bg-[#b13600] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00]"

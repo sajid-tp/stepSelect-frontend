@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { formatMoney } from "./CartItem";
+import InvoiceButton from "./InvoiceButton";
 import { paymentLabel, formatDateTime } from "../utils/orderFormat";
 
 /*
@@ -106,7 +107,12 @@ function PaymentSuccess({ payment }) {
         </div>
       </dl>
 
-      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+      {/* The invoice is ready the moment the payment goes through */}
+      <div className="mt-5">
+        <InvoiceButton orderNumber={orderNumber} />
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row">
         <Link
           to={`/orders/${orderNumber}`}
           className="flex-1 rounded-md bg-[#b13600] px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-white transition hover:bg-[#8f2c00]"

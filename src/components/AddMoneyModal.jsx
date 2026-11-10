@@ -10,7 +10,7 @@ import { formatMoney } from "./CartItem";
   Mount it only while it is open ({open && <AddMoneyModal ... />}), so the amount starts empty each time.
 
   Props
-    limits       { MIN_TOP_UP, MAX_TOP_UP } from the server (null until loaded)
+    limits       { MIN_TOP_UP } from the server (null until loaded)
     demo         true while the server runs the built-in demo Razorpay (no real keys)
     busy, error  loading state + message from the server
     onAdd(amount)  called with a number when the amount looks valid (opens Razorpay)
@@ -24,7 +24,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
   const [localError, setLocalError] = useState("");
 
   const min = limits?.MIN_TOP_UP ?? 100;
-  const max = limits?.MAX_TOP_UP ?? 50000;
 
   // Escape closes the window
   useEffect(() => {
@@ -53,10 +52,6 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
     }
     if (value < min) {
       setLocalError(`The minimum amount is ${formatMoney(min)}.`);
-      return;
-    }
-    if (value > max) {
-      setLocalError(`You can add up to ${formatMoney(max)} at a time.`);
       return;
     }
 
@@ -163,9 +158,9 @@ function AddMoneyModal({ limits, demo = false, busy = false, error = "", onAdd, 
             )}
           </button>
 
-          <p className="mt-4 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          {/* <p className="mt-4 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
             Up to {formatMoney(max).replace(".00", "")} at a time
-          </p>
+          </p> */}
           <p className="mt-1 text-center text-[10px] text-gray-400">
             Wallet money can be used for orders only. It can't be withdrawn.
           </p>
