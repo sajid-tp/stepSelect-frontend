@@ -32,6 +32,7 @@ const STATUS_FILTERS = [
   { value: "expired", label: "Expired" },
 ];
 
+// values must match sortMap in adminOfferServices.getOffers
 const OFFER_SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
@@ -75,6 +76,9 @@ function Switch({ checked, disabled, onChange, label }) {
   );
 }
 
+/* ---------------------------------------------------------------
+   Referral tab: programme rules + numbers
+--------------------------------------------------------------- */
 function ReferralTab({ setToast }) {
   const dispatch = useDispatch();
   const { referral, referralStatus, referralError } = useSelector((s) => s.adminOffers);
@@ -190,6 +194,9 @@ function ReferralTab({ setToast }) {
   );
 }
 
+/* ---------------------------------------------------------------
+   Page
+--------------------------------------------------------------- */
 function Offers() {
   const dispatch = useDispatch();
   const { offers, totalResults, totalPages, currentPage, limit, status, error } = useSelector((s) => s.adminOffers);
@@ -203,8 +210,8 @@ function Offers() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [toggleTarget, setToggleTarget] = useState(null);
+  const [selected, setSelected] = useState(null); // offer pending delete
+  const [toggleTarget, setToggleTarget] = useState(null); // offer waiting for switch on / off confirmation
   const [togglingId, setTogglingId] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
@@ -216,6 +223,7 @@ function Offers() {
 
   useEffect(() => {
     if (isOfferTab) fetchOffers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, tab, debouncedSearch, statusFilter, sort, page]);
 
   useEffect(() => {
@@ -275,6 +283,7 @@ function Offers() {
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
+        {/* HEADER */}
         <AdminPageHeader
           eyebrow="Incentives"
           title="Offer"
@@ -286,6 +295,7 @@ function Offers() {
         />
 
         <section className="px-12 py-8">
+          {/* OFFER TYPE TABS */}
           <AdminTabsSort
             className="mb-8"
             tabs={TABS}
@@ -297,6 +307,7 @@ function Offers() {
             <ReferralTab setToast={setToast} />
           ) : (
             <>
+              {/* SEARCH + FILTER */}
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-[420px]">
                   <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
@@ -314,6 +325,7 @@ function Offers() {
 
               </div>
 
+              {/* STATUS TABS + SORT */}
               <AdminTabsSort
                 className="mt-8 mb-8"
                 tabs={STATUS_FILTERS}
@@ -338,6 +350,7 @@ function Offers() {
                 </div>
               )}
 
+              {/* TABLE */}
               <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <table className="w-full text-left">
                   <thead className="border-b border-gray-200 bg-[#fafbfd]">
@@ -378,7 +391,7 @@ function Offers() {
                             <div className="flex items-center gap-2">
                               <Switch
                                 checked={offer.isActive && offer.status !== "expired"}
-                                disabled={togglingId === offer.id || offer.status === "expired"}
+                                disabled={offer.status === "expired"}
                                 onChange={() => setToggleTarget(offer)}
                                 label={`${offer.isActive ? "Switch off" : "Switch on"} ${offer.offerName}`}
                               />

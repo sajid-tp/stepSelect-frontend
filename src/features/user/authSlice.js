@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk, isAnyOf } from '@reduxjs/toolkit';
 import axiosInstance from '../../api/axiosInstance';
 import { setItem, getItem, removeItem } from '../../utils/localStorage';
 
+// Profile thunks: when any of these succeed, auth.user is kept in sync
+// so the Navbar never shows stale data. Adjust the path if needed.
 import {
   fetchUserProfile,
   updateProfile,
@@ -15,7 +17,7 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post('/auth/login', { email, password });
-      return res.data;
+      return res.data; // { id, username }
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -34,7 +36,7 @@ export const signupUser = createAsyncThunk(
         termsAccepted,
         ...(referralCode ? { referralCode } : {}),
       });
-      return res.data;
+      return res.data; // { _id, username }
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -53,13 +55,28 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Google signup, step 1 (signup page). Returns either the logged-in user, or
+// { isNewUser: true, profile } when this Google account has no account yet.
 export const googleSignup = createAsyncThunk(
   'auth/googleSignup',
-  async ({ token, referralCode, termsAccepted }, { rejectWithValue }) => {
+  async ({ token }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/auth/google', {
+      const response = await axiosInstance.post('/auth/google', { token });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Google signup failed');
+    }
+  }
+);
+
+// Google signup, step 2: the "Complete your account" screen creates the account
+export const googleComplete = createAsyncThunk(
+  'auth/googleComplete',
+  async ({ token, referralCode }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/auth/google/complete', {
         token,
-        termsAccepted,
+        termsAccepted: true,
         ...(referralCode ? { referralCode } : {}),
       });
       return response.data;
@@ -74,6 +91,10 @@ export const googleLogin = createAsyncThunk(
   async ({ token }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/auth/google', { token });
+      // Login never creates accounts: a brand-new Google account has to sign up first
+      if (response.data?.isNewUser) {
+        return rejectWithValue('No account found for this Google account. Please sign up first.');
+      }
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Google login failed');
@@ -93,6 +114,8 @@ export const otpSignup = createAsyncThunk(
   }
 );
 
+// Carries `type` so the backend knows whether this is the signup flow
+// or the forgot-password flow re-sending a code.
 export const resendOtp = createAsyncThunk(
   'auth/resendOtp',
   async ({ email, type }, { rejectWithValue }) => {
@@ -110,7 +133,7 @@ export const verifyOtp = createAsyncThunk(
   async ({ email, otp }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post('/auth/verify-otp', { email, otp });
-      return res.data;
+      return res.data; // { id, username } — verifying logs the user in
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -160,7 +183,7 @@ const authSlice = createSlice({
     status: 'idle',
     error: null,
     resetToken: null,
-    blocked: false,
+    blocked: false, // true when the backend says this user is blocked
   },
   reducers: {
     logout(state) {
@@ -181,6 +204,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ---------- login ----------
       .addCase(loginUser.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -195,6 +219,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- signup ----------
       .addCase(signupUser.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -207,6 +232,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- send otp ----------
       .addCase(otpSignup.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -219,6 +245,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- verify otp ----------
       .addCase(verifyOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -233,6 +260,9 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- resend otp ----------
+      // Deliberately not touching state.status: resend is a background
+      // action on the same screen.
       .addCase(resendOtp.pending, (state) => {
         state.error = null;
       })
@@ -240,6 +270,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- verify reset otp ----------
       .addCase(verifyResetOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -253,6 +284,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- forgot password ----------
       .addCase(forgotPassword.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -265,33 +297,56 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ---------- reset password ----------
       .addCase(resetPassword.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(resetPassword.fulfilled, (state) => {
         state.status = 'succeeded';
+        // no state.user: reset doesn't log anyone in
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
 
+      // ---------- google signup ----------
       .addCase(googleSignup.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(googleSignup.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload;
         state.error = null;
-        setItem('user', action.payload);
+        // New Google account: nobody is logged in yet, the signup page shows
+        // the "Complete your account" step.
+        if (action.payload?.isNewUser) return;
+        state.user = action.payload;
+        setItem('user', action.payload); // persist so refresh keeps the session
       })
       .addCase(googleSignup.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
 
+      // ---------- google signup: complete your account ----------
+      .addCase(googleComplete.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(googleComplete.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.user = action.payload;
+        state.error = null;
+        setItem('user', action.payload); // persist so refresh keeps the session
+      })
+      .addCase(googleComplete.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+
+      // ---------- google login ----------
       .addCase(googleLogin.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -300,20 +355,23 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.user = action.payload;
         state.error = null;
-        setItem('user', action.payload);
+        setItem('user', action.payload); // persist so refresh keeps the session
       })
       .addCase(googleLogin.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
 
+      // ---------- logout ----------
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.status = 'idle';
         state.error = null;
-        removeItem('user');
+        removeItem('user'); // clear persisted user too
       })
 
+      // ---------- keep auth.user in sync with profile changes ----------
+      // NOTE: addMatcher must come AFTER all addCase calls.
       .addMatcher(
         isAnyOf(
           fetchUserProfile.fulfilled,

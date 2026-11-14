@@ -4,11 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
+import GoogleCompleteAccount from '../components/GoogleCompleteAccount';
 
 import {
   signupUser,
   otpSignup,
   googleSignup,
+  googleComplete,
   clearAuthError,
 } from '../features/user/authSlice';
 
@@ -24,6 +26,8 @@ import {
   MESSAGES as VALIDATION,
 } from '../utils/validators';
 
+// Live checklist shown under the password field. These mirror validatePassword()
+// in utils/validators.js (the server enforces the same rule).
 const PASSWORD_CHECKS = [
   { label: '8 to 64 characters', test: (p) => p.length >= 8 && p.length <= 64 },
   { label: 'An uppercase letter', test: (p) => /[A-Z]/.test(p) },
@@ -54,15 +58,21 @@ function Signup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Referral (optional): a typed code, or the token from an invite link (?ref=...)
   const [referral, setReferral] = useState('');
   const [fromLink, setFromLink] = useState(false);
-  const [referralCheck, setReferralCheck] = useState({ state: 'idle', name: '' });
+  const [referralCheck, setReferralCheck] = useState({ state: 'idle', name: '' }); // idle | checking | valid | invalid
+  const [showReferral, setShowReferral] = useState(false); // collapsed behind "Have a referral code?"
+
+  // Set when Google verified a brand-new account: { token, profile }.
+  // The signup page then shows the "Complete your account" step.
+  const [googleSignupData, setGoogleSignupData] = useState(null);
 
   const checkReferral = async (value) => {
     const ref = value.trim();
     if (!ref) {
       setReferralCheck({ state: 'idle', name: '' });
-      return;
+      return 'idle';
     }
     setReferralCheck({ state: 'checking', name: '' });
     try {
@@ -70,8 +80,10 @@ function Signup() {
       setReferralCheck(
         result.valid ? { state: 'valid', name: result.referrerName } : { state: 'invalid', name: '' }
       );
+      return result.valid ? 'valid' : 'invalid';
     } catch {
-      setReferralCheck({ state: 'idle', name: '' });
+      setReferralCheck({ state: 'idle', name: '' }); // could not check: the server checks again on submit
+      return 'idle';
     }
   };
 
@@ -87,9 +99,17 @@ function Signup() {
     if (ref) {
       setReferral(ref);
       setFromLink(true);
+      setShowReferral(true);
       checkReferral(ref);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The auth error lives in shared Redux state, so clear any error left over
+  // from another page (e.g. the login page) when this page opens.
+  useEffect(() => {
+    dispatch(clearAuthError());
+  }, [dispatch]);
 
   const clearReferral = () => {
     setReferral('');
@@ -98,13 +118,16 @@ function Signup() {
     try {
       sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
     } catch {
+      /* ignore */
     }
   };
 
+  // Single source of truth now — no local isSubmitting/submitError
   const authStatus = useSelector((state) => state.auth.status);
   const authError = useSelector((state) => state.auth.error);
   const isSubmitting = authStatus === 'loading';
 
+  // Same rules and messages as the server (see utils/validators.js)
   const errors = {
     username: validateUsername(form.username),
     email: validateEmail(form.email),
@@ -143,6 +166,7 @@ function Signup() {
     }
 
     if (!isValid) {
+      // Take the user straight to the first problem (FormField ids = field names)
       const firstInvalid = ['username', 'email', 'password', 'confirmPassword'].find(
         (field) => errors[field]
       );
@@ -154,6 +178,7 @@ function Signup() {
 
     dispatch(clearAuthError());
 
+    // Send the same normalised email everywhere (trimmed + lower-case)
     const email = normalizeEmail(form.email);
 
     try {
@@ -167,7 +192,7 @@ function Signup() {
           referralCode: referral.trim(),
         })
       ).unwrap();
-      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { }
+      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* ignore */ }
       const otpRes = await dispatch(otpSignup({ email })).unwrap();
 
       navigate('/verify-otp', {
@@ -178,24 +203,75 @@ function Signup() {
     }
   };
 
+  // Step 1: Google verifies the person. Existing account -> logged in.
+  // New account -> nothing is created yet; show the "Complete your account" step.
   const handleGoogleSuccess = async (credentialResponse) => {
-    if (!acceptedTerms) {
-      setTermsError('Please accept the Terms & Conditions before signing up with Google');
-      return;
-    }
-
     try {
       const token = credentialResponse.credential;
-      await dispatch(googleSignup({ token, referralCode: referral.trim(), termsAccepted: true })).unwrap();
+      const result = await dispatch(googleSignup({ token })).unwrap();
+
+      if (result?.isNewUser) {
+        setGoogleSignupData({ token, profile: result.profile });
+        return;
+      }
       navigate('/', { replace: true });
     } catch (err) {
       console.log('Google signup failed:', err);
     }
   };
 
+  // Step 2: terms accepted + optional referral code -> create the account
+  const handleGoogleComplete = async (referralCode) => {
+    try {
+      await dispatch(googleComplete({ token: googleSignupData.token, referralCode })).unwrap();
+      try { sessionStorage.removeItem(REFERRAL_STORAGE_KEY); } catch { /* ignore */ }
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.log('Google signup failed:', err);
+    }
+  };
+
+  const handleGoogleCancel = () => {
+    setGoogleSignupData(null);
+    dispatch(clearAuthError());
+  };
+
   const handleGoogleError = () => {
     console.log('Google Login Failed');
   };
+
+  if (googleSignupData) {
+    return (
+      <AuthLayout
+        imageSrc="/images/auth/signup.jpg"
+        overlayTitle={
+          <>
+            Join STEP
+            <br />
+            SELECT.
+          </>
+        }
+      >
+        <h1 className="mb-2 text-3xl font-bold">
+          Complete Your <span className="text-[#f4511e]">Account</span>
+        </h1>
+
+        <p className="mb-8 text-sm text-muted">Just one more step before you join Step Select.</p>
+
+        {authError && (
+          <p className="mb-4 text-sm font-medium text-[#f4511e]">{authError}</p>
+        )}
+
+        <GoogleCompleteAccount
+          profile={googleSignupData.profile}
+          initialReferral={referral}
+          isSubmitting={isSubmitting}
+          onComplete={handleGoogleComplete}
+          onCancel={handleGoogleCancel}
+        />
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout
@@ -281,6 +357,16 @@ function Signup() {
           error={touched.confirmPassword ? errors.confirmPassword : ''}
         />
 
+        {/* Referral (optional): collapsed until the user asks for it or arrives via an invite link */}
+        {!showReferral && !referral ? (
+          <button
+            type="button"
+            onClick={() => setShowReferral(true)}
+            className="mb-5 text-sm font-semibold text-[#f4511e] underline"
+          >
+            Have a referral code?
+          </button>
+        ) : (
         <div className="mb-5">
           <label htmlFor="referral" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
             Referral code <span className="font-normal normal-case text-gray-400">(optional)</span>
@@ -325,7 +411,9 @@ function Signup() {
             <small className="text-red-500">This referral code is not valid.</small>
           )}
         </div>
+        )}
 
+        {/* Terms & Conditions (required) */}
         <div className="mb-5">
           <label className="flex cursor-pointer items-start gap-2.5 text-sm text-muted">
             <input

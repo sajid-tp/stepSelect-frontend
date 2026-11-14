@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react";
 import { formatMoney } from "./CartItem";
 
+/*
+  Line chart used by the admin Dashboard and the Sales Report.
+  trend = { labels[], revenue[], previousRevenue[] }   unit = "hour" | "day" | "month"
+  Solid line = this period, dashed line = the previous period of the same length.
+*/
+
+// Short money for chart axes and legends: ₹4.2L, ₹75k
 export const compact = (value) => {
   const n = Number(value) || 0;
   const trim = (x) => String(Math.round(x * 10) / 10);
@@ -10,6 +17,7 @@ export const compact = (value) => {
   return String(Math.round(n));
 };
 
+// A "nice" top value for the chart axis, split into 4 steps
 const niceScale = (max) => {
   if (!max || max <= 0) return { top: 100, step: 25 };
   const rough = max / 4;
@@ -18,6 +26,7 @@ const niceScale = (max) => {
   return { top: unit * 4, step: unit };
 };
 
+// Smooth line through the points without overshooting (monotone cubic)
 const smoothPath = (pts) => {
   if (pts.length === 0) return "";
   if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`;
@@ -62,6 +71,7 @@ const smoothPath = (pts) => {
   return d;
 };
 
+/* ---------------- Sales over time (SVG line + area) ---------------- */
 const W = 640;
 const H = 270;
 const PAD = { left: 46, right: 14, top: 14, bottom: 30 };
@@ -78,7 +88,7 @@ function TrendChart({ trend, unit }) {
     const innerH = H - PAD.top - PAD.bottom;
     const x = (i) =>
       PAD.left + (labels.length <= 1 ? innerW / 2 : (i / (labels.length - 1)) * innerW);
-    const y = (v) => PAD.top + innerH - (v / top) * innerH;
+    const y = (v) => PAD.top + innerH - (Math.max(0, v) / top) * innerH; // refunds can push a bucket below 0: draw it at 0
 
     const pts = revenue.map((v, i) => ({ x: x(i), y: y(v) }));
     const prevPts = previousRevenue.map((v, i) => ({ x: x(i), y: y(v) }));
@@ -90,6 +100,7 @@ function TrendChart({ trend, unit }) {
     const ticks = [];
     for (let v = 0; v <= top + 1; v += step) ticks.push({ v, y: y(v) });
 
+    // show at most ~8 labels on the bottom axis
     const every = Math.max(1, Math.ceil(labels.length / 8));
 
     return { labels, revenue, pts, line, area, ticks, every, prev: smoothPath(prevPts), y0: y(0) };

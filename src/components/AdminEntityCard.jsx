@@ -1,20 +1,22 @@
 function AdminEntityCard({
   item,
 
+  // What to display
   name,
   description,
 
+  // Visual
   visual,
   visualType = "image",
 
+  // Actions
   onEdit,
   onToggleStatus,
   onDelete,
 
-  toggling,
+  // Loading states (the Activate / Deactivate button is never disabled)
   deleting,
 }) {
-  const isToggling = toggling === item.id;
   const isDeleting = deleting === item.id;
 
   return (
@@ -35,7 +37,13 @@ function AdminEntityCard({
       "
     >
 
+      {/* ================================================= */}
+      {/* TOP SECTION */}
+      {/* ================================================= */}
+
       <div className="flex items-start justify-between">
+
+        {/* VISUAL */}
 
         <div
           className="
@@ -96,6 +104,8 @@ function AdminEntityCard({
         </div>
 
 
+        {/* STATUS */}
+
         <span
           className={`
             rounded-full
@@ -117,6 +127,10 @@ function AdminEntityCard({
 
       </div>
 
+
+      {/* ================================================= */}
+      {/* CONTENT */}
+      {/* ================================================= */}
 
       <div className="mt-5 flex-1">
 
@@ -148,6 +162,10 @@ function AdminEntityCard({
       </div>
 
 
+      {/* ================================================= */}
+      {/* ACTIONS */}
+      {/* ================================================= */}
+
       <div
         className="
           mt-5
@@ -160,34 +178,35 @@ function AdminEntityCard({
         "
       >
 
+        {/* EDIT */}
+
         <button
           type="button"
           onClick={() => onEdit(item)}
-          className={`
+          className="
             flex-1
             rounded-lg
+            bg-gray-100
             px-3
             py-2
             text-sm
             font-medium
+            text-gray-700
             transition
-            ${
-              item.isActive
-                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                : "cursor-not-allowed bg-gray-50 text-gray-300"
-            }
-          `}
+            hover:bg-gray-200
+          "
         >
           Edit
         </button>
 
+
+        {/* TOGGLE STATUS */}
 
         <button
           type="button"
           onClick={() =>
             onToggleStatus(item)
           }
-          disabled={isToggling}
           className={`
             flex-1
             rounded-lg
@@ -201,20 +220,15 @@ function AdminEntityCard({
                 ? "bg-orange-50 text-[#f4511e] hover:bg-orange-100"
                 : "bg-green-50 text-green-600 hover:bg-green-100"
             }
-            ${
-              isToggling
-                ? "cursor-not-allowed opacity-60"
-                : ""
-            }
           `}
         >
-          {isToggling
-            ? "Updating..."
-            : item.isActive
-              ? "Deactivate"
-              : "Activate"}
+          {item.isActive
+            ? "Deactivate"
+            : "Activate"}
         </button>
 
+
+        {/* DELETE */}
 
         <button
           type="button"

@@ -152,6 +152,7 @@ function Login() {
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
+          text = "continue_with"
         />
       </div>
 

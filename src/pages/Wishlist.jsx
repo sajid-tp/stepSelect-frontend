@@ -42,6 +42,7 @@ function Wishlist() {
     dispatch(getWishlist({ page, limit: LIMIT }));
   }, [dispatch, page]);
 
+  // If the last item of a page is removed, go back one page.
   useEffect(() => {
     if (status === "succeeded" && items.length === 0 && page > 1) {
       setPage((p) => p - 1);
@@ -95,6 +96,8 @@ function Wishlist() {
       );
 
       if (!alreadyInCart) {
+        // The server takes this line off the wishlist when it goes into the cart,
+        // and the wishlist slice drops it too (so the heart in the shop turns empty).
         await dispatch(
           addToCart({
             variantId: item.variantId,
@@ -103,6 +106,7 @@ function Wishlist() {
           })
         ).unwrap();
       } else {
+        // Already in the cart: nothing was added, so remove it from the wishlist ourselves
         await dispatch(
           removeFromWishlist({
             variantId: item.variantId,
@@ -159,9 +163,12 @@ function Wishlist() {
 
       <main className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:gap-8">
+          {/* SIDEBAR */}
           <AccountSidebar />
 
+          {/* CONTENT */}
           <section className="min-w-0">
+            {/* BREADCRUMB */}
             <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
               <Link
                 to="/"
@@ -173,7 +180,7 @@ function Wishlist() {
               <span className="mx-2 text-muted">/</span>
 
               <Link
-                to="/account"
+                to="/profile"
                 className="text-muted transition hover:text-ink"
               >
                 Account
@@ -198,6 +205,7 @@ function Wishlist() {
               )}
             </div>
 
+            {/* NOTIFICATIONS */}
             {notice && (
               <div
                 role={notice.type === "error" ? "alert" : "status"}
@@ -226,6 +234,7 @@ function Wishlist() {
               </div>
             )}
 
+            {/* LOADING */}
             {isLoading && (
               <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {[0, 1, 2, 3].map((n) => (
@@ -242,6 +251,7 @@ function Wishlist() {
               </div>
             )}
 
+            {/* LOAD ERROR */}
             {!isLoading && status === "failed" && (
               <div className="mt-6 flex min-h-[260px] flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 px-6 text-center">
                 <h2 className="text-base font-semibold text-red-700">
@@ -262,6 +272,7 @@ function Wishlist() {
               </div>
             )}
 
+            {/* EMPTY WISHLIST */}
             {!isLoading &&
               status === "succeeded" &&
               items.length === 0 &&
@@ -286,6 +297,7 @@ function Wishlist() {
                 </div>
               )}
 
+            {/* WISHLIST ITEMS */}
             {!isLoading && items.length > 0 && (
               <>
                 <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">

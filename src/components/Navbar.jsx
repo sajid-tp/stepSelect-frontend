@@ -22,17 +22,21 @@ function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Logout modal
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const dropdownRef = useRef(null);
 
+  // Avatar image: fall back to the initial if it fails to load
   const [avatarError, setAvatarError] = useState(false);
   const profileFetchedFor = useRef(null);
 
   const navLinkClass = ({ isActive }) =>
     `text-[13px] ${isActive ? "font-semibold text-ink" : "text-muted"}`;
 
+  // Load the profile once per logged-in user so the avatar can show their photo
+  // on every page (not just the account pages)
   const userId = user?.id || user?._id;
   useEffect(() => {
     if (!userId) {
@@ -46,14 +50,17 @@ function Navbar() {
     }
   }, [dispatch, userId, profile]);
 
+  // Load the wishlist count for the badge (once per login)
   useEffect(() => {
     if (user && wishlistIdsStatus === "idle") dispatch(getWishlistIds());
   }, [dispatch, user, wishlistIdsStatus]);
 
+  // Load the cart so the badge shows the item count on every page (once per login)
   useEffect(() => {
     if (user && cartStatus === "idle") dispatch(getCart());
   }, [dispatch, user, cartStatus]);
 
+  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -68,14 +75,21 @@ function Navbar() {
     };
   }, []);
 
+  // FIX: the user object has `username`, not `name`
   const initial =
     (user?.username || user?.name)?.trim()?.charAt(0)?.toUpperCase() || "U";
 
+  // Prefer the freshly loaded profile; until it arrives, use the saved user data.
+  // An empty profileImage (photo removed) correctly falls back to the initial.
   const avatarSrc = profile ? profile.profileImage : user?.profileImage;
 
   useEffect(() => {
     setAvatarError(false);
   }, [avatarSrc]);
+
+  // ============================================
+  // LOGOUT
+  // ============================================
 
   const handleLogoutClick = () => {
     setDropdownOpen(false);
@@ -94,6 +108,8 @@ function Navbar() {
       await dispatch(logoutUser()).unwrap();
     } catch (error) {
       console.error("Logout failed:", error);
+      // Even if the API request fails, clear the local session
+      // so the user isn't still "logged in" after being sent to /login.
       dispatch(logout());
     } finally {
       setLoggingOut(false);
@@ -104,12 +120,15 @@ function Navbar() {
 
   return (
     <>
+      {/* NAVBAR */}
       <header className="w-full border-b border-line">
         <div className="flex h-[72px] w-full items-center justify-between px-4 sm:px-6 lg:px-10">
+          {/* LOGO */}
           <Link to="/" className="shrink-0 text-[15px] font-bold tracking-wide">
             STEP SELECT
           </Link>
 
+          {/* DESKTOP NAVIGATION */}
           <nav className="hidden gap-8 md:flex">
             <NavLink to="/" end className={navLinkClass}>
               Home
@@ -134,8 +153,24 @@ function Navbar() {
             </NavLink>
           </nav>
 
+          {/* DESKTOP RIGHT SIDE */}
           <div className="hidden items-center gap-[18px] md:flex">
+            {/* Search */}
+            {/* <button className="flex text-ink" aria-label="Search">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button> */}
 
+            {/* Wishlist */}
             {user && (
               <Link to="/wishlist" className="relative flex text-ink" aria-label="Wishlist">
                 <svg
@@ -157,27 +192,31 @@ function Navbar() {
               </Link>
             )}
 
-            <Link to="/cart" className="relative flex text-ink" aria-label="Cart">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <circle cx="9" cy="21" r="1" />
-                <circle cx="20" cy="21" r="1" />
-                <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
-              </svg>
+            {/* Cart: only for logged-in users */}
+            {user && (
+              <Link to="/cart" className="relative flex text-ink" aria-label="Cart">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <circle cx="9" cy="21" r="1" />
+                  <circle cx="20" cy="21" r="1" />
+                  <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+                </svg>
 
-              {user && cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4511e] px-1 text-[10px] font-semibold leading-none text-white">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
-            </Link>
+                {user && cartCount > 0 && (
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f4511e] px-1 text-[10px] font-semibold leading-none text-white">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
+            {/* USER / AUTH */}
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -197,6 +236,7 @@ function Navbar() {
                   )}
                 </button>
 
+                {/* Dropdown */}
                 {dropdownOpen && (
                   <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-44 rounded-md border border-line bg-white py-1 shadow-lg">
                     <Link
@@ -244,6 +284,7 @@ function Navbar() {
             )}
           </div>
 
+          {/* MOBILE HAMBURGER */}
           <button
             className="flex text-ink md:hidden"
             aria-label="Toggle menu"
@@ -266,6 +307,7 @@ function Navbar() {
           </button>
         </div>
 
+        {/* MOBILE MENU */}
         {mobileOpen && (
           <div className="flex flex-col gap-4 border-t border-line px-4 py-4 md:hidden">
             <NavLink
@@ -321,14 +363,17 @@ function Navbar() {
               </Link>
             )}
 
-            <Link
-              to="/cart"
-              className={navLinkClass}
-              onClick={() => setMobileOpen(false)}
-            >
-              Cart{user && cartCount > 0 ? ` (${cartCount})` : ""}
-            </Link>
+            {user && (
+              <Link
+                to="/cart"
+                className={navLinkClass}
+                onClick={() => setMobileOpen(false)}
+              >
+                Cart{cartCount > 0 ? ` (${cartCount})` : ""}
+              </Link>
+            )}
 
+            {/* Mobile authenticated links */}
             {user ? (
               <>
                 <Link
@@ -370,6 +415,7 @@ function Navbar() {
         )}
       </header>
 
+      {/* LOGOUT MODAL */}
       <Modal
         open={logoutModalOpen}
         title="Logout"

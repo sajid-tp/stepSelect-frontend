@@ -11,7 +11,6 @@ function AdminProductCard({
   onView,
   onDelete,
   onToggleStatus,
-  statusLoading = false,
 }) {
 
 
@@ -30,6 +29,10 @@ function AdminProductCard({
         hover:shadow-md
       "
     >
+
+      {/* ================================================= */}
+      {/* IMAGE */}
+      {/* ================================================= */}
 
       <div
         className="
@@ -80,6 +83,8 @@ function AdminProductCard({
       </div>
 
 
+      {/* BRAND + STATUS */}
+
 <div className="mt-4 flex items-center justify-between gap-3">
 
   <p className="text-xs font-semibold uppercase tracking-wide text-[#ff5722]">
@@ -98,12 +103,10 @@ function AdminProductCard({
 
     <button
       type="button"
-      disabled={statusLoading}
       onClick={() => onToggleStatus(product)}
       className={`
         relative h-6 w-11 shrink-0 rounded-full
         transition-colors duration-200 focus:outline-none
-        disabled:cursor-not-allowed disabled:opacity-60
         ${product.isActive ? "bg-[#ff5722]" : "bg-gray-300"}
       `}
     >
@@ -120,6 +123,10 @@ function AdminProductCard({
 
 </div>
 
+      {/* ================================================= */}
+      {/* PRODUCT NAME */}
+      {/* ================================================= */}
+
       <h3
         className="
           mt-1
@@ -135,6 +142,10 @@ function AdminProductCard({
         {product.productName}
       </h3>
 
+
+      {/* ================================================= */}
+      {/* PRICE + UNITS */}
+      {/* ================================================= */}
 
       <div
         className="
@@ -179,6 +190,10 @@ function AdminProductCard({
       </div>
 
 
+      {/* ================================================= */}
+      {/* ACTIONS */}
+      {/* ================================================= */}
+
       <div
         className="
           mt-5
@@ -190,6 +205,8 @@ function AdminProductCard({
           pt-4
         "
       >
+
+        {/* EDIT */}
 
         <button
           type="button"
@@ -225,6 +242,8 @@ function AdminProductCard({
         </button>
 
 
+        {/* VIEW */}
+
         <button
           type="button"
           onClick={() =>
@@ -258,6 +277,8 @@ function AdminProductCard({
 
         </button>
 
+
+        {/* DELETE */}
 
         <button
           type="button"

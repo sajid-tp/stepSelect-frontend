@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import NotFound from './pages/NotFound';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
@@ -66,12 +67,14 @@ function App() {
     <DemoRazorpayHost />
     <PaymentFailureModal />
       <Routes>
+        {/* User routes */}
         <Route path="/" element={<Home />} />
           <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-         </Route>
+        {/* Guest-only: a signed-in user who hits Back to the OTP page is sent home */}
         <Route path="/verify-otp" element={<VerifyOtp />} />
+         </Route>
         <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
@@ -79,6 +82,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/shop" element={<Shop />} />
+        {/* Customer-only pages: redirect to /login when signed out */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<AccountOverview />} />
           <Route path="/profile/edit" element={<EditProfile />} />
@@ -104,6 +108,7 @@ function App() {
   element={<ProductDetailsPage />}
 />
  
+       {/* Admin routes */}
         <Route path="/admin/auth/login" element={<AdminLogin/>}/>
        <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
@@ -175,6 +180,8 @@ function App() {
 />
 
         </Route>
+        {/* Any other address: show a 404 page instead of a blank screen (must stay LAST) */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
@@ -183,3 +190,7 @@ function App() {
 export default App;
 
 
+//this is my step select project 
+// feature branch testing 
+// I am now in main branch
+// new feature branch

@@ -15,7 +15,12 @@ import {
   deleteCoupon,
 } from "../../features/admin/couponSlice";
 
-const PAGE_SIZE = 9;
+/*
+|--------------------------------------------------------------------------
+| CONSTANTS
+|--------------------------------------------------------------------------
+*/
+const PAGE_SIZE = 9; // 3 x 3 grid
 
 const TABS = [
   { value: "all", label: "All coupons" },
@@ -23,6 +28,7 @@ const TABS = [
   { value: "inactive", label: "Inactive" },
 ];
 
+// values must match the sortMap in adminCouponServices.getCoupons
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest first" },
   { value: "oldest", label: "Oldest first" },
@@ -31,6 +37,11 @@ const SORT_OPTIONS = [
   { value: "expiry_asc", label: "Expiring soonest" },
 ];
 
+/*
+|--------------------------------------------------------------------------
+| HELPERS
+|--------------------------------------------------------------------------
+*/
 const formatMoney = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 
@@ -60,6 +71,11 @@ const STATUS_TEXT = {
   scheduled: "text-blue-500",
 };
 
+/*
+|--------------------------------------------------------------------------
+| SMALL UI PIECES
+|--------------------------------------------------------------------------
+*/
 function Switch({ checked, disabled, onChange, label }) {
   return (
     <button
@@ -89,6 +105,7 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
 
   const limit = coupon.redemptionLimit;
   const usedPct = limit ? Math.min((coupon.redemptions / limit) * 100, 100) : 0;
+  // independent of isActive: an inactive coupon can also be past its expiry
   const expired = Boolean(coupon.expiryDate) && new Date(coupon.expiryDate) < new Date();
 
   const fineprint = [
@@ -105,6 +122,7 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
         dimmed ? "opacity-80" : ""
       }`}
     >
+      {/* TOP: status toggle */}
       <div className="flex items-center gap-2">
         <span
           className={`text-[10px] font-bold uppercase tracking-[0.14em] ${STATUS_TEXT[display.tone]}`}
@@ -113,12 +131,12 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
         </span>
         <Switch
           checked={coupon.isActive}
-          disabled={toggling}
           onChange={() => onToggle(coupon)}
           label={`${coupon.isActive ? "Deactivate" : "Activate"} ${coupon.couponCode}`}
         />
       </div>
 
+      {/* CODE + DISCOUNT */}
       <div className="mt-4 flex items-start justify-between gap-3">
         <span className="inline-flex max-w-[60%] items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-gray-50 px-2.5 py-1.5">
           <i className="fa-solid fa-ticket shrink-0 text-[11px] text-gray-400" />
@@ -139,10 +157,12 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
         </div>
       </div>
 
+      {/* DESCRIPTION */}
       <p className="mt-3 line-clamp-2 min-h-[36px] text-xs italic leading-[18px] text-gray-500">
         {coupon.description ? `“${coupon.description}”` : "No description added."}
       </p>
 
+      {/* STATS */}
       <div className="mt-4 grid grid-cols-2 gap-3 rounded-lg bg-gray-50 px-3 py-2.5">
         <div>
           <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-gray-400">
@@ -182,6 +202,7 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
         {fineprint.join(" · ")}
       </p>
 
+      {/* ACTIONS */}
       <div className="mt-auto flex items-center gap-2 pt-4">
         <button
           type="button"
@@ -206,6 +227,11 @@ function CouponCard({ coupon, toggling, deleting, onEdit, onToggle, onDelete }) 
   );
 }
 
+/*
+|--------------------------------------------------------------------------
+| PAGE
+|--------------------------------------------------------------------------
+*/
 function Coupons() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -229,10 +255,11 @@ function Coupons() {
 
   const [togglingId, setTogglingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [toggleTarget, setToggleTarget] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [selected, setSelected] = useState(null); // coupon pending delete
+  const [toggleTarget, setToggleTarget] = useState(null); // coupon waiting for activate / deactivate confirmation
+  const [toast, setToast] = useState(null); // { type: "success" | "error", text }
 
+  /* ---------------- FETCH ---------------- */
   const fetchCoupons = () =>
     dispatch(
       getCoupons({
@@ -246,8 +273,10 @@ function Coupons() {
 
   useEffect(() => {
     fetchCoupons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, debouncedSearch, tab, sort, page]);
 
+  /* ---------------- TOAST auto-dismiss ---------------- */
   useEffect(() => {
     if (!toast) return undefined;
     const timer = setTimeout(() => setToast(null), 3500);
@@ -257,6 +286,7 @@ function Coupons() {
   const errorText = (err) =>
     typeof err === "string" ? err : err?.message || "Something went wrong.";
 
+  /* ---------------- HANDLERS ---------------- */
   const handleTabChange = (value) => {
     setTab(value);
     setPage(1);
@@ -280,6 +310,7 @@ function Coupons() {
         text: `${result.couponCode} ${result.isActive ? "activated" : "deactivated"}.`,
       });
 
+      // On the Active / Inactive tabs the card no longer belongs there
       if (tab !== "all") fetchCoupons();
     } catch (err) {
       setToast({ type: "error", text: errorText(err) });
@@ -304,6 +335,7 @@ function Coupons() {
       setToast({ type: "success", text: `${selected.couponCode} deleted.` });
       setSelected(null);
 
+      // keep pagination correct after removing the last card on a page
       if (coupons.length === 1 && page > 1) setPage((p) => p - 1);
       else fetchCoupons();
     } catch (err) {
@@ -317,11 +349,13 @@ function Coupons() {
   const isLoading = status === "loading";
   const hasFilters = Boolean(debouncedSearch) || tab !== "all";
 
+  /* ---------------- RENDER ---------------- */
   return (
     <div className="min-h-screen bg-[#f7f9fc]">
       <AdminSidebar />
 
       <main className="ml-[214px] min-h-screen">
+        {/* HEADER */}
         <AdminPageHeader
           eyebrow="Incentives"
           title="Coupon"
@@ -330,6 +364,7 @@ function Coupons() {
         />
 
         <section className="px-12 py-8">
+          {/* SEARCH + SORT */}
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="relative w-full max-w-[420px]">
               <i className="fa-solid fa-magnifying-glass pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
@@ -347,6 +382,7 @@ function Coupons() {
 
           </div>
 
+          {/* TABS + SORT */}
           <AdminTabsSort
             className="mt-14 mb-8"
             tabs={TABS}
@@ -358,6 +394,7 @@ function Coupons() {
             sortId="coupon-sort"
           />
 
+          {/* LIST ERROR */}
           {error && (
             <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               <span>{error}</span>
@@ -371,6 +408,7 @@ function Coupons() {
             </div>
           )}
 
+          {/* LOADING / EMPTY / GRID */}
           {isLoading && coupons.length === 0 ? (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -444,6 +482,7 @@ function Coupons() {
         </section>
       </main>
 
+      {/* ACTIVATE / DEACTIVATE MODAL */}
       <Modal
         open={Boolean(toggleTarget)}
         title={toggleTarget?.isActive ? "Deactivate coupon?" : "Activate coupon?"}
@@ -464,6 +503,7 @@ function Coupons() {
         }}
       />
 
+      {/* DELETE MODAL */}
       <Modal
         open={Boolean(selected)}
         title="Delete coupon?"
@@ -482,6 +522,7 @@ function Coupons() {
         }}
       />
 
+      {/* TOAST */}
       {toast && (
         <div
           role="status"

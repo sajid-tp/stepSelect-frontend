@@ -96,6 +96,8 @@ function Cart() {
     }
   };
 
+  // ---------- DERIVED DATA ----------
+
   const availableItems = items.filter((item) => item.isAvailable);
   const unavailableCount = items.length - availableItems.length;
 
@@ -108,6 +110,8 @@ function Cart() {
     availableItems.length > 0 && unavailableCount === 0 && !isBusy;
 
   const isLoading = status === "idle" || status === "loading";
+
+  // ---------- PAGINATION ----------
 
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
 
@@ -123,6 +127,7 @@ function Cart() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Keep the current page valid when cart items are removed.
   useEffect(() => {
     if (totalPages > 0 && page > totalPages) {
       setPage(totalPages);
@@ -131,17 +136,22 @@ function Cart() {
     }
   }, [totalPages, page]);
 
+  // ---------- RENDER ----------
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-white">
       <Navbar />
 
       <main className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10 2xl:px-16">
         <div className="grid gap-6 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start xl:grid-cols-[256px_minmax(0,1fr)_320px] xl:gap-8">
+          {/* SIDEBAR */}
           <div className="lg:row-span-2 xl:row-span-1">
             <AccountSidebar />
           </div>
 
+          {/* CART ITEMS */}
           <section className="min-w-0">
+            {/* BREADCRUMB */}
             <nav className="mb-4 text-xs uppercase tracking-wide md:mb-6">
               <Link
                 to="/"
@@ -153,7 +163,7 @@ function Cart() {
               <span className="mx-2 text-muted">/</span>
 
               <Link
-                to="/account"
+                to="/profile"
                 className="text-muted transition hover:text-ink"
               >
                 Account
@@ -168,6 +178,7 @@ function Cart() {
               Shopping <span className="text-[#f4511e]">Cart</span>
             </h1>
 
+            {/* ACTION ERROR */}
             {actionError && (
               <div
                 role="alert"
@@ -185,6 +196,7 @@ function Cart() {
               </div>
             )}
 
+            {/* LOADING */}
             {isLoading && (
               <div className="mt-6 space-y-4">
                 {[0, 1].map((n) => (
@@ -204,6 +216,7 @@ function Cart() {
               </div>
             )}
 
+            {/* LOAD ERROR */}
             {!isLoading && status === "failed" && (
               <div className="mt-6 flex min-h-[260px] flex-col items-center justify-center rounded-xl border border-red-100 bg-red-50 px-6 text-center">
                 <h2 className="text-base font-semibold text-red-700">
@@ -224,6 +237,7 @@ function Cart() {
               </div>
             )}
 
+            {/* EMPTY CART */}
             {!isLoading && status === "succeeded" && items.length === 0 && (
               <div className="mt-6 flex min-h-[320px] flex-col items-center justify-center rounded-xl border border-gray-200 px-6 text-center">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -243,6 +257,7 @@ function Cart() {
               </div>
             )}
 
+            {/* CART ITEMS */}
             {!isLoading && items.length > 0 && (
               <>
                 <div className="mt-6 space-y-4">
@@ -263,6 +278,7 @@ function Cart() {
                   ))}
                 </div>
 
+                {/* PAGINATION */}
                 {totalPages > 1 && (
                   <div className="mt-10">
                     <Pagination
@@ -275,6 +291,7 @@ function Cart() {
                   </div>
                 )}
 
+                {/* CLEAR CART */}
                 <button
                   type="button"
                   onClick={() => setClearOpen(true)}
@@ -287,6 +304,7 @@ function Cart() {
             )}
           </section>
 
+          {/* ORDER SUMMARY */}
           {!isLoading && items.length > 0 && (
             <div className="lg:col-start-2 xl:col-start-3 xl:sticky xl:top-6">
               <OrderSummary
