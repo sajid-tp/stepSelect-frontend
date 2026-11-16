@@ -160,21 +160,95 @@ const cartStatus = useSelector((state) => state.cart.status);
 
   if (productDetailsStatus === "failed") {
 
+    // The API answers "not found" / "unavailable" when the product was
+    // blocked, deleted, or its category / brand was switched off.
+    // Anything else (network, server) is a temporary error worth retrying.
+    const isUnavailable = /not found|unavailable/i.test(
+      String(productDetailsError || "")
+    );
+
     return (
       <>
         <Navbar />
 
-        <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="flex min-h-[60vh] items-center justify-center px-4 py-10">
 
-          <div className="text-center">
+          <div className="w-full max-w-md text-center">
 
-            <h2 className="text-lg font-semibold text-gray-900">
-              Failed to load product
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#fff1ec] text-[#ff5722]">
+              <svg
+                className="h-9 w-9"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              >
+                {isUnavailable ? (
+                  <>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M20 7.5l-8-4.5-8 4.5v9l8 4.5 8-4.5v-9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 7.5l8 4.5 8-4.5M12 12v9"
+                    />
+                  </>
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  />
+                )}
+              </svg>
+            </div>
+
+            <h2 className="mt-6 text-xl font-bold text-gray-900">
+              {isUnavailable
+                ? "This product is no longer available"
+                : "We couldn't load this product"}
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
-              {productDetailsError}
+            <p className="mt-2 text-sm leading-6 text-gray-500">
+              {isUnavailable
+                ? "The item you're looking for has been removed or is temporarily unavailable. Explore our other products instead."
+                : "Something went wrong while loading this product. Please check your connection and try again."}
             </p>
+
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+
+              {!isUnavailable && (
+                <button
+                  type="button"
+                  onClick={() => dispatch(getProductById(productId))}
+                  className="w-full rounded-lg bg-[#ff5722] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#f4511e] sm:w-auto"
+                >
+                  Try again
+                </button>
+              )}
+
+              <Link
+                to="/shop"
+                className={`w-full rounded-lg px-6 py-2.5 text-sm font-semibold transition sm:w-auto ${
+                  isUnavailable
+                    ? "bg-[#ff5722] text-white hover:bg-[#f4511e]"
+                    : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                Continue shopping
+              </Link>
+
+              <Link
+                to="/"
+                className="w-full rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:w-auto"
+              >
+                Go to home
+              </Link>
+
+            </div>
 
           </div>
 

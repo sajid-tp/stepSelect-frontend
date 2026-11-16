@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import FormField from '../components/FormField';
 import { resetPassword } from '../features/user/authSlice';
@@ -82,6 +82,11 @@ function UpdatePassword() {
       setIsSubmitting(false);
     }
   };
+
+  // Direct visit, refresh or Back without a verified reset: send them to restart the flow
+  if (!email || !resetToken) {
+    return <Navigate to={isLoggedIn ? '/profile/edit' : '/forgot-password'} replace />;
+  }
 
   return (
     <AuthLayout

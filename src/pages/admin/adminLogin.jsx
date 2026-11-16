@@ -5,6 +5,7 @@ import FormField from "../../components/FormField";
 import {
   loginAdmin,
   clearAuth,
+  checkAdminAuth,
 } from "../../features/admin/authSlice";
 
 function AdminLogin() {
@@ -21,13 +22,19 @@ function AdminLogin() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { error, status } = useSelector(
+  const { error, status, isAdmin } = useSelector(
     (state) => state.adminAuth
   );
 
   useEffect(() => {
     dispatch(clearAuth());
+    // If an admin session already exists (cookie still valid), skip the login form
+    dispatch(checkAdminAuth());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (isAdmin) navigate("/admin", { replace: true });
+  }, [isAdmin, navigate]);
 
   const errors = {
     email: !form.email

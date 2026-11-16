@@ -13,6 +13,17 @@ const AdminProtectedRoute = () => {
     }
   }, [dispatch, isAdmin]);
 
+  // After logout, Back/Forward can restore the old dashboard from the browser cache.
+  // Re-verify the session whenever a page is restored that way.
+  useEffect(() => {
+    const onPageShow = (event) => {
+      if (event.persisted) dispatch(checkAdminAuth());
+    };
+
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, [dispatch]);
+
   if (isCheckingAuth) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
