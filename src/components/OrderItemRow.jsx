@@ -33,6 +33,10 @@ function OrderItemRow({
 
   const showItemBadge = item.status !== orderStatus;
 
+  // Offer on this product: show the original price and how much was taken off
+  const hasOffer =
+    !isCancelled && item.discountPercent > 0 && item.price > item.finalPrice;
+
   return (
     <div className="flex flex-col gap-4 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-4">
@@ -141,6 +145,12 @@ function OrderItemRow({
       </div>
 
       <div className="shrink-0 text-left sm:text-right">
+        {hasOffer && (
+          <p className="text-xs text-gray-400 line-through">
+            {formatMoney(item.price * remaining)}
+          </p>
+        )}
+
         <p
           className={`text-sm font-bold ${
             isCancelled ? "text-gray-400 line-through" : "text-ink"
@@ -149,9 +159,21 @@ function OrderItemRow({
           {formatMoney(lineTotal)}
         </p>
 
+        {hasOffer && (
+          <span className="mt-1 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+            {Math.round(item.discountPercent)}% off
+          </span>
+        )}
+
         <p className="mt-0.5 text-xs text-muted">
           Qty: {isCancelled ? item.quantity : remaining}
         </p>
+
+        {!isCancelled && item.finalPrice > 0 && remaining > 1 && (
+          <p className="mt-0.5 text-xs text-muted">
+            {formatMoney(item.finalPrice)} each
+          </p>
+        )}
 
         {!isCancelled && cancelledQty > 0 && (
           <p className="mt-0.5 text-xs text-red-500">

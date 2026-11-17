@@ -416,6 +416,9 @@ const ProductForm = () => {
 
   const [editingVariant, setEditingVariant] = useState(null);
 
+  // Index of a not-yet-saved variant (add-product mode) that is being edited
+  const [editingLocalIndex, setEditingLocalIndex] = useState(null);
+
   const [variantToDelete, setVariantToDelete] = useState(null);
 
 
@@ -870,11 +873,13 @@ const ProductForm = () => {
     } else {
 
       const colorAlreadyUsed = variants.some(
-        (variant) =>
+        (variant, variantIndex) =>
           variant.color?.trim().toLowerCase() ===
             color.trim().toLowerCase() &&
           (editingVariant
             ? variant.id !== editingVariant.id
+            : editingLocalIndex !== null
+            ? variantIndex !== editingLocalIndex
             : true)
       );
 
@@ -988,6 +993,7 @@ const ProductForm = () => {
     setExistingImageUrls([]);
 
     setEditingVariant(null);
+    setEditingLocalIndex(null);
     setCropImageIndex(null);
     setIsCropping(false);
 
@@ -1113,12 +1119,25 @@ const ProductForm = () => {
 
       const uploadedUrls = await uploadNewImages();
 
-      const newVariant = buildVariantData(uploadedUrls);
-
-      setVariants((previous) => [
-        ...previous,
-        newVariant,
+      // Images already uploaded earlier (when editing an unsaved variant) + any new ones
+      const newVariant = buildVariantData([
+        ...existingImageUrls,
+        ...uploadedUrls,
       ]);
+
+      if (editingLocalIndex !== null) {
+        // Replace the variant that was being edited
+        setVariants((previous) =>
+          previous.map((item, i) =>
+            i === editingLocalIndex ? newVariant : item
+          )
+        );
+      } else {
+        setVariants((previous) => [
+          ...previous,
+          newVariant,
+        ]);
+      }
 
       resetVariantForm();
 
@@ -1135,9 +1154,17 @@ const ProductForm = () => {
   };
 
 
-  const handleEditVariant = (variant) => {
+  const handleEditVariant = (variant, index) => {
 
-    setEditingVariant(variant);
+    if (variant.id) {
+      // Saved variant (edit-product page)
+      setEditingVariant(variant);
+      setEditingLocalIndex(null);
+    } else {
+      // Not saved yet (add-product page): remember its position in the list
+      setEditingVariant(null);
+      setEditingLocalIndex(index);
+    }
 
     setColor(variant.color || "");
 
@@ -1180,6 +1207,13 @@ const ProductForm = () => {
 
 
   const handleRemoveLocalVariant = (index) => {
+
+    if (editingLocalIndex === index) {
+      // The variant being edited was removed
+      resetVariantForm();
+    } else if (editingLocalIndex !== null && editingLocalIndex > index) {
+      setEditingLocalIndex(editingLocalIndex - 1);
+    }
 
     setVariants((previous) =>
       previous.filter((_, i) => i !== index)
@@ -1359,6 +1393,8 @@ const ProductForm = () => {
 
   const isDeletingVariant = variantDeleteStatus === "loading";
 
+  const isEditingVariant = Boolean(editingVariant) || editingLocalIndex !== null;
+
   const isVariantOperationLoading =
     isUploading ||
     isAddingVariant ||
@@ -1404,15 +1440,13 @@ const ProductForm = () => {
 
           <div className="flex items-center gap-4">
 
-            {isBackendVariant && (
-              <button
-                type="button"
-                onClick={() => handleEditVariant(variant)}
-                className="text-sm font-medium text-orange-500 hover:text-orange-600"
-              >
-                Edit
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => handleEditVariant(variant, index)}
+              className="text-sm font-medium text-orange-500 hover:text-orange-600"
+            >
+              Edit
+            </button>
 
             <button
               type="button"
@@ -1852,10 +1886,10 @@ const ProductForm = () => {
               <div>
 
                 <h2 className="text-2xl font-bold text-slate-900 mt-2">
-                  {editingVariant ? "Edit Variant" : "Add Variant"}
+                  {isEditingVariant ? "Edit Variant" : "Add Variant"}
                 </h2>
 
-                {editingVariant && (
+                {isEditingVariant && (
 
                   <p className="text-sm text-slate-500 mt-1">
                     Update the selected variant.
@@ -1865,7 +1899,7 @@ const ProductForm = () => {
 
               </div>
 
-              {editingVariant && (
+              {isEditingVariant && (
 
                 <button
                   type="button"
@@ -2257,7 +2291,7 @@ const ProductForm = () => {
                   ? "ADDING..."
                   : isUpdatingVariant
                   ? "UPDATING..."
-                  : editingVariant
+                  : isEditingVariant
                   ? "UPDATE VARIANT"
                   : "ADD VARIANT"}
               </button>

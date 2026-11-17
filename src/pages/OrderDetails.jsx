@@ -216,6 +216,10 @@ function OrderDetails() {
   const hasBottomActions = showCancelOrder || showReturnOrder || showInvoice;
 
   const pricing = order?.pricing || {};
+  const totalSaved =
+    (pricing.discountTotal || 0) +
+    (pricing.couponDiscount || 0) +
+    (pricing.referralDiscount || 0);
   const pay = order ? paymentState(order) : null;
   const addr = order?.shippingAddress;
 
@@ -465,7 +469,18 @@ function OrderDetails() {
                   {pricing.couponDiscount > 0 && (
                     <div className="flex justify-between gap-4">
                       <dt className="text-gray-600">
-                        Coupon{order.couponCode ? ` (${order.couponCode})` : ""}
+                        Coupon
+                        {order.couponCode
+                          ? ` (${order.couponCode}${
+                              order.couponInfo
+                                ? ` · ${
+                                    order.couponInfo.type === "percentage"
+                                      ? `${order.couponInfo.value}% off`
+                                      : `${formatMoney(order.couponInfo.value)} off`
+                                  }`
+                                : ""
+                            })`
+                          : ""}
                       </dt>
                       <dd className="text-green-600">
                         − {formatMoney(pricing.couponDiscount)}
@@ -508,6 +523,12 @@ function OrderDetails() {
                       {formatMoney(pricing.totalAmount)}
                     </dd>
                   </div>
+
+                  {totalSaved > 0 && (
+                    <p className="text-right text-xs font-semibold text-green-600">
+                      You saved {formatMoney(totalSaved)} on this order
+                    </p>
+                  )}
                 </dl>
               </div>
             </section>
