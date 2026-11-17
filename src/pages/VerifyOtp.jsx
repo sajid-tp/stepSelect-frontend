@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { verifyOtp, resendOtp, verifyResetOtp } from '../features/user/authSlice';
 import OtpVerificationCard from '../components/OtpCard';
 import { resolveOtpSession, saveOtpSession, clearOtpSession } from '../utils/otpSession';
@@ -9,6 +9,7 @@ function VerifyOtp() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const isLoggedIn = useSelector((state) => Boolean(state.auth.user));
 
   const [session] = useState(() => resolveOtpSession(location.state));
   const { email, type = 'signup' } = session || {};
@@ -68,6 +69,13 @@ function VerifyOtp() {
       setIsResending(false);
     }
   };
+
+  // Signed-in users are only allowed here for the password-reset flow
+  // (Account -> Forgot Password). A signed-in user who hits Back to the
+  // signup OTP page is still sent home.
+  if (isLoggedIn && type !== 'reset') {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f6f4]">

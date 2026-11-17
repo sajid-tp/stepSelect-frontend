@@ -72,9 +72,10 @@ function App() {
           <Route element={<GuestRoute />}>
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        {/* Guest-only: a signed-in user who hits Back to the OTP page is sent home */}
-        <Route path="/verify-otp" element={<VerifyOtp />} />
          </Route>
+        {/* Not guest-only: signed-in users need it for Account > Forgot Password.
+            VerifyOtp itself sends a signed-in user home unless it is the reset flow. */}
+        <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/invite/:token" element={<InviteRedirect />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />

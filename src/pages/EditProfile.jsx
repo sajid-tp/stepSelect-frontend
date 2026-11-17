@@ -28,12 +28,22 @@ import {
   validateProfileImage,
   MESSAGES as VALIDATION,
 } from '../utils/validators';
+import {
+  saveEmailChangeSession,
+  loadEmailChangeSession,
+  clearEmailChangeSession,
+} from '../utils/emailChangeSession';
 
 function EditProfile() {
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
   const profile = useSelector((state) => state.account?.profile);
+  const authUser = useSelector((state) => state.auth?.user);
+  const userId = authUser?.id || authUser?._id;
+
+  // If the user reloads while the email OTP box is open, bring that step back
+  const [pendingOtp] = useState(() => loadEmailChangeSession(userId));
 
 
 const isGoogleUser = Boolean(profile?.isGoogleUser);
@@ -121,21 +131,21 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   const [passwordConfirmModalOpen, setPasswordConfirmModalOpen] =
     useState(false);
 
-  const [isChangingEmail, setIsChangingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
+  const [isChangingEmail, setIsChangingEmail] = useState(Boolean(pendingOtp));
+  const [newEmail, setNewEmail] = useState(pendingOtp?.email || '');
   const [emailError, setEmailError] = useState('');
   const [emailSuccess, setEmailSuccess] = useState('');
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState(false);
 
   const [emailConfirmModalOpen, setEmailConfirmModalOpen] = useState(false);
 
-  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [isOtpOpen, setIsOtpOpen] = useState(Boolean(pendingOtp));
   const [otpError, setOtpError] = useState('');
-  const [otpExpiresAt, setOtpExpiresAt] = useState(null);
+  const [otpExpiresAt, setOtpExpiresAt] = useState(pendingOtp?.expiresAt || null);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
 
-  const pendingEmailRef = useRef('');
+  const pendingEmailRef = useRef(pendingOtp?.email || '');
 
   useEffect(() => {
     if (!profile) {
@@ -339,6 +349,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       pendingEmailRef.current = trimmed;
 
       setOtpExpiresAt(result?.expiresAt || null);
+      saveEmailChangeSession({
+        userId,
+        email: trimmed,
+        expiresAt: result?.expiresAt,
+      });
       setOtpError('');
 
       setEmailConfirmModalOpen(false);
@@ -355,6 +370,7 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
   };
 
   const closeOtpModal = () => {
+    clearEmailChangeSession();
     setIsOtpOpen(false);
     setOtpError('');
     setOtpExpiresAt(null);
@@ -413,6 +429,11 @@ const isGoogleUser = Boolean(profile?.isGoogleUser);
       ).unwrap();
 
       setOtpExpiresAt(result?.expiresAt || null);
+      saveEmailChangeSession({
+        userId,
+        email: pendingEmailRef.current,
+        expiresAt: result?.expiresAt,
+      });
     } catch (err) {
       setOtpError(
         err || 'Could not resend code. Please try again.'
