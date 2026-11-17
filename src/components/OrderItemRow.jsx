@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 import OrderStatusBadge from "./OrderStatusBadge";
 import { formatMoney } from "./CartItem";
-import { TRACKABLE_ITEM_STATUSES } from "../utils/orderFormat";
+import { TRACKABLE_ITEM_STATUSES, formatDateTime } from "../utils/orderFormat";
 
 const primaryBtn =
   "rounded bg-[#b13600] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white transition hover:bg-[#8f2c00] disabled:cursor-not-allowed disabled:opacity-50";
@@ -17,6 +17,8 @@ function OrderItemRow({
 }) {
   const remaining = item.remainingQuantity ?? item.quantity;
   const cancelledQty = item.cancelledQuantity || 0;
+  const returnedQty = item.returnedQuantity || 0;
+  const returnRequestedQty = item.returnRequestedQuantity || 0;
   const isCancelled = item.status === "cancelled";
 
   const lineTotal = isCancelled
@@ -121,6 +123,20 @@ function OrderItemRow({
               </button>
             )}
           </div>
+
+          {item.canReturn && item.returnDeadline && (
+            <p className="mt-2 text-xs text-muted">
+              <i className="fa-regular fa-clock mr-1" />
+              Return available until {formatDateTime(item.returnDeadline)}
+            </p>
+          )}
+
+          {item.returnWindowExpired && (
+            <p className="mt-2 text-xs text-amber-700">
+              Return period ended on {formatDateTime(item.returnDeadline)}. Returns are accepted
+              within {item.returnWindowDays || 7} days of delivery.
+            </p>
+          )}
         </div>
       </div>
 
@@ -140,6 +156,18 @@ function OrderItemRow({
         {!isCancelled && cancelledQty > 0 && (
           <p className="mt-0.5 text-xs text-red-500">
             {cancelledQty} cancelled
+          </p>
+        )}
+
+        {returnedQty > 0 && (
+          <p className="mt-0.5 text-xs text-purple-600">
+            {returnedQty} returned
+          </p>
+        )}
+
+        {returnRequestedQty > 0 && (
+          <p className="mt-0.5 text-xs text-amber-600">
+            {returnRequestedQty} return requested
           </p>
         )}
       </div>

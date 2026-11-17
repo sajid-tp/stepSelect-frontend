@@ -73,6 +73,11 @@ function OrderCard({ order, backTo = "/orders" }) {
             {order.paymentFlow.attemptsLeft === 1 ? "attempt" : "attempts"} left
           </p>
         )}
+        {order.canReturn && order.returnDeadline && (
+          <p className="mt-2 text-xs text-muted">
+            Return available until {formatDate(order.returnDeadline)}
+          </p>
+        )}
         {isPaymentFailed && (
           <p className="mt-2 text-xs text-red-600">
             {order.paymentFlow?.closedReason === "expired"

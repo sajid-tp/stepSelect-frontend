@@ -210,6 +210,8 @@ function OrderDetails() {
 
   const showCancelOrder = Boolean(order?.canCancel) && !leftProcessing;
   const showReturnOrder = Boolean(order?.canReturn);
+  const returnPeriodEnded =
+    isDelivered && !showReturnOrder && (order?.items || []).some((item) => item.returnWindowExpired);
   const showInvoice = Boolean(order?.canDownloadInvoice);
   const hasBottomActions = showCancelOrder || showReturnOrder || showInvoice;
 
@@ -245,8 +247,11 @@ function OrderDetails() {
       case "returnOrder":
         return {
           title: "Return this order?",
-          description:
-            "Every delivered item in this order will be sent back. We'll review your request, and once it is approved the refund is added to your wallet.",
+          description: `Every delivered item in this order will be sent back. We'll review your request, and once it is approved the refund is added to your wallet.${
+            order.returnDeadline
+              ? ` Returns are accepted until ${formatDateTime(order.returnDeadline)}.`
+              : ""
+          }`,
           confirmText: "Request return",
           variant: "primary",
           reasons: returnReasons,
@@ -257,7 +262,11 @@ function OrderDetails() {
       case "returnItem":
         return {
           title: "Return this item?",
-          description: `${modal.item.name}. Once the return is approved, the refund is added to your wallet.`,
+          description: `${modal.item.name}. Once the return is approved, the refund is added to your wallet.${
+            modal.item.returnDeadline
+              ? ` Returns are accepted until ${formatDateTime(modal.item.returnDeadline)}.`
+              : ""
+          }`,
           confirmText: "Request return",
           variant: "primary",
           reasons: returnReasons,
@@ -531,6 +540,13 @@ function OrderDetails() {
               )}
             </section>
 
+            {returnPeriodEnded && (
+              <p className="border-t border-line px-6 py-4 text-center text-xs text-amber-700 sm:px-8">
+                The {order.returnWindowDays || 7}-day return period for this order has ended.
+                Returns are accepted within {order.returnWindowDays || 7} days of delivery.
+              </p>
+            )}
+
             {hasBottomActions && (
               <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-line px-6 py-6 sm:px-8">
                 {showCancelOrder && (
@@ -567,6 +583,13 @@ function OrderDetails() {
                     <i className="fa-solid fa-download mr-2" />
                     {downloading ? "Preparing..." : "Download invoice"}
                   </button>
+                )}
+
+                {showReturnOrder && order.returnDeadline && (
+                  <p className="w-full text-center text-xs text-muted">
+                    Return available until {formatDateTime(order.returnDeadline)} (
+                    {order.returnWindowDays || 7} days from delivery)
+                  </p>
                 )}
               </footer>
             )}

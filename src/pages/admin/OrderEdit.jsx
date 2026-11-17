@@ -147,6 +147,7 @@ function OrderEdit() {
 
   const isLoading = !order && currentStatus !== "failed";
   const pricing = order?.pricing || {};
+  const refunded = Number(order?.payment?.refundedAmount) || 0;
   const addr = order?.shippingAddress;
 
   const liveItems = (order?.items || []).filter((i) => i.status !== "cancelled");
@@ -301,8 +302,17 @@ function OrderEdit() {
                                 className="!px-2.5 !py-0.5 !text-[11px]"
                               />
                               {item.cancelledQuantity > 0 && !cancelled && (
-                                <span className="text-xs text-red-500">
-                                  {item.cancelledQuantity} cancelled
+                                <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-600">
+                                  {item.cancelledQuantity} of {item.quantity} cancelled
+                                </span>
+                              )}
+                              {item.returnedQuantity > 0 && (
+                                <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700">
+                                  {item.status === "returned"
+                                    ? `All ${item.returnedQuantity} returned`
+                                    : `${item.returnedQuantity} of ${
+                                        item.quantity - (item.cancelledQuantity || 0)
+                                      } returned`}
                                 </span>
                               )}
                               {DELIVERED_LIKE.includes(item.status) && deliveredOn(item) && (
@@ -398,6 +408,24 @@ function OrderEdit() {
                                   </button>
                                 </div>
                               </div>
+                            )}
+
+                            {item.cancelledQuantity > 0 && (
+                              <p className="mt-2 text-xs text-red-500">
+                                Cancelled {item.cancelledQuantity} of {item.quantity} unit
+                                {item.quantity > 1 ? "s" : ""}
+                                {item.cancelledAmount > 0 && ` (${formatMoney(item.cancelledAmount)})`}
+                                {item.cancelReason && ` · ${item.cancelReason}`}
+                                {item.cancelledAt && ` · ${formatDateTime(item.cancelledAt)}`}
+                              </p>
+                            )}
+
+                            {item.returnedQuantity > 0 && (
+                              <p className="mt-2 text-xs font-medium text-purple-700">
+                                Refunded {formatMoney(item.returnRefundAmount)} to the customer for{" "}
+                                {item.returnedQuantity} returned unit
+                                {item.returnedQuantity > 1 ? "s" : ""}
+                              </p>
                             )}
 
                             {(item.returnRestockedQuantity > 0 || item.returnDiscardedQuantity > 0) && (
@@ -542,7 +570,59 @@ function OrderEdit() {
                         {formatMoney(pricing.totalAmount)}
                       </dd>
                     </div>
+
+                    {(order.cancelledTotal > 0 || order.returnedTotal > 0) && (
+                      <div className="mt-1 space-y-2 border-t border-dashed border-gray-200 pt-3">
+                        {order.cancelledTotal > 0 && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-gray-600">Originally ordered</dt>
+                            <dd className="text-[#071a33]">{formatMoney(order.originalTotal)}</dd>
+                          </div>
+                        )}
+                        {order.cancelledTotal > 0 && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-gray-600">Cancelled items</dt>
+                            <dd className="text-red-600">− {formatMoney(order.cancelledTotal)}</dd>
+                          </div>
+                        )}
+                        {order.returnedTotal > 0 && (
+                          <div className="flex justify-between gap-4">
+                            <dt className="text-gray-600">Returned items</dt>
+                            <dd className="text-purple-700">− {formatMoney(order.returnedTotal)}</dd>
+                          </div>
+                        )}
+                        <div className="flex justify-between gap-4 border-t border-gray-100 pt-2">
+                          <dt className="font-semibold text-[#071a33]">Net order value</dt>
+                          <dd className="font-semibold text-[#071a33]">
+                            {formatMoney(Math.max(pricing.totalAmount - (order.returnedTotal || 0), 0))}
+                          </dd>
+                        </div>
+                      </div>
+                    )}
+
+                    {refunded > 0 && (
+                      <div className="flex justify-between gap-4">
+                        <dt className="text-gray-600">Refunded to wallet</dt>
+                        <dd className="text-purple-700">{formatMoney(refunded)}</dd>
+                      </div>
+                    )}
                   </dl>
+
+                  {order.cancelledTotal > 0 &&
+                    refunded === 0 &&
+                    order.paymentMethod === "COD" &&
+                    order.paymentStatus !== "paid" && (
+                      <p className="mt-4 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                        No refund needed for the cancelled items: this is a Cash on Delivery
+                        order and no payment was collected.
+                      </p>
+                    )}
+
+                  {order.payment?.refundError && (
+                    <p className="mt-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">
+                      A refund failed: {order.payment.refundError}
+                    </p>
+                  )}
                 </div>
 
                 <Link

@@ -28,6 +28,7 @@ function Cart() {
     useSelector((state) => state.cart);
 
   const [isBusy, setIsBusy] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [actionError, setActionError] = useState("");
 
   const [clearOpen, setClearOpen] = useState(false);
@@ -37,6 +38,21 @@ function Cart() {
 
   useEffect(() => {
     dispatch(getCart());
+  }, [dispatch]);
+
+  // Re-check the cart when the user comes back to this tab, so a product the
+  // admin blocked meanwhile shows up without a manual reload.
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") dispatch(getCart());
+    };
+
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    window.addEventListener("focus", refreshOnReturn);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+      window.removeEventListener("focus", refreshOnReturn);
+    };
   }, [dispatch]);
 
   const runAction = async (action) => {
@@ -96,6 +112,51 @@ function Cart() {
     }
   };
 
+  // Always check with the server before leaving for checkout, because the cart
+  // on screen can be out of date (e.g. admin blocked a product meanwhile).
+  const handleCheckout = async () => {
+    if (isBusy || isChecking) return;
+
+    setIsChecking(true);
+    setActionError("");
+
+    try {
+      const freshCart = await dispatch(getCart()).unwrap();
+      const freshItems = freshCart?.items || [];
+
+      if (freshItems.length === 0) {
+        setActionError("Your cart is empty.");
+        return;
+      }
+
+      const firstBadIndex = freshItems.findIndex((item) => !item.isAvailable);
+
+      if (firstBadIndex !== -1) {
+        const badCount = freshItems.filter((item) => !item.isAvailable).length;
+
+        setActionError(
+          badCount === 1
+            ? "1 item in your cart is no longer available. Remove it or fix it to continue."
+            : `${badCount} items in your cart are no longer available. Remove or fix them to continue.`
+        );
+        // Jump to the page that shows the first problem item
+        setPage(Math.floor(firstBadIndex / ITEMS_PER_PAGE) + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      navigate("/checkout");
+    } catch (message) {
+      setActionError(
+        typeof message === "string"
+          ? message
+          : "Could not verify your cart. Please try again."
+      );
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
   // ---------- DERIVED DATA ----------
 
   const availableItems = items.filter((item) => item.isAvailable);
@@ -107,7 +168,10 @@ function Cart() {
   );
 
   const canCheckout =
-    availableItems.length > 0 && unavailableCount === 0 && !isBusy;
+    availableItems.length > 0 &&
+    unavailableCount === 0 &&
+    !isBusy &&
+    !isChecking;
 
   const isLoading = status === "idle" || status === "loading";
 
@@ -313,7 +377,7 @@ function Cart() {
                 savings={totalSavings}
                 unavailableCount={unavailableCount}
                 canCheckout={canCheckout}
-                onCheckout={() => navigate("/checkout")}
+                onCheckout={handleCheckout}
               />
             </div>
           )}
